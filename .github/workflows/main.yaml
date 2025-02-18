@@ -58,7 +58,7 @@ jobs:
       run: uv sync --all-extras
 
     - name: Run mypy
-      run: mypy --config-file=./pyproject.toml --warn-unused-ignores --python-version ${{ matrix.version }} .
+      run: uv run mypy --config-file=./mypy.ini --warn-unused-ignores --python-version ${{ matrix.version }} .
 
     - name: Run Pyright
       uses: jakebailey/pyright-action@v2
