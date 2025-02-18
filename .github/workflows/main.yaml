@@ -40,23 +40,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.9, 3.10, 3.11, 3.12]
+        version: ['3.9', '3.10', '3.11', '3.12']
+        folder: [.]
+
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python }}
+    - name: Set up Python ${{ matrix.version }}
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python }}
+        python-version: ${{ matrix.version }}
 
     - name: Install uv
       run: pip install uv==0.5.8
 
     - name: Sync dependencies with uv
-      run: uv sync
+      run: uv sync --group dev
 
     - name: Run mypy
-      run: mypy --config-file=./pyproject.toml --warn-unused-ignores --python-version ${{ matrix.python }} .
+      run: mypy --config-file=./pyproject.toml --warn-unused-ignores --python-version ${{ matrix.version }} .
 
     - name: Run Pyright
       uses: jakebailey/pyright-action@v2
@@ -87,12 +89,12 @@ jobs:
     - name: Run Unit Tests
       run: make run_unit_tests
 
-      # - name: Archive coverage report
-      #   if: matrix.python == '3.10' && github.ref_name != 'main'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: coverage-report-test
-      #     path: coverage.xml
+        # - name: Archive coverage report
+        #   if: matrix.python == '3.10' && github.ref_name != 'main'
+        #   uses: actions/upload-artifact@v4
+        #   with:
+        #     name: coverage-report-test
+        #     path: coverage.xml
 
   # codecov:
   #   name: Upload Coverage to Codecov
