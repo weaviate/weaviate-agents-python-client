@@ -2,12 +2,9 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
+from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
 from weaviate_agents.errors import QueryAgentError
-from weaviate_agents.query.classes.response import (
-    CollectionDescription,
-    QueryAgentResponse,
-)
-from weaviate_agents.query.query_agent import QueryAgent
+from weaviate_agents.query import QueryAgent
 
 
 class DummyClient:
