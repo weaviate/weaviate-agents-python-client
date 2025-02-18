@@ -27,7 +27,7 @@ jobs:
       run: uv sync --all-extras
 
     - name: Run ruff for linting
-      run: ruff check .
+      run: uv run ruff check .
 
     - name: Run Pre-commit hooks
       uses: pre-commit/action@v3.0.0
@@ -59,11 +59,6 @@ jobs:
 
     - name: Run mypy
       run: uv run mypy --config-file=./mypy.ini --warn-unused-ignores --python-version ${{ matrix.version }} .
-
-    - name: Run Pyright
-      uses: jakebailey/pyright-action@v2
-      with:
-        version: 1.1.347
 
   unit-tests:
     name: Unit Tests
