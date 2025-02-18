@@ -20,11 +20,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install uv
+    - name: Install uv --group
       run: pip install uv==0.5.8
 
     - name: Sync dependencies with uv
-      run: uv sync
+      run: uv sync --all-extras
 
     - name: Run ruff for linting
       run: ruff check .
@@ -55,7 +55,7 @@ jobs:
       run: pip install uv==0.5.8
 
     - name: Sync dependencies with uv
-      run: uv sync --group dev
+      run: uv sync --all-extras
 
     - name: Run mypy
       run: mypy --config-file=./pyproject.toml --warn-unused-ignores --python-version ${{ matrix.version }} .
@@ -84,7 +84,7 @@ jobs:
       run: pip install uv==0.5.8
 
     - name: Sync dependencies with uv
-      run: uv sync
+      run: uv sync --all-extras
 
     - name: Run Unit Tests
       run: make run_unit_tests
