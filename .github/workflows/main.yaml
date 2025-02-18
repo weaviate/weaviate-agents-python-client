@@ -1,0 +1,116 @@
+---
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  lint-and-format:
+    name: Lint and Format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      run: pip install uv==0.5.8
+
+    - name: Sync dependencies with uv
+      run: uv sync
+
+    - name: Run ruff for linting
+      run: ruff check .
+
+    - name: Run Pre-commit hooks
+      uses: pre-commit/action@v3.0.0
+      with:
+        extra_args: --verbose --all-files --config=.pre-commit-config.yaml
+
+  type-checking:
+    name: Type Checking
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [3.9, 3.10, 3.11, 3.12]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install uv
+      run: pip install uv==0.5.8
+
+    - name: Sync dependencies with uv
+      run: uv sync
+
+    - name: Run mypy
+      run: mypy --config-file=./pyproject.toml --warn-unused-ignores --python-version ${{ matrix.python }} .
+
+    - name: Run Pyright
+      uses: jakebailey/pyright-action@v2
+      with:
+        version: 1.1.347
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [3.9, 3.10, 3.11, 3.12]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install uv
+      run: pip install uv==0.5.8
+
+    - name: Sync dependencies with uv
+      run: uv sync
+
+    - name: Run Unit Tests
+      run: make run_unit_tests
+
+      # - name: Archive coverage report
+      #   if: matrix.python == '3.10' && github.ref_name != 'main'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: coverage-report-test
+      #     path: coverage.xml
+
+  # codecov:
+  #   name: Upload Coverage to Codecov
+  #   runs-on: ubuntu-latest
+  #   needs: unit-tests
+  #   if: github.ref_name != 'main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Download coverage artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: coverage-report-test
+
+  #     - name: Upload to Codecov
+  #       uses: codecov/codecov-action@v4
+  #       with:
+  #         fail_ci_if_error: true
+  #         token: ${{ secrets.CODECOV_TOKEN }}
+  #         files: coverage.xml
+  #         verbose: true
