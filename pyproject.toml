@@ -21,4 +21,16 @@ build-backend = 'setuptools.build_meta'
 dev = [
     "mypy>=1.15.0",
     "pre-commit>=4.1.0",
+    "pytest-cov>=6.0.0",
+    "pytest>=8.3.4",
+    "ruff>=0.9.6",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]  # Search in current directory
+exclude = [
+    "bash*",
+    "tests*",
+    "docs*",
+    "scripts*",
 ]
