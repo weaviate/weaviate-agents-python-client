@@ -15,7 +15,7 @@ class QueryAgent(_BaseAgent):
         Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
         breaking changes. Please ensure you are using the latest version.
 
-        For more information, see the [Weaviate Agents - Query Agent](TODO: add docs link)
+        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def __init__(
@@ -27,6 +27,12 @@ class QueryAgent(_BaseAgent):
         timeout: Union[int, None] = None,
     ):
         """Initialize the QueryAgent.
+
+        Warning:
+            Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
+            breaking changes. Please ensure you are using the latest version.
+
+            For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
 
         Args:
             client: The Weaviate client connected to a Weaviate Cloud cluster.
@@ -50,7 +56,8 @@ class QueryAgent(_BaseAgent):
         view_properties: Optional[List[str]] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> QueryAgentResponse:
-        """Run the query agent.
+        """
+        Run the query agent.
 
         Args:
             query: The natural language query string for the agent.
