@@ -37,4 +37,4 @@ exclude = [
 ]
 
 [tool.setuptools]
-license-files = ["LICENSE"]
+license-files = []
