@@ -1,3 +1,6 @@
-from . import query, transformation
+from .query import CollectionDescription, QueryAgentResponse
 
-__all__ = ["transformation", "query"]
+__all__ = [
+    "CollectionDescription",
+    "QueryAgentResponse",
+]
