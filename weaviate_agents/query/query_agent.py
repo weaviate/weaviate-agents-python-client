@@ -15,7 +15,7 @@ class QueryAgent(_BaseAgent):
         Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
         breaking changes. Please ensure you are using the latest version.
 
-        For more information, see the [Weaviate Agents - Query Agent](TODO: add docs link)
+        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class QueryAgent(_BaseAgent):
             Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
             breaking changes. Please ensure you are using the latest version.
 
-            For more information, see the [Weaviate Agents - Query Agent](TODO: add docs link)
+            For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
 
         Args:
             client: The Weaviate client connected to a Weaviate Cloud cluster.
