@@ -106,10 +106,24 @@ jobs:
     - name: Sync dependencies with uv
       run: uv sync --all-extras
 
+    - name: Verify version matches
+      run: |
+        PYPROJECT_VERSION=$(uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        GIT_TAG=${GITHUB_REF#refs/tags/}
+        GIT_TAG=${GIT_TAG#v}
+
+        if [ "$PYPROJECT_VERSION" != "$GIT_TAG" ]; then
+          echo "Version mismatch!"
+          echo "pyproject.toml version: $PYPROJECT_VERSION"
+          echo "Git tag version: $GIT_TAG"
+          exit 1
+        fi
+        echo "Versions match: $PYPROJECT_VERSION"
+
     - name: Build package with uv
       run: uv build
 
     - name: Publish package to PyPI
       env:
-        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-      run: uv publish --token $UV_PUBLISH_TOKEN
+        PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      run: uv publish --token $PYPI_API_TOKEN
