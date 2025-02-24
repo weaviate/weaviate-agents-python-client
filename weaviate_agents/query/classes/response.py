@@ -146,7 +146,6 @@ class QueryAgentResponse(BaseModel):
     aggregations: list[list[AggregationResultWithCollection]]
     usage: Usage
     total_time: float
-    search_answer: Optional[str] = None
     aggregation_answer: Optional[str] = None
     has_aggregation_answer: bool
     has_search_answer: bool
