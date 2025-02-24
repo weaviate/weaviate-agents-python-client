@@ -134,6 +134,11 @@ class QueryResultWithCollection(QueryResult):
     collection: str
 
 
+class Source(BaseModel):
+    object_id: str
+    collection: str
+
+
 class QueryAgentResponse(BaseModel):
     original_query: str
     collection_names: list[str]
@@ -148,3 +153,4 @@ class QueryAgentResponse(BaseModel):
     is_partial_answer: bool
     missing_information: list[str]
     final_answer: str
+    sources: list[Source]

@@ -35,3 +35,83 @@ def test_package_imports():
         assert (
             set(weaviate_agents.__all__) == expected_modules
         ), "Package __all__ should contain all public modules"
+
+
+def test_class_exports():
+    """Test that all data model classes are properly exported through the classes module."""
+    from weaviate_agents.classes import (
+        AggregationResult,
+        AggregationResultWithCollection,
+        BooleanMetrics,
+        BooleanPropertyAggregation,
+        BooleanPropertyFilter,
+        CollectionDescription,
+        ComparisonOperator,
+        IntegerPropertyAggregation,
+        IntegerPropertyFilter,
+        NumericMetrics,
+        QueryAgentResponse,
+        QueryResult,
+        QueryResultWithCollection,
+        Source,
+        TextMetrics,
+        TextPropertyAggregation,
+        TextPropertyFilter,
+        Usage,
+    )
+
+    # Verify all exports are classes
+    classes = [
+        CollectionDescription,
+        QueryAgentResponse,
+        Source,
+        ComparisonOperator,
+        IntegerPropertyFilter,
+        TextPropertyFilter,
+        BooleanPropertyFilter,
+        QueryResult,
+        NumericMetrics,
+        TextMetrics,
+        BooleanMetrics,
+        IntegerPropertyAggregation,
+        TextPropertyAggregation,
+        BooleanPropertyAggregation,
+        AggregationResult,
+        Usage,
+        AggregationResultWithCollection,
+        QueryResultWithCollection,
+    ]
+
+    for cls in classes:
+        assert isinstance(cls, type), f"{cls.__name__} should be a class"
+
+    # Verify __all__ contains all exports
+    import weaviate_agents.classes
+
+    expected_exports = [
+        "CollectionDescription",
+        "QueryAgentResponse",
+        "Source",
+        "ComparisonOperator",
+        "IntegerPropertyFilter",
+        "TextPropertyFilter",
+        "BooleanPropertyFilter",
+        "QueryResult",
+        "NumericMetrics",
+        "TextMetrics",
+        "BooleanMetrics",
+        "IntegerPropertyAggregation",
+        "TextPropertyAggregation",
+        "BooleanPropertyAggregation",
+        "AggregationResult",
+        "Usage",
+        "AggregationResultWithCollection",
+        "QueryResultWithCollection",
+    ]
+
+    assert hasattr(
+        weaviate_agents.classes, "__all__"
+    ), "Module should have __all__ defined"
+    assert set(weaviate_agents.classes.__all__) == set(
+        expected_exports
+    ), "__all__ should contain all data model classes"
