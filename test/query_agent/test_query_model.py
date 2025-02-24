@@ -56,6 +56,7 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
         "collection_names": ["test_collection"],
         "searches": [],
         "aggregations": [],
+        "sources": [{"object_id": "123", "collection": "test_collection"}],
         "usage": {
             "requests": 1,
             "request_tokens": 10,
