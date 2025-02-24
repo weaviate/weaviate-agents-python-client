@@ -65,7 +65,6 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
             "details": {},
         },
         "total_time": 0.1,
-        "search_answer": None,
         "aggregation_answer": None,
         "has_aggregation_answer": False,
         "has_search_answer": False,
