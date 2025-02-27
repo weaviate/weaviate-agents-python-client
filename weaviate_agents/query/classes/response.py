@@ -116,6 +116,9 @@ class AggregationResult(BaseModel):
             BooleanPropertyAggregation,
         ]
     ]
+    filters: list[
+        Union["BooleanPropertyFilter", "IntegerPropertyFilter", "TextPropertyFilter"]
+    ] = []
 
 
 class Usage(BaseModel):
