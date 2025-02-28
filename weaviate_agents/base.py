@@ -26,8 +26,6 @@ class _BaseAgent:
         self._agents_host = agents_host or "https://api.agents.weaviate.io"
 
         self._headers = {
-            "Authorization": self._connection.get_current_bearer_token().replace(
-                "Bearer ", ""
-            ),
+            "Authorization": self._connection.get_current_bearer_token(),
             "X-Weaviate-Cluster-Url": self._client._connection.url.replace(":443", ""),
         }
