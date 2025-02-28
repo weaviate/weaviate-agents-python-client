@@ -6,7 +6,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_call:
 
 jobs:
   lint-and-format:
@@ -83,47 +82,3 @@ jobs:
 
     - name: Run Unit Tests
       run: make run_unit_tests
-
-  build-and-publish:
-    name: Build and Publish Package
-    if: startsWith(github.ref, 'refs/tags')
-    needs: [lint-and-format, type-checking, unit-tests]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install uv
-      run: pip install uv==0.5.8
-
-    - name: Sync dependencies with uv
-      run: uv sync --all-extras
-
-    - name: Verify version matches
-      run: |
-        PYPROJECT_VERSION=$(uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        GIT_TAG=${GITHUB_REF#refs/tags/}
-        GIT_TAG=${GIT_TAG#v}
-
-        if [ "$PYPROJECT_VERSION" != "$GIT_TAG" ]; then
-          echo "Version mismatch!"
-          echo "pyproject.toml version: $PYPROJECT_VERSION"
-          echo "Git tag version: $GIT_TAG"
-          exit 1
-        fi
-        echo "Versions match: $PYPROJECT_VERSION"
-
-    - name: Build package with uv
-      run: uv build
-
-    - name: Publish package to PyPI
-      env:
-        PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-      run: uv publish --token $PYPI_API_TOKEN
