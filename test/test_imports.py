@@ -10,7 +10,6 @@ def test_package_imports():
     # Test direct imports from the package
     import weaviate_agents
     from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
-    from weaviate_agents.errors import QueryAgentError
     from weaviate_agents.query import QueryAgent
 
     # Verify the imported items are the correct types
@@ -18,7 +17,6 @@ def test_package_imports():
         CollectionDescription, type
     ), "CollectionDescription should be a class"
     assert isinstance(QueryAgentResponse, type), "QueryAgentResponse should be a class"
-    assert isinstance(QueryAgentError, type), "QueryAgentError should be a class"
     assert isinstance(QueryAgent, type), "QueryAgent should be a class"
 
     # Optional: Test that __all__ is defined and contains expected modules
@@ -26,7 +24,6 @@ def test_package_imports():
         expected_modules = {
             "base",
             "classes",
-            "errors",
             "personalization",
             "query",
             "transformation",

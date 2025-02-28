@@ -1,9 +1,8 @@
-from . import base, classes, errors, personalization, query, transformation, utils
+from . import base, classes, personalization, query, transformation, utils
 
 __all__ = [
     "base",
     "classes",
-    "errors",
     "personalization",
     "query",
     "transformation",

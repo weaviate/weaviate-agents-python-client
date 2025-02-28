@@ -4,7 +4,6 @@ import httpx
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import _BaseAgent
-from weaviate_agents.errors import QueryAgentError
 from weaviate_agents.query.classes import CollectionDescription, QueryAgentResponse
 
 
@@ -86,14 +85,8 @@ class QueryAgent(_BaseAgent):
             timeout=self._timeout,
         )
 
-        if response.status_code != 200:
-            error_data = response.json().get("error", {})
-            raise QueryAgentError(
-                message=error_data.get("message", "Unknown error"),
-                code=error_data.get("code", "unknown"),
-                details=error_data.get("details", {}),
-                status_code=response.status_code,
-            )
+        if not response.is_success:
+            raise Exception(response.json())
 
         return QueryAgentResponse(**response.json())
 

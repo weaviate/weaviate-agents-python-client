@@ -3,7 +3,6 @@ import pytest
 from pydantic import ValidationError
 
 from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
-from weaviate_agents.errors import QueryAgentError
 from weaviate_agents.query import QueryAgent
 
 
@@ -34,6 +33,7 @@ class FakeResponse:
 
     def __init__(self, status_code: int, json_data: dict):
         self.status_code = status_code
+        self.is_success = 200 <= status_code <= 299
         self._json = json_data
 
     def json(self) -> dict:
@@ -114,7 +114,7 @@ def test_run_success(monkeypatch):
 
 
 def test_run_failure(monkeypatch):
-    """Test that QueryAgent.run raises a QueryAgentError when the HTTP response indicates an error.
+    """Test that QueryAgent.run raises an exception when the HTTP response indicates an error.
 
     Returns:
         None.
@@ -127,13 +127,13 @@ def test_run_failure(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    with pytest.raises(QueryAgentError) as exc_info:
+    with pytest.raises(Exception) as exc_info:
         agent.run("failure query")
-    error = exc_info.value
-    assert error.message == "Test error message"
-    assert error.code == "test_error_code"
-    assert error.details == {"info": "test detail"}
-    assert error.status_code == 400
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
 
 
 def test_add_and_remove_collection():
