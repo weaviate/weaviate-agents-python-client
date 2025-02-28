@@ -9,7 +9,6 @@ on:
 jobs:
   build-and-publish:
     name: Build and Publish Package
-    needs: [lint-and-format, type-checking, unit-tests]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
