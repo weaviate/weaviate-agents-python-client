@@ -161,7 +161,7 @@ class QueryAgentResponse(BaseModel):
 
     def display(self) -> None:
         """
-        Display a pretty-printed version of the QueryAgentResponse object.
+        Display a pretty-printed summary of the QueryAgentResponse object.
 
         Returns:
             None
