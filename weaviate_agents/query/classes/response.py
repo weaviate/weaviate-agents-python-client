@@ -159,12 +159,12 @@ class QueryAgentResponse(BaseModel):
     sources: list[Source]
 
 
-    def display(self) -> "QueryAgentResponse":
+    def display(self) -> None:
         """
-        Display a pretty-printed version of the QueryAgentResponse.
+        Display a pretty-printed version of the QueryAgentResponse object.
 
         Returns:
-            QueryAgentResponse: The QueryAgentResponse object.
+            None
         """
         print_query_agent_response(self)
-        return self
+        return None
