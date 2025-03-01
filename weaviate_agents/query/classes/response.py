@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Dict, Literal, Optional, Union
+from utils import print_query_agent_response
 
 from pydantic import BaseModel
 
@@ -156,3 +157,14 @@ class QueryAgentResponse(BaseModel):
     missing_information: list[str]
     final_answer: str
     sources: list[Source]
+
+
+    def display(self) -> "QueryAgentResponse":
+        """
+        Display a pretty-printed version of the QueryAgentResponse.
+
+        Returns:
+            QueryAgentResponse: The QueryAgentResponse object.
+        """
+        print_query_agent_response(self)
+        return self
