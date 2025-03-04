@@ -157,7 +157,6 @@ class QueryAgentResponse(BaseModel):
     final_answer: str
     sources: list[Source]
 
-
     def display(self) -> None:
         """
         Display a pretty-printed summary of the QueryAgentResponse object.
@@ -166,5 +165,6 @@ class QueryAgentResponse(BaseModel):
             None
         """
         from weaviate_agents.utils import print_query_agent_response
+
         print_query_agent_response(self)
         return None
