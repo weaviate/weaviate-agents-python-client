@@ -1,10 +1,11 @@
 from enum import Enum
 from typing import Dict, Literal, Optional, Union
+
+from pydantic import BaseModel
 from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table
-from pydantic import BaseModel
 
 console = Console()
 
