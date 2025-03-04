@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Dict, Literal, Optional, Union
-from utils import print_query_agent_response
 
 from pydantic import BaseModel
 
@@ -166,5 +165,6 @@ class QueryAgentResponse(BaseModel):
         Returns:
             None
         """
+        from weaviate_agents.utils import print_query_agent_response
         print_query_agent_response(self)
         return None
