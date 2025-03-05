@@ -24,6 +24,7 @@ from .transformation import (
     Operations,
     OperationStep,
     OperationType,
+    UpdatePropertyOperation,
 )
 
 __all__ = [

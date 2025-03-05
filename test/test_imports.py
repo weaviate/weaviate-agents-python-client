@@ -39,14 +39,19 @@ def test_class_exports():
     from weaviate_agents.classes import (
         AggregationResult,
         AggregationResultWithCollection,
+        AppendPropertyOperation,
         BooleanMetrics,
         BooleanPropertyAggregation,
         BooleanPropertyFilter,
         CollectionDescription,
         ComparisonOperator,
+        DependentOperationStep,
         IntegerPropertyAggregation,
         IntegerPropertyFilter,
         NumericMetrics,
+        Operations,
+        OperationStep,
+        OperationType,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
@@ -54,6 +59,7 @@ def test_class_exports():
         TextMetrics,
         TextPropertyAggregation,
         TextPropertyFilter,
+        UpdatePropertyOperation,
         Usage,
     )
 
@@ -77,6 +83,12 @@ def test_class_exports():
         Usage,
         AggregationResultWithCollection,
         QueryResultWithCollection,
+        OperationType,
+        OperationStep,
+        AppendPropertyOperation,
+        UpdatePropertyOperation,
+        DependentOperationStep,
+        Operations,
     ]
 
     for cls in classes:
@@ -104,6 +116,12 @@ def test_class_exports():
         "Usage",
         "AggregationResultWithCollection",
         "QueryResultWithCollection",
+        "OperationType",
+        "OperationStep",
+        "AppendPropertyOperation",
+        "UpdatePropertyOperation",
+        "DependentOperationStep",
+        "Operations",
     ]
 
     assert hasattr(
