@@ -57,15 +57,15 @@ class TransformationAgent(_BaseAgent):
 
         self.t_host = f"{self._agents_host}/transformation"
 
-    def update_all(self) -> TransformationResponse:
+    def update_all(self) -> List[TransformationResponse]:
         """Execute all configured transformation operations on the collection.
 
         This method processes operations sequentially, supporting both property creation
         (append) and update operations.
 
         Returns:
-            TransformationResponse: Contains the workflow ID and operation name for tracking
-                the transformation progress.
+            List[TransformationResponse]: A list containing TransformationResponse objects for each
+                operation, with workflow IDs and operation names for tracking transformation progress.
 
         Raises:
             httpx.HTTPError: If there is an error communicating with the transformation service.
@@ -79,56 +79,60 @@ class TransformationAgent(_BaseAgent):
                     raise ValueError(
                         "Append operations must use AppendPropertyOperation type"
                     )
-                on_properties = [
-                    {
-                        "name": operation.property_name,
-                        "data_type": operation.data_type.value,
-                    }
-                ]
+                request = {
+                    "type": "create",
+                    "collection": self.collection,
+                    "instruction": operation.instruction,
+                    "view_properties": operation.view_properties,
+                    "on_properties": [
+                        {
+                            "name": operation.property_name,
+                            "data_type": operation.data_type.value,
+                        }
+                    ],
+                }
             elif operation.operation_type == OperationType.UPDATE:
                 if not isinstance(operation, UpdatePropertyOperation):
                     raise ValueError(
                         "Update operations must use UpdatePropertyOperation type"
                     )
-                on_properties = [{"name": operation.property_name}]
+                request = {
+                    "type": "update",
+                    "collection": self.collection,
+                    "instruction": operation.instruction,
+                    "view_properties": operation.view_properties,
+                    "on_properties": [operation.property_name],
+                }
             else:
                 raise ValueError(
                     f"Unsupported operation type: {operation.operation_type}. "
                     "Only APPEND and UPDATE operations are supported."
                 )
-
-            request = {
-                "type": (
-                    "create"
-                    if operation.operation_type == OperationType.APPEND
-                    else "update"
-                ),
-                "collection": self.collection,
-                "instruction": operation.instruction,
-                "view_properties": operation.view_properties,
-                "on_properties": on_properties,
-            }
             requests.append(request)
 
-        print("Requests:")
-        print(requests)
-
-        print(self.t_host + "/properties")
-
-        # Send the requests array directly instead of wrapping it
+        # Send the requests array directly
         with httpx.Client(timeout=self._timeout) as client:
             response = client.post(
                 self.t_host + "/properties",
                 json=requests,
                 headers=self._headers,
             )
-            print("Response:")
-            print(response.json())
-            response.raise_for_status()
-            print("Response:")
-            print(response.json())
 
-            return TransformationResponse(**response.json())
+            response.raise_for_status()
+            json_response = response.json()
+
+            # Handle array response
+            if isinstance(json_response, list):
+                return [
+                    TransformationResponse(
+                        workflow_id=resp["workflow_id"],
+                        operation_name=f"{self.operations[i].property_name}",
+                    )
+                    for i, resp in enumerate(json_response)
+                ]
+
+            # Handle single response (fallback for backward compatibility)
+            return [TransformationResponse(**json_response)]
 
     def get_status(self, workflow_id: str) -> dict:
         """Check the status of a transformation workflow.
