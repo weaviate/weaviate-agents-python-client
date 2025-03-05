@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Dict, Literal, Optional, Union
-from utils import print_query_agent_response
 
 from pydantic import BaseModel
+
+from weaviate_agents.utils import print_query_agent_response
 
 
 class CollectionDescription(BaseModel):
@@ -157,7 +158,6 @@ class QueryAgentResponse(BaseModel):
     missing_information: list[str]
     final_answer: str
     sources: list[Source]
-
 
     def display(self) -> None:
         """

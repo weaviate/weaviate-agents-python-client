@@ -1,14 +1,17 @@
+from typing import TYPE_CHECKING
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table
 
-from weaviate_agents.query.classes import QueryAgentResponse
+if TYPE_CHECKING:
+    from weaviate_agents.query.classes import QueryAgentResponse
 
 console = Console()
 
 
-def print_query_agent_response(response: QueryAgentResponse):
+def print_query_agent_response(response: "QueryAgentResponse"):
     """Prints a formatted response from the Query Agent using rich."""
 
     console.print(
