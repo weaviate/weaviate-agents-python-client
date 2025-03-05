@@ -1,6 +1,6 @@
 from typing import Union
 
-from weaviate.client import WeaviateAsyncClient, WeaviateClient
+from weaviate.client import WeaviateClient
 
 
 class _BaseAgent:
@@ -10,7 +10,7 @@ class _BaseAgent:
 
     def __init__(
         self,
-        client: Union[WeaviateClient, WeaviateAsyncClient],
+        client: WeaviateClient,
         agents_host: Union[str, None] = None,
     ):
         """

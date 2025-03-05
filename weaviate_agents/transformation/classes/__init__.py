@@ -1,4 +1,4 @@
-from weaviate_agents.transformation.classes import (
+from .operation import (
     AppendPropertyOperation,
     DependentOperationStep,
     Operations,

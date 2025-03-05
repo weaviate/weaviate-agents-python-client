@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 import httpx
-from weaviate.client import WeaviateAsyncClient, WeaviateClient
+from weaviate.client import WeaviateClient
 
 from weaviate_agents.base import _BaseAgent
 from weaviate_agents.query.classes import CollectionDescription, QueryAgentResponse
@@ -12,14 +12,14 @@ class QueryAgent(_BaseAgent):
 
     Warning:
         Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version.
+        breaking changes. Please ensure you are using the latest version of the client.
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def __init__(
         self,
-        client: Union[WeaviateClient, WeaviateAsyncClient],
+        client: WeaviateClient,
         collections: List[Union[str, CollectionDescription]],
         agents_host: Union[str, None] = None,
         system_prompt: Union[str, None] = None,

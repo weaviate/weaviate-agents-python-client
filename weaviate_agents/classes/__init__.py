@@ -18,6 +18,13 @@ from .query import (
     TextPropertyFilter,
     Usage,
 )
+from .transformation import (
+    AppendPropertyOperation,
+    DependentOperationStep,
+    Operations,
+    OperationStep,
+    OperationType,
+)
 
 __all__ = [
     "CollectionDescription",
@@ -38,4 +45,10 @@ __all__ = [
     "Usage",
     "AggregationResultWithCollection",
     "QueryResultWithCollection",
+    "OperationType",
+    "OperationStep",
+    "AppendPropertyOperation",
+    "UpdatePropertyOperation",
+    "DependentOperationStep",
+    "Operations",
 ]
