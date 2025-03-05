@@ -58,10 +58,7 @@ class TransformationAgent(_BaseAgent):
         self.t_host = f"{self._agents_host}/transformation"
 
     def update_all(self) -> List[TransformationResponse]:
-        """Execute all configured transformation operations on the collection.
-
-        This method processes operations sequentially, supporting both property creation
-        (append) and update operations.
+        """Triggers all configured transformation operations on the collection.
 
         Returns:
             List[TransformationResponse]: A list containing TransformationResponse objects for each
@@ -69,8 +66,20 @@ class TransformationAgent(_BaseAgent):
 
         Raises:
             httpx.HTTPError: If there is an error communicating with the transformation service.
-            ValueError: If the operations are not properly configured.
+            ValueError: If the operations are not properly configured or if there are duplicate
+                property operations.
         """
+        # Check for duplicate property operations
+        property_operations = {}
+        for operation in self.operations:
+            property_name = operation.property_name
+            if property_name in property_operations:
+                raise ValueError(
+                    f"Duplicate operation detected for property '{property_name}'. "
+                    "Multiple operations on the same property are not allowed simultaneously."
+                )
+            property_operations[property_name] = operation.operation_type
+
         # Convert operations to request format
         requests = []
         for operation in self.operations:
