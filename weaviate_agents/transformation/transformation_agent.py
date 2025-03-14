@@ -127,7 +127,9 @@ class TransformationAgent(_BaseAgent):
                 headers=self._headers,
             )
 
-            response.raise_for_status()
+            if response.is_error:
+                raise Exception(response.text)
+
             json_response = response.json()
 
             # Handle array response
@@ -160,6 +162,8 @@ class TransformationAgent(_BaseAgent):
                 f"{self.t_host}/properties/status/{workflow_id}",
                 headers=self._headers,
             )
-            response.raise_for_status()
+
+            if response.is_error:
+                raise Exception(response.text)
 
             return response.json()
