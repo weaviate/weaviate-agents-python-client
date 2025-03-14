@@ -85,8 +85,8 @@ class QueryAgent(_BaseAgent):
             timeout=self._timeout,
         )
 
-        if not response.is_success:
-            raise Exception(response.json())
+        if response.is_error:
+            raise Exception(response.text)
 
         return QueryAgentResponse(**response.json())
 

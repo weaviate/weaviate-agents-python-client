@@ -33,8 +33,9 @@ class FakeResponse:
 
     def __init__(self, status_code: int, json_data: dict):
         self.status_code = status_code
-        self.is_success = 200 <= status_code <= 299
+        self.is_error = 400 <= status_code <= 599
         self._json = json_data
+        self.text = json_data
 
     def json(self) -> dict:
         """Return the JSON data of the fake response.
