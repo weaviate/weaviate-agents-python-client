@@ -81,16 +81,15 @@ class TransformationAgent(_BaseAgent):
             property_operations[property_name] = operation.operation_type
 
         # Convert operations to request format
-        requests = []
+        request_operations = []
         for operation in self.operations:
             if operation.operation_type == OperationType.APPEND:
                 if not isinstance(operation, AppendPropertyOperation):
                     raise ValueError(
                         "Append operations must use AppendPropertyOperation type"
                     )
-                request = {
+                request_operation = {
                     "type": "create",
-                    "collection": self.collection,
                     "instruction": operation.instruction,
                     "view_properties": operation.view_properties,
                     "on_properties": [
@@ -105,9 +104,8 @@ class TransformationAgent(_BaseAgent):
                     raise ValueError(
                         "Update operations must use UpdatePropertyOperation type"
                     )
-                request = {
+                request_operation = {
                     "type": "update",
-                    "collection": self.collection,
                     "instruction": operation.instruction,
                     "view_properties": operation.view_properties,
                     "on_properties": [operation.property_name],
@@ -117,13 +115,18 @@ class TransformationAgent(_BaseAgent):
                     f"Unsupported operation type: {operation.operation_type}. "
                     "Only APPEND and UPDATE operations are supported."
                 )
-            requests.append(request)
+            request_operations.append(request_operation)
+
+        request = {
+            "collection": self.collection,
+            "operations": request_operations,
+        }
 
         # Send the requests array directly
         with httpx.Client(timeout=self._timeout) as client:
             response = client.post(
                 self.t_host + "/properties",
-                json=requests,
+                json=request,
                 headers=self._headers,
             )
 
