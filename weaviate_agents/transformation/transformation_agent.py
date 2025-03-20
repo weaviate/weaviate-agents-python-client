@@ -57,29 +57,17 @@ class TransformationAgent(_BaseAgent):
 
         self.t_host = f"{self._agents_host}/transformation"
 
-    def update_all(self) -> List[TransformationResponse]:
+    def update_all(self) -> TransformationResponse:
         """Triggers all configured transformation operations on the collection.
 
         Returns:
-            List[TransformationResponse]: A list containing TransformationResponse objects for each
-                operation, with workflow IDs and operation names for tracking transformation progress.
+            TransformationResponse: response with workflow ID for tracking transformation progress.
 
         Raises:
             httpx.HTTPError: If there is an error communicating with the transformation service.
             ValueError: If the operations are not properly configured or if there are duplicate
                 property operations.
         """
-        # Check for duplicate property operations
-        property_operations = {}
-        for operation in self.operations:
-            property_name = operation.property_name
-            if property_name in property_operations:
-                raise ValueError(
-                    f"Duplicate operation detected for property '{property_name}'. "
-                    "Multiple operations on the same property are not allowed simultaneously."
-                )
-            property_operations[property_name] = operation.operation_type
-
         # Convert operations to request format
         request_operations = []
         for operation in self.operations:
@@ -122,7 +110,6 @@ class TransformationAgent(_BaseAgent):
             "operations": request_operations,
         }
 
-        # Send the requests array directly
         with httpx.Client(timeout=self._timeout) as client:
             response = client.post(
                 self.t_host + "/properties",
@@ -133,20 +120,7 @@ class TransformationAgent(_BaseAgent):
             if response.is_error:
                 raise Exception(response.text)
 
-            json_response = response.json()
-
-            # Handle array response
-            if isinstance(json_response, list):
-                return [
-                    TransformationResponse(
-                        workflow_id=resp["workflow_id"],
-                        operation_name=f"{self.operations[i].property_name}",
-                    )
-                    for i, resp in enumerate(json_response)
-                ]
-
-            # Handle single response (fallback for backward compatibility)
-            return [TransformationResponse(**json_response)]
+            return TransformationResponse(**response.json())
 
     def get_status(self, workflow_id: str) -> dict:
         """Check the status of a transformation workflow.
