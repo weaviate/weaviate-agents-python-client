@@ -47,9 +47,8 @@ class DependentOperationStep(BaseModel):
 
 
 class TransformationResponse(BaseModel):
-    """Response from a GFL operation."""
+    """Response from a transformation operation."""
 
-    operation_name: str
     workflow_id: str
 
 

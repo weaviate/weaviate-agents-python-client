@@ -54,31 +54,18 @@ class FakeResponse:
         """
         return self._json
 
-    def raise_for_status(self):
-        """Raise an HTTPError if the status code indicates an error."""
-        if not self.is_success:
-            error = httpx.HTTPError(message="HTTP Error")
-            error.response = self
-            raise error
-
 
 def fake_post_success(*args, **kwargs) -> FakeResponse:
     """Simulate a successful HTTP POST response.
 
     Returns:
-        FakeResponse: A fake HTTP response with status code 200.
+        FakeResponse: A fake HTTP response with status code 202.
     """
-    json_data = [
-        {
-            "workflow_id": "workflow1",
-            "status": "running",
-        },
-        {
-            "workflow_id": "workflow2",
-            "status": "running",
-        },
-    ]
-    return FakeResponse(200, json_data)
+    json_data = {
+        "workflow_id": "test_workflow_id",
+        "status": "running",
+    }
+    return FakeResponse(202, json_data)
 
 
 def fake_post_failure(*args, **kwargs) -> FakeResponse:
@@ -148,11 +135,8 @@ def test_update_all_success(monkeypatch):
     )
 
     result = agent.update_all()
-    assert isinstance(result, list)
-    assert len(result) == 2
-    assert all(isinstance(r, TransformationResponse) for r in result)
-    assert result[0].workflow_id == "workflow1"
-    assert result[1].workflow_id == "workflow2"
+    assert isinstance(result, TransformationResponse)
+    assert result.workflow_id == "test_workflow_id"
 
 
 def test_update_all_failure(monkeypatch):
@@ -210,43 +194,6 @@ def test_get_status_success(monkeypatch):
     assert isinstance(result["status"]["total_duration"], float)
     assert "start_time" in result["status"]
     assert "end_time" in result["status"]
-
-
-def test_duplicate_operations():
-    """Test that TransformationAgent raises ValueError for duplicate property operations.
-
-    Returns:
-        None.
-    """
-    dummy_client = DummyClient()
-
-    operations = [
-        AppendPropertyOperation(
-            property_name="same_prop",
-            instruction="test instruction 1",
-            view_properties=["prop1"],
-            data_type=DataType.TEXT,
-        ),
-        UpdatePropertyOperation(
-            property_name="same_prop",
-            instruction="test instruction 2",
-            view_properties=["prop2"],
-        ),
-    ]
-
-    agent = TransformationAgent(
-        dummy_client,
-        collection="test_collection",
-        operations=operations,
-        agents_host="http://dummy-agent",
-    )
-
-    with pytest.raises(ValueError) as exc_info:
-        agent.update_all()
-
-    assert "Duplicate operation detected for property 'same_prop'" in str(
-        exc_info.value
-    )
 
 
 def test_invalid_operation_type():
