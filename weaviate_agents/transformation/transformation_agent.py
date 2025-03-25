@@ -108,6 +108,7 @@ class TransformationAgent(_BaseAgent):
         request = {
             "collection": self.collection,
             "operations": request_operations,
+            "headers": self._connection.additional_headers,
         }
 
         with httpx.Client(timeout=self._timeout) as client:
