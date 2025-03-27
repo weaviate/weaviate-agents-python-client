@@ -1,3 +1,10 @@
+from .personalization import (
+    Persona,
+    PersonaInteraction,
+    PersonaInteractionResponse,
+    PersonalizationAgentGetObjectsResponse,
+    PersonalizedObject,
+)
 from .query import (
     AggregationResult,
     AggregationResultWithCollection,
@@ -52,4 +59,9 @@ __all__ = [
     "UpdatePropertyOperation",
     "DependentOperationStep",
     "Operations",
+    "Persona",
+    "PersonaInteraction",
+    "PersonaInteractionResponse",
+    "PersonalizationAgentGetObjectsResponse",
+    "PersonalizedObject",
 ]
