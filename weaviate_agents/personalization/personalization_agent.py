@@ -404,3 +404,44 @@ class PersonalizationAgent(_BaseAgent):
             raise ValueError(f"Failed to get objects: {response.text}")
 
         return PersonalizationAgentGetObjectsResponse(**response.json())
+
+    @classmethod
+    def exists(
+        cls,
+        client: WeaviateClient,
+        reference_collection: str,
+        agents_host: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ) -> bool:
+        """Check if a persona collection exists for a given reference collection.
+
+        Args:
+            client: The Weaviate client
+            reference_collection: The name of the collection to check
+            agents_host: Optional host URL for the agents service
+            timeout: Optional timeout for the request
+
+        Returns:
+            bool: True if the persona collection exists, False otherwise
+        """
+        # Initialize base values from client
+        base_agent = cls(client, reference_collection, agents_host=agents_host)
+
+        request_data = {
+            "collection_name": reference_collection,
+            "headers": base_agent._connection.additional_headers,
+        }
+
+        response = httpx.post(
+            f"{base_agent._agents_host}{base_agent._route}/exists",
+            headers=base_agent._headers,
+            json=request_data,
+            timeout=timeout,
+        )
+
+        if response.is_error:
+            raise ValueError(
+                f"Failed to check if persona collection exists: {response.text}"
+            )
+
+        return response.json()["persona_collection_exists"]
