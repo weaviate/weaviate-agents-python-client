@@ -143,7 +143,7 @@ class PersonalizationAgent(_BaseAgent):
         """Add a persona to the Personalization Agent's persona collection.
 
         Args:
-            persona: The persona to add. The persona must have an id and properties that match the user properties
+            persona: The persona to add. The persona must have a persona_id and properties that match the user properties
             defined when the Personalization Agent was created.
         """
 
@@ -170,7 +170,7 @@ class PersonalizationAgent(_BaseAgent):
         """Update an existing persona in the Personalization Agent's persona collection.
 
         Args:
-            persona: The persona to update. The persona must have an id and properties that match
+            persona: The persona to update. The persona must have a persona_id and properties that match
                     the user properties defined when the Personalization Agent was created.
         """
         request_data = {
@@ -192,7 +192,7 @@ class PersonalizationAgent(_BaseAgent):
             raise ValueError(f"Failed to update persona: {response.text}")
 
     def get_persona(self, persona_id: UUID) -> Persona:
-        """Get a persona by ID from the Personalization Agent's persona collection.
+        """Get a persona by persona_id from the Personalization Agent's persona collection.
 
         Args:
             persona_id: The ID of the persona to retrieve
@@ -220,7 +220,7 @@ class PersonalizationAgent(_BaseAgent):
         return Persona(**response.json())
 
     def delete_persona(self, persona_id: UUID) -> None:
-        """Delete a persona by ID from the Personalization Agent's persona collection.
+        """Delete a persona by persona_id from the Personalization Agent's persona collection.
 
         Args:
             persona_id: The ID of the persona to delete

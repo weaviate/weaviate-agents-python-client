@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class Persona(BaseModel):
-    id: UUID
+    persona_id: UUID
     properties: Dict[str, Any]
 
     def model_dump(self, **kwargs):
@@ -23,7 +23,7 @@ class PersonaInteraction(BaseModel):
     item and persona pair will be replaced with the new interaction.
     """
 
-    id: UUID
+    persona_id: UUID
     item_id: UUID
     weight: float
     replace_previous_interactions: bool = False
