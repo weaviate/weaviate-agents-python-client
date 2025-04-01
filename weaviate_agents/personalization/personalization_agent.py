@@ -427,15 +427,9 @@ class PersonalizationAgent(_BaseAgent):
         # Initialize base values from client
         base_agent = cls(client, reference_collection, agents_host=agents_host)
 
-        request_data = {
-            "collection_name": reference_collection,
-            "headers": base_agent._connection.additional_headers,
-        }
-
-        response = httpx.post(
-            f"{base_agent._agents_host}{base_agent._route}/exists",
+        response = httpx.get(
+            f"{base_agent._agents_host}{base_agent._route}/exists/{reference_collection}",
             headers=base_agent._headers,
-            json=request_data,
             timeout=timeout,
         )
 
