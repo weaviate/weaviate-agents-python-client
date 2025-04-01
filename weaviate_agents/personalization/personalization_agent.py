@@ -135,7 +135,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(
+            raise Exception(
                 f"Failed to initialize personalization agent: {response.text}"
             )
 
@@ -148,7 +148,7 @@ class PersonalizationAgent(_BaseAgent):
         """
 
         request_data = {
-            "persona": persona.model_dump(),
+            "persona": persona.model_dump(mode="json"),
             "personalization_request": {
                 "collection_name": self._reference_collection,
                 "headers": self._connection.additional_headers,
@@ -164,7 +164,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to add persona: {response.text}")
+            raise Exception(f"Failed to add persona: {response.text}")
 
     def update_persona(self, persona: Persona) -> None:
         """Update an existing persona in the Personalization Agent's persona collection.
@@ -174,7 +174,7 @@ class PersonalizationAgent(_BaseAgent):
                     the user properties defined when the Personalization Agent was created.
         """
         request_data = {
-            "persona": persona.model_dump(),
+            "persona": persona.model_dump(mode="json"),
             "personalization_request": {
                 "collection_name": self._reference_collection,
                 "headers": self._connection.additional_headers,
@@ -189,7 +189,7 @@ class PersonalizationAgent(_BaseAgent):
             timeout=self._timeout,
         )
         if response.is_error:
-            raise ValueError(f"Failed to update persona: {response.text}")
+            raise Exception(f"Failed to update persona: {response.text}")
 
     def get_persona(self, persona_id: UUID) -> Persona:
         """Get a persona by persona_id from the Personalization Agent's persona collection.
@@ -215,7 +215,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to get persona: {response.text}")
+            raise Exception(f"Failed to get persona: {response.text}")
 
         return Persona(**response.json())
 
@@ -240,7 +240,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to delete persona: {response.text}")
+            raise Exception(f"Failed to delete persona: {response.text}")
 
     def has_persona(self, persona_id: UUID) -> bool:
         """Check if a persona exists in the Personalization Agent's persona collection.
@@ -266,7 +266,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to check persona existence: {response.text}")
+            raise Exception(f"Failed to check persona existence: {response.text}")
 
         return response.json()["exists"]
 
@@ -292,7 +292,7 @@ class PersonalizationAgent(_BaseAgent):
         request_data = {
             "interactions_request": {
                 "interactions": [
-                    interaction.model_dump() for interaction in interactions
+                    interaction.model_dump(mode="json") for interaction in interactions
                 ],
                 "create_persona_if_not_exists": create_persona_if_not_exists,
                 "remove_previous_interactions": remove_previous_interactions,
@@ -313,7 +313,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to add interactions: {response.text}")
+            raise Exception(f"Failed to add interactions: {response.text}")
 
     def get_interactions(
         self, persona_id: UUID, interaction_type: str
@@ -348,7 +348,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to get interactions: {response.text}")
+            raise Exception(f"Failed to get interactions: {response.text}")
 
         return [
             PersonaInteractionResponse(**interaction) for interaction in response.json()
@@ -401,7 +401,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(f"Failed to get objects: {response.text}")
+            raise Exception(f"Failed to get objects: {response.text}")
 
         return PersonalizationAgentGetObjectsResponse(**response.json())
 
@@ -434,7 +434,7 @@ class PersonalizationAgent(_BaseAgent):
         )
 
         if response.is_error:
-            raise ValueError(
+            raise Exception(
                 f"Failed to check if persona collection exists: {response.text}"
             )
 

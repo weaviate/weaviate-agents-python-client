@@ -9,12 +9,6 @@ class Persona(BaseModel):
     persona_id: UUID
     properties: Dict[str, Any]
 
-    def model_dump(self, **kwargs):
-        data = super().model_dump(**kwargs)
-        if "id" in data:
-            data["id"] = str(data["id"])
-        return data
-
 
 class PersonaInteraction(BaseModel):
     """Interaction between a persona and an item.
@@ -29,16 +23,6 @@ class PersonaInteraction(BaseModel):
     replace_previous_interactions: bool = False
     created_at: Optional[datetime] = None
 
-    def model_dump(self, **kwargs):
-        data = super().model_dump(**kwargs)
-        if "id" in data:
-            data["id"] = str(data["id"])
-        if "item_id" in data:
-            data["item_id"] = str(data["item_id"])
-        if "created_at" in data and data["created_at"] is not None:
-            data["created_at"] = data["created_at"].isoformat()
-        return data
-
 
 class PersonaInteractionResponse(BaseModel):
     """Response model for persona interactions when retrieving them."""
@@ -46,11 +30,3 @@ class PersonaInteractionResponse(BaseModel):
     item_id: UUID = Field(alias="uuid")
     weight: float
     created_at: str = Field(alias="createdAt")
-
-    def model_dump(self, **kwargs):
-        data = super().model_dump(**kwargs)
-        if "item_id" in data:
-            data["item_id"] = str(data["item_id"])
-        if "created_at" in data:
-            data["created_at"] = data["created_at"].isoformat()
-        return data
