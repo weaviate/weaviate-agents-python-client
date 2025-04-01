@@ -52,6 +52,11 @@ def test_class_exports():
         Operations,
         OperationStep,
         OperationType,
+        Persona,
+        PersonaInteraction,
+        PersonaInteractionResponse,
+        PersonalizationAgentGetObjectsResponse,
+        PersonalizedObject,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
@@ -89,6 +94,11 @@ def test_class_exports():
         UpdatePropertyOperation,
         DependentOperationStep,
         Operations,
+        Persona,
+        PersonaInteraction,
+        PersonaInteractionResponse,
+        PersonalizationAgentGetObjectsResponse,
+        PersonalizedObject,
     ]
 
     for cls in classes:
@@ -122,6 +132,11 @@ def test_class_exports():
         "UpdatePropertyOperation",
         "DependentOperationStep",
         "Operations",
+        "Persona",
+        "PersonaInteraction",
+        "PersonaInteractionResponse",
+        "PersonalizationAgentGetObjectsResponse",
+        "PersonalizedObject",
     ]
 
     assert hasattr(
