@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+
 class NearTextQueryParameters(BaseModel):
     query_method: Literal["near_text"] = "near_text"
 
@@ -63,7 +64,9 @@ class HybridQueryParameters(BaseModel):
     # return_references: Union[weaviate.collections.classes.grpc._QueryReference, Sequence[weaviate.collections.classes.grpc._QueryReference], Type[~TReferences], NoneType] = None,
 
 
-QueryParameters = Union[NearTextQueryParameters, BM25QueryParameters, HybridQueryParameters]
+QueryParameters = Union[
+    NearTextQueryParameters, BM25QueryParameters, HybridQueryParameters
+]
 
 
 class QueryRequest(BaseModel):

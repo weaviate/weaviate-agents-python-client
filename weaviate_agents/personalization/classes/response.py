@@ -1,9 +1,8 @@
 from typing import Any, Dict, Optional, Union
 from uuid import UUID
 
-from weaviate.outputs.query import QueryReturn
-
 from pydantic import BaseModel
+from weaviate.outputs.query import QueryReturn
 
 
 class Usage(BaseModel):

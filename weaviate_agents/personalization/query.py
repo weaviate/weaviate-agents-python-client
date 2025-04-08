@@ -1,15 +1,16 @@
-from typing import Any, List, Union, Optional
+from typing import Any, List, Optional, Union
 from uuid import UUID
 
 import httpx
 
 from weaviate_agents.personalization.classes import (
-    PersonalizedQueryResponse,
+    NearTextQueryParameters,
     PersonalizationRequest,
-    QueryRequest,
+    PersonalizedQueryResponse,
     QueryParameters,
-    NearTextQueryParameters
+    QueryRequest,
 )
+
 
 class PersonalizedQuery:
     def __init__(
@@ -36,17 +37,21 @@ class PersonalizedQuery:
         self.decay_rate = decay_rate
 
     def _get_request_data(self, query_parameters: QueryParameters) -> dict[str, Any]:
-        query_request = QueryRequest.model_validate({
-            "persona_id": self.persona_id,
-            "strength": self.strength,
-            "recent_interactions_count": self.recent_interactions_count,
-            "decay_rate": self.decay_rate,
-            "overfetch_factor": self.overfetch_factor,
-            "query_parameters": query_parameters,
-        })
+        query_request = QueryRequest.model_validate(
+            {
+                "persona_id": self.persona_id,
+                "strength": self.strength,
+                "recent_interactions_count": self.recent_interactions_count,
+                "decay_rate": self.decay_rate,
+                "overfetch_factor": self.overfetch_factor,
+                "query_parameters": query_parameters,
+            }
+        )
         return {
-            "query_request": query_request.model_dump(mode='json'),
-            "personalization_request": self.personalization_request.model_dump(mode='json'),
+            "query_request": query_request.model_dump(mode="json"),
+            "personalization_request": self.personalization_request.model_dump(
+                mode="json"
+            ),
         }
 
     def near_text(
