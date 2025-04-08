@@ -4,6 +4,7 @@ from uuid import UUID
 import httpx
 
 from weaviate_agents.personalization.classes import (
+    PersonalizedQueryResponse,
     PersonalizationRequest,
     QueryRequest,
     QueryParameters,
@@ -82,9 +83,5 @@ class PersonalizedQuery:
             json=self._get_request_data(query_parameters),
             timeout=self.timeout,
         )
-        try:
-            response.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            raise RuntimeError('...') from exc  # TODO
-
-        return response.json()
+        response_data = response.raise_for_status().json()
+        return PersonalizedQueryResponse.model_validate(response_data)
