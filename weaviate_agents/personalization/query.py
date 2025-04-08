@@ -67,7 +67,7 @@ class PersonalizedQuery:
         # return_properties,
         # return_references,
     ):
-        query_parameters = NearTextQueryParameters.model_validate(
+        query_parameters = NearTextQueryParameters(
             query=query,
             certainty=certainty,
             distance=distance,
