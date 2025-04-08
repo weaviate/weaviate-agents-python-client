@@ -1,8 +1,8 @@
 from typing import Annotated, List, Literal, Optional, Union
-from typing_extensions import TypedDict
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, PlainSerializer, Field
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
+from typing_extensions import TypedDict
 from weaviate.classes.query import Move
 
 
