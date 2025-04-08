@@ -31,7 +31,7 @@ class IntegerPropertyFilter(BaseModel):
 
 
 class TextPropertyFilter(BaseModel):
-    """Filter text properties using equality or LIKE operators"""
+    """Filter text properties using equality or LIKE operators."""
 
     property_name: str
     operator: ComparisonOperator
@@ -39,7 +39,7 @@ class TextPropertyFilter(BaseModel):
 
 
 class BooleanPropertyFilter(BaseModel):
-    """Filter boolean properties using equality operators"""
+    """Filter boolean properties using equality operators."""
 
     property_name: str
     operator: ComparisonOperator
@@ -81,14 +81,14 @@ class BooleanMetrics(str, Enum):
 
 
 class IntegerPropertyAggregation(BaseModel):
-    """Aggregate numeric properties using statistical functions"""
+    """Aggregate numeric properties using statistical functions."""
 
     property_name: str
     metrics: NumericMetrics
 
 
 class TextPropertyAggregation(BaseModel):
-    """Aggregate text properties using frequency analysis"""
+    """Aggregate text properties using frequency analysis."""
 
     property_name: str
     metrics: TextMetrics
@@ -96,15 +96,14 @@ class TextPropertyAggregation(BaseModel):
 
 
 class BooleanPropertyAggregation(BaseModel):
-    """Aggregate boolean properties using statistical functions"""
+    """Aggregate boolean properties using statistical functions."""
 
     property_name: str
     metrics: BooleanMetrics
 
 
 class AggregationResult(BaseModel):
-    """
-    The aggregations to be performed on a collection in a vector database.
+    """The aggregations to be performed on a collection in a vector database.
 
     They should be based on the original user query and can include multiple
     aggregations across different properties and metrics.
@@ -153,11 +152,6 @@ class QueryAgentResponse(BaseModel):
     sources: list[Source]
 
     def display(self) -> None:
-        """
-        Display a pretty-printed summary of the QueryAgentResponse object.
-
-        Returns:
-            None
-        """
+        """Display a pretty-printed summary of the QueryAgentResponse object."""
         print_query_agent_response(self)
         return None

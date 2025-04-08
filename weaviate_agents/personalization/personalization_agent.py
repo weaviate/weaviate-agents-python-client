@@ -59,9 +59,11 @@ class PersonalizationAgent(_BaseAgent):
             reference_collection: The name of the collection to personalize
             user_properties: Optional dictionary of user properties and their data types
             agents_host: Optional host URL for the agents service
+            vector_name: Optional name of the vector field to use
             timeout: Optional timeout for the request
+
         Returns:
-            PersonalizationAgent: A new instance of the Personalization Agent
+            A new instance of the Personalization Agent
         """
         agent = cls(
             client=client,
@@ -93,9 +95,11 @@ class PersonalizationAgent(_BaseAgent):
             client: The Weaviate client
             reference_collection: The name of the collection to connect to
             agents_host: Optional host URL for the agents service
+            vector_name: Optional name of the vector field to use
             timeout: Optional timeout for the request
+
         Returns:
-            PersonalizationAgent: An instance of the Personalization Agent
+            An instance of the Personalization Agent
         """
         agent = cls(
             client=client,
@@ -120,8 +124,10 @@ class PersonalizationAgent(_BaseAgent):
 
         Args:
             reference_collection: The name of the collection to personalize
+            create: Whether to create a new personalization agent
             user_properties: Optional dictionary of user properties and their data types
             vector_name: Optional name of the vector field to use
+            timeout: Optional timeout for the request
         """
         request_data = {
             "collection_name": reference_collection,
@@ -150,7 +156,6 @@ class PersonalizationAgent(_BaseAgent):
             persona: The persona to add. The persona must have a persona_id and properties that match the user properties
             defined when the Personalization Agent was created.
         """
-
         request_data = {
             "persona": persona.model_dump(mode="json"),
             "personalization_request": {
@@ -202,7 +207,7 @@ class PersonalizationAgent(_BaseAgent):
             persona_id: The ID of the persona to retrieve
 
         Returns:
-            Persona: The retrieved persona
+            The retrieved persona
         """
         request_data = {
             "collection_name": self._reference_collection,
@@ -253,7 +258,7 @@ class PersonalizationAgent(_BaseAgent):
             persona_id: The ID of the persona to check
 
         Returns:
-            bool: True if the persona exists, False otherwise
+            True if the persona exists, False otherwise
         """
         request_data = {
             "collection_name": self._reference_collection,
@@ -329,7 +334,7 @@ class PersonalizationAgent(_BaseAgent):
             interaction_type: The type of interaction to filter by (e.g. "positive", "negative")
 
         Returns:
-            list[PersonaInteractionResponse]: List of matching interactions for the persona
+            List of matching interactions for the persona
         """
         request_data = {
             "interaction_request": {
@@ -377,6 +382,12 @@ class PersonalizationAgent(_BaseAgent):
             persona_id: The ID of the persona to get objects for
             limit: The maximum number of objects to return
             recent_interactions_count: The number of recent interactions to consider
+            exclude_interacted_items: Whether to exclude items that have been interacted with
+            decay_rate: The decay rate for the personalization algorithm
+            exclude_items: List of items to exclude from the results
+            use_agent_ranking: Whether to use agent ranking for the results
+            explain_results: Whether to explain the results
+            instruction: Optional instruction to guide the personalization process
         """
         objects_request = GetObjectsRequest(
             persona_id=persona_id,
@@ -429,7 +440,7 @@ class PersonalizationAgent(_BaseAgent):
             timeout: Optional timeout for the request
 
         Returns:
-            bool: True if the persona collection exists, False otherwise
+            True if the persona collection exists, False otherwise
         """
         # Initialize base values from client
         base_agent = cls(client, reference_collection, agents_host=agents_host)
