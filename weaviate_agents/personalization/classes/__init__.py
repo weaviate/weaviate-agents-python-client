@@ -1,5 +1,10 @@
 from .persona import Persona, PersonaInteraction, PersonaInteractionResponse
-from .response import PersonalizationAgentGetObjectsResponse, PersonalizedObject, Usage
+from .response import (
+    PersonalizationAgentGetObjectsResponse,
+    PersonalizedObject,
+    Usage,
+    PersonalizedQueryResponse,
+)
 from .request import PersonalizationRequest
 from .query import (
     BM25QueryParameters,
@@ -16,6 +21,7 @@ __all__ = [
     "PersonalizationAgentGetObjectsResponse",
     "PersonalizedObject",
     "Usage",
+    "PersonalizedQueryResponse",
     "PersonalizationRequest",
     "BM25QueryParameters",
     "HybridQueryParameters",
