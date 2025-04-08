@@ -3,6 +3,12 @@ from uuid import UUID
 
 import httpx
 
+from weaviate_agents.personalization.classes import (
+    PersonalizationRequest,
+    QueryRequest,
+    QueryParameters,
+    NearTextQueryParameters
+)
 
 class PersonalizedQuery:
     def __init__(
@@ -10,7 +16,7 @@ class PersonalizedQuery:
         agents_host: str,
         headers: dict,
         persona_id: UUID,
-        personalization_request: dict[str, Any],
+        personalization_request: PersonalizationRequest,
         timeout: Optional[int] = None,
         strength: float = 1.1,
         overfetch_factor: float = 1.5,
@@ -28,34 +34,29 @@ class PersonalizedQuery:
         self.recent_interactions_count = recent_interactions_count
         self.decay_rate = decay_rate
 
-    def _get_request_data(self, query_method: str, **kwargs: Any) -> dict[str, Any]:
+    def _get_request_data(self, query_parameters: QueryParameters) -> dict[str, Any]:
+        query_request = QueryRequest.model_validate({
+            "persona_id": self.persona_id,
+            "strength": self.strength,
+            "recent_interactions_count": self.recent_interactions_count,
+            "decay_rate": self.decay_rate,
+            "overfetch_factor": self.overfetch_factor,
+            "query_parameters": query_parameters,
+        })
         return {
-            "query_request": {
-                "persona_id": str(self.persona_id),
-                "strength": self.strength,
-                "recent_interactions_count": self.recent_interactions_count,
-                "decay_rate": self.decay_rate,
-                "overfetch_factor": self.overfetch_factor,
-                "query_parameters": {
-                    "query_method": query_method,
-                    **kwargs
-                }
-            },
-            "personalization_request": self.personalization_request,
+            "query_request": query_request.model_dump(mode='json'),
+            "personalization_request": self.personalization_request.model_dump(mode='json'),
         }
 
     def near_text(
         self,
         **kwargs,  # TODO: Should match the collections.query.near_text(...) method
     ):
-        request_data = self._get_request_data(
-            query_method="near_text",
-            **kwargs
-        )
+        query_parameters = NearTextQueryParameters.model_validate(kwargs)
         response = httpx.post(
             self._route,
             headers=self._headers,
-            json=request_data,
+            json=self._get_request_data(query_parameters),
             timeout=self.timeout,
         )
         try:

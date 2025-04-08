@@ -11,6 +11,7 @@ from weaviate_agents.personalization.classes import (
     PersonaInteraction,
     PersonaInteractionResponse,
     PersonalizationAgentGetObjectsResponse,
+    PersonalizationRequest,
 )
 from weaviate_agents.personalization.query import PersonalizedQuery
 
@@ -444,18 +445,17 @@ class PersonalizationAgent(_BaseAgent):
     def query(
         self,
         persona_id: UUID,
-        # Etc etc, optional kwargs to control how personalisation is done
         strength: float = 0.5,
         overfetch_factor: float = 1.5,
         recent_interactions_count: int = 100,
         decay_rate: float = 0.1,
     ):
-        personalization_request = {
-            "collection_name": self._reference_collection,
-            "headers": self._connection.additional_headers,
-            "item_collection_vector_name": self._vector_name,
-            "create": False,
-        }
+        personalization_request = PersonalizationRequest(
+            collection_name=self._reference_collection,
+            headers=self._connection.additional_headers,
+            item_collection_vector_name=self._vector_name,
+            create=False,
+        )
         return PersonalizedQuery(
             agents_host=self._agents_host,
             headers=self._headers,
