@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from uuid import UUID
 
 import httpx
 
@@ -8,7 +9,7 @@ class PersonalizedQuery:
         self,
         agents_host: str,
         headers: dict,
-        persona_id: str,
+        persona_id: UUID,
         personalization_request: dict[str, Any],
         timeout: Optional[int] = None,
         strength: float = 1.1,
@@ -30,7 +31,7 @@ class PersonalizedQuery:
     def _get_request_data(self, query_method: str, **kwargs: Any) -> dict[str, Any]:
         return {
             "query_request": {
-                "persona_id": self.persona_id,
+                "persona_id": str(self.persona_id),
                 "strength": self.strength,
                 "recent_interactions_count": self.recent_interactions_count,
                 "decay_rate": self.decay_rate,
