@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, List, Union, Optional
 from uuid import UUID
 
 import httpx
@@ -50,9 +50,32 @@ class PersonalizedQuery:
 
     def near_text(
         self,
-        **kwargs,  # TODO: Should match the collections.query.near_text(...) method
+        query: Union[List[str], str],
+        certainty: Union[int, float, None] = None,
+        distance: Union[int, float, None] = None,
+        # move_to,
+        # move_away,
+        limit: Union[int, None] = None,
+        offset: Union[int, None] = None,
+        auto_limit: Union[int, None] = None,
+        # filters,
+        # group_by,
+        # rerank,
+        # target_vector,
+        include_vector: Union[bool, str, List[str]] = False,
+        # return_metadata,
+        # return_properties,
+        # return_references,
     ):
-        query_parameters = NearTextQueryParameters.model_validate(kwargs)
+        query_parameters = NearTextQueryParameters.model_validate(
+            query=query,
+            certainty=certainty,
+            distance=distance,
+            limit=limit,
+            offset=offset,
+            auto_limit=auto_limit,
+            include_vector=include_vector,
+        )
         response = httpx.post(
             self._route,
             headers=self._headers,
