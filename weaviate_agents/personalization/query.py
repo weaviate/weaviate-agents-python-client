@@ -2,6 +2,7 @@ from typing import Any, List, Optional, Union
 from uuid import UUID
 
 import httpx
+import weaviate.classes as wvc
 
 from weaviate_agents.personalization.classes import (
     NearTextQueryParameters,
@@ -59,8 +60,8 @@ class PersonalizedQuery:
         query: Union[List[str], str],
         certainty: Union[int, float, None] = None,
         distance: Union[int, float, None] = None,
-        # move_to,
-        # move_away,
+        move_to: Optional[wvc.query.Move] = None,
+        move_away: Optional[wvc.query.Move] = None,
         limit: Union[int, None] = None,
         offset: Union[int, None] = None,
         auto_limit: Union[int, None] = None,
@@ -77,6 +78,8 @@ class PersonalizedQuery:
             query=query,
             certainty=certainty,
             distance=distance,
+            move_to=move_to,
+            move_away=move_away,
             limit=limit,
             offset=offset,
             auto_limit=auto_limit,

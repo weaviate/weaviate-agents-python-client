@@ -1,17 +1,32 @@
-from typing import List, Literal, Union
+from typing import Annotated, List, Literal, Optional, TypedDict, Union
+from typing_extensions import TypedDict
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, PlainSerializer, Field
+from weaviate.classes.query import Move
+
+
+class MoveSerialise(TypedDict):
+    force: float
+    objects: Optional[Union[List[Union[UUID, str]], UUID, str]]
+    concepts: Optional[Union[List[str], str]]
+
+
+def _serialise_move(move: Move) -> MoveSerialise:
+    return MoveSerialise(
+        force=move.force, objects=move._objects_list, concepts=move._concepts_list
+    )
 
 
 class NearTextQueryParameters(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     query_method: Literal["near_text"] = "near_text"
 
     query: Union[List[str], str]
     certainty: Union[int, float, None] = None
     distance: Union[int, float, None] = None
-    # move_to: Optional[weaviate.collections.classes.grpc.Move] = None
-    # move_away: Optional[weaviate.collections.classes.grpc.Move] = None
+    move_to: Optional[Annotated[Move, PlainSerializer(_serialise_move)]] = None
+    move_away: Optional[Annotated[Move, PlainSerializer(_serialise_move)]] = None
     limit: Union[int, None] = None
     offset: Union[int, None] = None
     auto_limit: Union[int, None] = None
