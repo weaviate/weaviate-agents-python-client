@@ -8,8 +8,8 @@ from weaviate.classes.query import Move
 
 class MoveSerialise(TypedDict):
     force: float
-    objects: Optional[Union[List[Union[UUID, str]], UUID, str]]
-    concepts: Optional[Union[List[str], str]]
+    objects: Optional[List[str]]
+    concepts: Optional[List[str]]
 
 
 def _serialise_move(move: Move) -> MoveSerialise:
