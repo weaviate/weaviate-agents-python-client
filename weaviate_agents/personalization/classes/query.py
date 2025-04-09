@@ -4,18 +4,48 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from typing_extensions import TypedDict
 from weaviate.classes.query import Move
+from weaviate.collections.classes.filters import (
+    _Filters,
+    _FilterAnd,
+    _FilterOr,
+    _FilterValue,
+)
 
 
-class MoveSerialise(TypedDict):
+class _MoveSerialise(TypedDict):
     force: float
     objects: Optional[List[str]]
     concepts: Optional[List[str]]
 
 
-def _serialise_move(move: Move) -> MoveSerialise:
-    return MoveSerialise(
+@PlainSerializer
+def serialise_move(move: Move) -> _MoveSerialise:
+    return _MoveSerialise(
         force=move.force, objects=move._objects_list, concepts=move._concepts_list
     )
+
+
+class _FilterAndOrSerialise(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    combine: Literal["and", "or"]
+    filters: list[_Filters]
+
+
+@PlainSerializer
+def serialise_filter(
+    filter_and_or_value: Union[_FilterAnd, _FilterOr, _FilterValue],
+) -> Union[_FilterValue, _FilterAndOrSerialise]:
+    if isinstance(filter_and_or_value, _FilterValue):
+        return filter_and_or_value
+
+    if isinstance(filter_and_or_value, _FilterAnd):
+        combine: Literal["and", "or"] = "and"
+    elif isinstance(filter_and_or_value, _FilterOr):
+        combine = "or"
+    else:
+        raise TypeError(f"Unknown filter type {type(filter_and_or_value)}")
+    return _FilterAndOrSerialise(combine=combine, filters=filter_and_or_value.filters)
 
 
 class NearTextQueryParameters(BaseModel):
@@ -25,12 +55,13 @@ class NearTextQueryParameters(BaseModel):
     query: Union[List[str], str]
     certainty: Union[int, float, None] = None
     distance: Union[int, float, None] = None
-    move_to: Optional[Annotated[Move, PlainSerializer(_serialise_move)]] = None
-    move_away: Optional[Annotated[Move, PlainSerializer(_serialise_move)]] = None
+    move_to: Optional[Annotated[Move, serialise_move]] = None
+    move_away: Optional[Annotated[Move, serialise_move]] = None
     limit: Union[int, None] = None
     offset: Union[int, None] = None
     auto_limit: Union[int, None] = None
     # filters: Optional[weaviate.collections.classes.filters._Filters] = None
+    filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None
     # rerank: Optional[weaviate.collections.classes.grpc.Rerank] = None
     # target_vector: Union[str, List[str], weaviate.collections.classes.grpc._MultiTargetVectorJoin, NoneType] = None
