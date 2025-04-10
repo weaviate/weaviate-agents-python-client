@@ -5,7 +5,7 @@ import httpx
 from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import _Filters
 from weaviate.collections.classes.grpc import TargetVectorJoinType, METADATA
-from weaviate.collections.classes.internal import ReturnProperties
+from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 from weaviate_agents.personalization.classes import (
     NearTextQueryParameters,
@@ -75,7 +75,7 @@ class PersonalizedQuery:
         include_vector: Union[bool, str, List[str]] = False,
         return_metadata: Optional[METADATA] = None,
         return_properties: Optional[ReturnProperties[dict]] = None,
-        # return_references,
+        return_references: Optional[ReturnReferences[dict]] = None,
     ):
         query_parameters = NearTextQueryParameters(
             query=query,
@@ -92,6 +92,7 @@ class PersonalizedQuery:
             include_vector=include_vector,
             return_metadata=return_metadata,
             return_properties=return_properties,
+            return_references=return_references,
         )
         response = httpx.post(
             self._route,
