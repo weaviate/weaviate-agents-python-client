@@ -5,9 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from typing_extensions import TypedDict
 from weaviate.classes.query import Move
 from weaviate.collections.classes.filters import (
-    _Filters,
     _FilterAnd,
     _FilterOr,
+    _Filters,
     _FilterValue,
 )
 
