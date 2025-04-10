@@ -4,7 +4,7 @@ from uuid import UUID
 import httpx
 from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import _Filters
-from weaviate.collections.classes.grpc import TargetVectorJoinType, METADATA
+from weaviate.collections.classes.grpc import METADATA, TargetVectorJoinType
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 from weaviate_agents.personalization.classes import (

@@ -12,7 +12,7 @@ from weaviate.collections.classes.filters import (
     _Filters,
     _FilterValue,
 )
-from weaviate.collections.classes.grpc import TargetVectorJoinType, METADATA
+from weaviate.collections.classes.grpc import METADATA, TargetVectorJoinType
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 
