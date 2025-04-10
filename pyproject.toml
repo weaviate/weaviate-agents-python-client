@@ -40,9 +40,18 @@ exclude = [
 [tool.setuptools]
 license-files = []
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "D"]
-ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "E501"]
+[tool.ruff]
+lint.select = ["E", "F", "I", "D"]
+lint.ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "E501"]
+exclude = [
+    "tests",
+    "docs",
+    "scripts",
+    "bash",
+    ".venv",
+    ".git",
+    "__pycache__",
+]
 
 # D100: Missing docstring in a public module
 # D101: Missing docstring in a public class
