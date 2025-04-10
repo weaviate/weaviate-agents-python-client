@@ -1,4 +1,4 @@
-from __future__ import annotations 
+from __future__ import annotations
 
 from typing import Annotated, List, Literal, Optional, Union
 from uuid import UUID
@@ -12,7 +12,7 @@ from weaviate.collections.classes.filters import (
     _Filters,
     _FilterValue,
 )
-from weaviate.collections.classes.grpc import TargetVectorJoinType
+from weaviate.collections.classes.grpc import TargetVectorJoinType, METADATA
 
 
 class NearTextQueryParameters(BaseModel):
@@ -32,7 +32,7 @@ class NearTextQueryParameters(BaseModel):
     rerank: Optional[Rerank] = None
     target_vector: Optional[TargetVectorJoinType] = None
     include_vector: Union[bool, str, List[str]] = False
-    # return_metadata: Union[List[Literal['creation_time', 'last_update_time', 'distance', 'certainty', 'score', 'explain_score', 'is_consistent']], weaviate.collections.classes.grpc.MetadataQuery, NoneType] = None
+    return_metadata: Optional[METADATA] = None
     # return_properties: Union[Sequence[Union[str, weaviate.collections.classes.grpc.QueryNested]], str, weaviate.collections.classes.grpc.QueryNested, bool, Type[~TProperties], NoneType] = None,
     # return_references: Union[weaviate.collections.classes.grpc._QueryReference, Sequence[weaviate.collections.classes.grpc._QueryReference], Type[~TReferences], NoneType] = None,
 
