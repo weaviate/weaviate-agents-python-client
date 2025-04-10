@@ -13,6 +13,7 @@ from weaviate.collections.classes.filters import (
     _FilterValue,
 )
 from weaviate.collections.classes.grpc import TargetVectorJoinType, METADATA
+from weaviate.collections.classes.internal import ReturnProperties
 
 
 class NearTextQueryParameters(BaseModel):
@@ -33,7 +34,7 @@ class NearTextQueryParameters(BaseModel):
     target_vector: Optional[TargetVectorJoinType] = None
     include_vector: Union[bool, str, List[str]] = False
     return_metadata: Optional[METADATA] = None
-    # return_properties: Union[Sequence[Union[str, weaviate.collections.classes.grpc.QueryNested]], str, weaviate.collections.classes.grpc.QueryNested, bool, Type[~TProperties], NoneType] = None,
+    return_properties: Optional[ReturnProperties[dict]] = None
     # return_references: Union[weaviate.collections.classes.grpc._QueryReference, Sequence[weaviate.collections.classes.grpc._QueryReference], Type[~TReferences], NoneType] = None,
 
 
