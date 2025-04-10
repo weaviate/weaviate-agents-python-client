@@ -10,6 +10,7 @@ from weaviate.collections.classes.filters import (
     _Filters,
     _FilterValue,
 )
+from weaviate.collections.classes.grpc import TargetVectorJoinType
 
 
 class _MoveSerialise(TypedDict):
@@ -63,7 +64,7 @@ class NearTextQueryParameters(BaseModel):
     filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None
     rerank: Optional[Rerank] = None
-    # target_vector: Union[str, List[str], weaviate.collections.classes.grpc._MultiTargetVectorJoin, NoneType] = None
+    target_vector: Optional[TargetVectorJoinType] = None
     include_vector: Union[bool, str, List[str]] = False
     # return_metadata: Union[List[Literal['creation_time', 'last_update_time', 'distance', 'certainty', 'score', 'explain_score', 'is_consistent']], weaviate.collections.classes.grpc.MetadataQuery, NoneType] = None
     # return_properties: Union[Sequence[Union[str, weaviate.collections.classes.grpc.QueryNested]], str, weaviate.collections.classes.grpc.QueryNested, bool, Type[~TProperties], NoneType] = None,
