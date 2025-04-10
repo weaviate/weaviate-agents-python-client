@@ -1,3 +1,5 @@
+from __future__ import annotations 
+
 from typing import Annotated, List, Literal, Optional, Union
 from uuid import UUID
 
@@ -11,42 +13,6 @@ from weaviate.collections.classes.filters import (
     _FilterValue,
 )
 from weaviate.collections.classes.grpc import TargetVectorJoinType
-
-
-class _MoveSerialise(TypedDict):
-    force: float
-    objects: Optional[List[str]]
-    concepts: Optional[List[str]]
-
-
-@PlainSerializer
-def serialise_move(move: Move) -> _MoveSerialise:
-    return _MoveSerialise(
-        force=move.force, objects=move._objects_list, concepts=move._concepts_list
-    )
-
-
-class _FilterAndOrSerialise(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    combine: Literal["and", "or"]
-    filters: list[_Filters]
-
-
-@PlainSerializer
-def serialise_filter(
-    filter_and_or_value: Union[_FilterAnd, _FilterOr, _FilterValue],
-) -> Union[_FilterValue, _FilterAndOrSerialise]:
-    if isinstance(filter_and_or_value, _FilterValue):
-        return filter_and_or_value
-
-    if isinstance(filter_and_or_value, _FilterAnd):
-        combine: Literal["and", "or"] = "and"
-    elif isinstance(filter_and_or_value, _FilterOr):
-        combine = "or"
-    else:
-        raise TypeError(f"Unknown filter type {type(filter_and_or_value)}")
-    return _FilterAndOrSerialise(combine=combine, filters=filter_and_or_value.filters)
 
 
 class NearTextQueryParameters(BaseModel):
@@ -122,3 +88,39 @@ class QueryRequest(BaseModel):
     decay_rate: float
     overfetch_factor: float
     query_parameters: QueryParameters = Field(discriminator="query_method")
+
+
+class _MoveSerialise(TypedDict):
+    force: float
+    objects: Optional[List[str]]
+    concepts: Optional[List[str]]
+
+
+@PlainSerializer
+def serialise_move(move: Move) -> _MoveSerialise:
+    return _MoveSerialise(
+        force=move.force, objects=move._objects_list, concepts=move._concepts_list
+    )
+
+
+class _FilterAndOrSerialise(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    combine: Literal["and", "or"]
+    filters: list[_Filters]
+
+
+@PlainSerializer
+def serialise_filter(
+    filter_and_or_value: Union[_FilterAnd, _FilterOr, _FilterValue],
+) -> Union[_FilterValue, _FilterAndOrSerialise]:
+    if isinstance(filter_and_or_value, _FilterValue):
+        return filter_and_or_value
+
+    if isinstance(filter_and_or_value, _FilterAnd):
+        combine: Literal["and", "or"] = "and"
+    elif isinstance(filter_and_or_value, _FilterOr):
+        combine = "or"
+    else:
+        raise TypeError(f"Unknown filter type {type(filter_and_or_value)}")
+    return _FilterAndOrSerialise(combine=combine, filters=filter_and_or_value.filters)
