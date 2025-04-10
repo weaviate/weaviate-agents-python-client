@@ -1,8 +1,9 @@
 from typing import Any, Dict, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel
-from weaviate.outputs.query import QueryReturn
+from pydantic import BaseModel, field_validator
+from weaviate.collections.classes.internal import MetadataReturn
+from weaviate.outputs.query import Object, QueryReturn
 
 
 class Usage(BaseModel):
@@ -34,3 +35,11 @@ class PersonalizationAgentGetObjectsResponse(BaseModel):
 
 class PersonalizedQueryResponse(BaseModel, QueryReturn):
     usage: Usage
+
+    @field_validator("objects", mode="after")
+    @classmethod
+    def _ensure_metadata_type(cls, objects: list[Object]) -> list[Object]:
+        for i in range(len(objects)):
+            if isinstance(existing_metadata := objects[i].metadata, dict):
+                objects[i].metadata = MetadataReturn(**existing_metadata)
+        return objects
