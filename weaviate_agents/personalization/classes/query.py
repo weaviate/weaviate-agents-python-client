@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from typing_extensions import TypedDict
-from weaviate.classes.query import Move
+from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import (
     _FilterAnd,
     _FilterOr,
@@ -63,7 +63,7 @@ class NearTextQueryParameters(BaseModel):
     # filters: Optional[weaviate.collections.classes.filters._Filters] = None
     filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None
-    # rerank: Optional[weaviate.collections.classes.grpc.Rerank] = None
+    rerank: Optional[Rerank] = None
     # target_vector: Union[str, List[str], weaviate.collections.classes.grpc._MultiTargetVectorJoin, NoneType] = None
     include_vector: Union[bool, str, List[str]] = False
     # return_metadata: Union[List[Literal['creation_time', 'last_update_time', 'distance', 'certainty', 'score', 'explain_score', 'is_consistent']], weaviate.collections.classes.grpc.MetadataQuery, NoneType] = None

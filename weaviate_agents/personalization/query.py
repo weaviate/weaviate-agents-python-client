@@ -2,7 +2,7 @@ from typing import Any, List, Optional, Union
 from uuid import UUID
 
 import httpx
-from weaviate.classes.query import Move
+from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.personalization.classes import (
@@ -68,7 +68,7 @@ class PersonalizedQuery:
         auto_limit: Union[int, None] = None,
         filters: Optional[_Filters] = None,
         # group_by,
-        # rerank,
+        rerank: Optional[Rerank] = None,
         # target_vector,
         include_vector: Union[bool, str, List[str]] = False,
         # return_metadata,
@@ -85,6 +85,7 @@ class PersonalizedQuery:
             offset=offset,
             auto_limit=auto_limit,
             filters=filters,
+            rerank=rerank,
             include_vector=include_vector,
         )
         response = httpx.post(
