@@ -46,13 +46,13 @@ class BM25QueryParameters(BaseModel):
     limit: Union[int, None] = None
     offset: Union[int, None] = None
     auto_limit: Union[int, None] = None
-    # filters: Optional[weaviate.collections.classes.filters._Filters] = None,
+    filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None,
-    # rerank: Optional[weaviate.collections.classes.grpc.Rerank] = None,
+    rerank: Optional[Rerank] = None
     include_vector: Union[bool, str, List[str]] = False
-    # return_metadata: Union[List[Literal['creation_time', 'last_update_time', 'distance', 'certainty', 'score', 'explain_score', 'is_consistent']], weaviate.collections.classes.grpc.MetadataQuery, NoneType] = None,
-    # return_properties: Union[Sequence[Union[str, weaviate.collections.classes.grpc.QueryNested]], str, weaviate.collections.classes.grpc.QueryNested, bool, Type[~TProperties], NoneType] = None,
-    # return_references: Union[weaviate.collections.classes.grpc._QueryReference, Sequence[weaviate.collections.classes.grpc._QueryReference], Type[~TReferences], NoneType] = None,
+    return_metadata: Optional[METADATA] = None
+    return_properties: Optional[ReturnProperties[dict]] = None
+    return_references: Optional[ReturnReferences[dict]] = None
 
 
 class HybridQueryParameters(BaseModel):
@@ -67,14 +67,14 @@ class HybridQueryParameters(BaseModel):
     limit: Union[int, None] = None
     offset: Union[int, None] = None
     auto_limit: Union[int, None] = None
-    # filters: Optional[weaviate.collections.classes.filters._Filters] = None,
+    filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None,
-    # rerank: Optional[weaviate.collections.classes.grpc.Rerank] = None,
-    # target_vector: Union[str, List[str], weaviate.collections.classes.grpc._MultiTargetVectorJoin, NoneType] = None,
+    rerank: Optional[Rerank] = None
+    target_vector: Optional[TargetVectorJoinType] = None
     include_vector: Union[bool, str, List[str]] = False
-    # return_metadata: Union[List[Literal['creation_time', 'last_update_time', 'distance', 'certainty', 'score', 'explain_score', 'is_consistent']], weaviate.collections.classes.grpc.MetadataQuery, NoneType] = None,
-    # return_properties: Union[Sequence[Union[str, weaviate.collections.classes.grpc.QueryNested]], str, weaviate.collections.classes.grpc.QueryNested, bool, Type[~TProperties], NoneType] = None,
-    # return_references: Union[weaviate.collections.classes.grpc._QueryReference, Sequence[weaviate.collections.classes.grpc._QueryReference], Type[~TReferences], NoneType] = None,
+    return_metadata: Optional[METADATA] = None
+    return_properties: Optional[ReturnProperties[dict]] = None
+    return_references: Optional[ReturnReferences[dict]] = None
 
 
 QueryParameters = Union[
