@@ -60,7 +60,6 @@ class NearTextQueryParameters(BaseModel):
     limit: Union[int, None] = None
     offset: Union[int, None] = None
     auto_limit: Union[int, None] = None
-    # filters: Optional[weaviate.collections.classes.filters._Filters] = None
     filters: Optional[Annotated[_Filters, serialise_filter]] = None
     # group_by: Optional[weaviate.collections.classes.grpc.GroupBy] = None
     rerank: Optional[Rerank] = None
