@@ -39,6 +39,7 @@ class NearTextQueryParameters(BaseModel):
 
 
 class BM25QueryParameters(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     query_method: Literal["bm25"] = "bm25"
 
     query: Union[str, None]
@@ -56,6 +57,7 @@ class BM25QueryParameters(BaseModel):
 
 
 class HybridQueryParameters(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     query_method: Literal["hybrid"] = "hybrid"
 
     query: Union[str, None]
