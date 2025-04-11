@@ -4,7 +4,11 @@ from uuid import UUID
 import httpx
 from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import _Filters
-from weaviate.collections.classes.grpc import METADATA, TargetVectorJoinType
+from weaviate.collections.classes.grpc import (
+    HybridFusion,
+    METADATA,
+    TargetVectorJoinType,
+)
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 from weaviate_agents.personalization.classes import (
@@ -119,7 +123,7 @@ class PersonalizedQuery:
         alpha: Union[int, float] = 0.7,
         # vector: HybridVectorType | None = None,
         query_properties: Optional[List[str]] = None,
-        # fusion_type: HybridFusion | None = None,
+        fusion_type: Optional[HybridFusion] = None,
         max_vector_distance: Optional[Union[int, float]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
@@ -137,6 +141,7 @@ class PersonalizedQuery:
             query=query,
             alpha=alpha,
             query_properties=query_properties,
+            fusion_type=fusion_type,
             max_vector_distance=max_vector_distance,
             limit=limit,
             offset=offset,

@@ -12,7 +12,11 @@ from weaviate.collections.classes.filters import (
     _Filters,
     _FilterValue,
 )
-from weaviate.collections.classes.grpc import METADATA, TargetVectorJoinType
+from weaviate.collections.classes.grpc import (
+    HybridFusion,
+    METADATA,
+    TargetVectorJoinType,
+)
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 
@@ -64,7 +68,7 @@ class HybridQueryParameters(BaseModel):
     alpha: Union[int, float] = 0.7
     # vector: Union[Sequence[Union[int, float]], Sequence[Sequence[Union[int, float]]], Mapping[str, Union[Sequence[Union[int, float]], Sequence[Sequence[Union[int, float]]], weaviate.collections.classes.grpc._ListOfVectorsQuery[Sequence[Union[int, float]]], weaviate.collections.classes.grpc._ListOfVectorsQuery[Sequence[Sequence[Union[int, float]]]]]], weaviate.collections.classes.grpc._HybridNearText, weaviate.collections.classes.grpc._HybridNearVector, NoneType] = None
     query_properties: Union[List[str], None] = None
-    # fusion_type: Optional[weaviate.collections.classes.grpc.HybridFusion] = None
+    fusion_type: Optional[HybridFusion] = None
     max_vector_distance: Union[int, float, None] = None
     limit: Union[int, None] = None
     offset: Union[int, None] = None
