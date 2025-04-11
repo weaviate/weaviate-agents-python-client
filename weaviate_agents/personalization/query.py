@@ -7,6 +7,7 @@ from weaviate.collections.classes.filters import _Filters
 from weaviate.collections.classes.grpc import (
     METADATA,
     HybridFusion,
+    HybridVectorType,
     TargetVectorJoinType,
 )
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
@@ -121,7 +122,7 @@ class PersonalizedQuery:
         query: Optional[str],
         *,
         alpha: Union[int, float] = 0.7,
-        # vector: HybridVectorType | None = None,
+        vector: Optional[HybridVectorType] = None,
         query_properties: Optional[List[str]] = None,
         fusion_type: Optional[HybridFusion] = None,
         max_vector_distance: Optional[Union[int, float]] = None,
@@ -140,6 +141,7 @@ class PersonalizedQuery:
         query_parameters = HybridQueryParameters(
             query=query,
             alpha=alpha,
+            vector=vector,
             query_properties=query_properties,
             fusion_type=fusion_type,
             max_vector_distance=max_vector_distance,
