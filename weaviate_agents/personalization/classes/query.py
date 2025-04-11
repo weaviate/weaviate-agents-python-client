@@ -16,6 +16,10 @@ from weaviate.collections.classes.grpc import (
     HybridFusion,
     METADATA,
     TargetVectorJoinType,
+    HybridVectorType,
+    NearVectorInputType,
+    _HybridNearText,
+    _HybridNearVector,
 )
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
@@ -66,7 +70,7 @@ class HybridQueryParameters(BaseModel):
 
     query: Union[str, None]
     alpha: Union[int, float] = 0.7
-    # vector: Union[Sequence[Union[int, float]], Sequence[Sequence[Union[int, float]]], Mapping[str, Union[Sequence[Union[int, float]], Sequence[Sequence[Union[int, float]]], weaviate.collections.classes.grpc._ListOfVectorsQuery[Sequence[Union[int, float]]], weaviate.collections.classes.grpc._ListOfVectorsQuery[Sequence[Sequence[Union[int, float]]]]]], weaviate.collections.classes.grpc._HybridNearText, weaviate.collections.classes.grpc._HybridNearVector, NoneType] = None
+    vector: Union[NearVectorInputType, _HybridNearText, _HybridNearVector, None] = None
     query_properties: Union[List[str], None] = None
     fusion_type: Optional[HybridFusion] = None
     max_vector_distance: Union[int, float, None] = None
@@ -104,7 +108,9 @@ class _MoveSerialise(TypedDict):
 
 
 @PlainSerializer
-def serialise_move(move: Move) -> _MoveSerialise:
+def serialise_move(move: Optional[Move]) -> Optional[_MoveSerialise]:
+    if move is None:
+        return None
     return _MoveSerialise(
         force=move.force, objects=move._objects_list, concepts=move._concepts_list
     )
@@ -131,3 +137,46 @@ def serialise_filter(
     else:
         raise TypeError(f"Unknown filter type {type(filter_and_or_value)}")
     return _FilterAndOrSerialise(combine=combine, filters=filter_and_or_value.filters)
+
+
+# A set of models to help serialise HybridVectorType, which is a union of
+# NearVectorInputType (itself a union over std types), _HybridNearText and _HybridNearVector.
+class _HybridNearTextSerialise(_HybridNearText):
+    serialised_class: Literal["_HybridNearText"] = "_HybridNearText"
+
+    move_to: Annotated[Optional[Move], serialise_move] = None
+    move_away: Annotated[Optional[Move], serialise_move] = None
+
+
+def _serialise_hybrid_near_text(model: _HybridNearText) -> _HybridNearTextSerialise:
+    return _HybridNearTextSerialise.model_validate(model.model_dump())
+
+
+class _HybridNearVectorSerialise(BaseModel):
+    serialised_class: Literal["_HybridNearVector"] = "_HybridNearVector"
+
+    vector: NearVectorInputType
+    distance: Optional[float]
+    certainty: Optional[float]
+
+
+def _serialise_hybrid_near_vector(
+    model: _HybridNearVector,
+) -> _HybridNearVectorSerialise:
+    return _HybridNearVectorSerialise(
+        vector=model.vector,
+        distance=model.distance,
+        certainty=model.certainty,
+    )
+
+
+@PlainSerializer
+def serialise_hybrid_vector_type(
+    vector: HybridVectorType,
+) -> Union[_HybridNearTextSerialise, _HybridNearVectorSerialise, NearVectorInputType]:
+    if isinstance(vector, _HybridNearText):
+        return _serialise_hybrid_near_text(vector)
+    elif isinstance(vector, _HybridNearVector):
+        return _serialise_hybrid_near_vector(vector)
+    else:
+        return vector
