@@ -4,9 +4,9 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 from weaviate.collections.classes.grpc import (
     HybridVectorType,
+    Move,
     _HybridNearText,
     _HybridNearVector,
-    Move,
 )
 
 from weaviate_agents.personalization.classes.query import (

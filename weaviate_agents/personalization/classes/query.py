@@ -13,11 +13,11 @@ from weaviate.collections.classes.filters import (
     _FilterValue,
 )
 from weaviate.collections.classes.grpc import (
-    HybridFusion,
     METADATA,
-    TargetVectorJoinType,
+    HybridFusion,
     HybridVectorType,
     NearVectorInputType,
+    TargetVectorJoinType,
     _HybridNearText,
     _HybridNearVector,
 )
@@ -70,7 +70,7 @@ class HybridQueryParameters(BaseModel):
 
     query: Union[str, None]
     alpha: Union[int, float] = 0.7
-    vector: Union[NearVectorInputType, _HybridNearText, _HybridNearVector, None] = None
+    vector: Union[HybridVectorType, None] = None
     query_properties: Union[List[str], None] = None
     fusion_type: Optional[HybridFusion] = None
     max_vector_distance: Union[int, float, None] = None

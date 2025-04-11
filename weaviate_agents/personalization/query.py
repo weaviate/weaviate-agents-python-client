@@ -5,8 +5,8 @@ import httpx
 from weaviate.classes.query import Move, Rerank
 from weaviate.collections.classes.filters import _Filters
 from weaviate.collections.classes.grpc import (
-    HybridFusion,
     METADATA,
+    HybridFusion,
     TargetVectorJoinType,
 )
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
