@@ -8,6 +8,8 @@ from weaviate.collections.classes.grpc import METADATA, TargetVectorJoinType
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
 
 from weaviate_agents.personalization.classes import (
+    BM25QueryParameters,
+    HybridQueryParameters,
     NearTextQueryParameters,
     PersonalizationRequest,
     PersonalizedQueryResponse,
@@ -66,6 +68,76 @@ class PersonalizedQuery:
             distance=distance,
             move_to=move_to,
             move_away=move_away,
+            limit=limit,
+            offset=offset,
+            auto_limit=auto_limit,
+            filters=filters,
+            rerank=rerank,
+            target_vector=target_vector,
+            include_vector=include_vector,
+            return_metadata=return_metadata,
+            return_properties=return_properties,
+            return_references=return_references,
+        )
+        return self._get_query_response(query_parameters)
+
+    def bm25(
+        self,
+        query: Optional[str],
+        *,
+        query_properties: Optional[List[str]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        auto_limit: Optional[int] = None,
+        filters: Optional[_Filters] = None,
+        # group_by,
+        rerank: Optional[Rerank] = None,
+        include_vector: Union[bool, str, List[str]] = False,
+        return_metadata: Optional[METADATA] = None,
+        return_properties: Optional[ReturnProperties[dict]] = None,
+        return_references: Optional[ReturnReferences[dict]] = None,
+    ) -> PersonalizedQueryResponse:
+        query_parameters = BM25QueryParameters(
+            query=query,
+            query_properties=query_properties,
+            limit=limit,
+            offset=offset,
+            auto_limit=auto_limit,
+            filters=filters,
+            rerank=rerank,
+            include_vector=include_vector,
+            return_metadata=return_metadata,
+            return_properties=return_properties,
+            return_references=return_references,
+        )
+        return self._get_query_response(query_parameters)
+
+    def hybrid(
+        self,
+        query: Optional[str],
+        *,
+        alpha: Union[int, float] = 0.7,
+        # vector: HybridVectorType | None = None,
+        query_properties: Optional[List[str]] = None,
+        # fusion_type: HybridFusion | None = None,
+        max_vector_distance: Optional[Union[int, float]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        auto_limit: Optional[int] = None,
+        filters: Optional[_Filters] = None,
+        # group_by,
+        rerank: Optional[Rerank] = None,
+        target_vector: Optional[TargetVectorJoinType] = None,
+        include_vector: Union[bool, str, List[str]] = False,
+        return_metadata: Optional[METADATA] = None,
+        return_properties: Optional[ReturnProperties[dict]] = None,
+        return_references: Optional[ReturnReferences[dict]] = None,
+    ) -> PersonalizedQueryResponse:
+        query_parameters = HybridQueryParameters(
+            query=query,
+            alpha=alpha,
+            query_properties=query_properties,
+            max_vector_distance=max_vector_distance,
             limit=limit,
             offset=offset,
             auto_limit=auto_limit,
