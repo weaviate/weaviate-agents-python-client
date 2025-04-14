@@ -70,7 +70,9 @@ class HybridQueryParameters(BaseModel):
 
     query: Union[str, None]
     alpha: Union[int, float] = 0.7
-    vector: Union[HybridVectorType, None] = None
+    vector: Union[Annotated[HybridVectorType, serialise_hybrid_vector_type], None] = (
+        None
+    )
     query_properties: Union[List[str], None] = None
     fusion_type: Optional[HybridFusion] = None
     max_vector_distance: Union[int, float, None] = None
