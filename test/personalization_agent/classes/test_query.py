@@ -2,6 +2,7 @@ from typing import Annotated
 
 import pytest
 from pydantic import BaseModel, ConfigDict
+from weaviate.collections.classes.filters import Filter, _Filters
 from weaviate.collections.classes.grpc import (
     HybridVectorType,
     Move,
@@ -10,6 +11,7 @@ from weaviate.collections.classes.grpc import (
 )
 
 from weaviate_agents.personalization.classes.query import (
+    serialise_filter,
     serialise_hybrid_vector_type,
     serialise_move,
 )
@@ -24,6 +26,77 @@ def test_serialise_move():
     serialised = model.model_dump(mode="json")
 
     expect = {"field": {"force": 1, "concepts": ["ooh go this way"], "objects": None}}
+    assert serialised == expect
+
+
+@pytest.mark.parametrize(
+    "field, expect",
+    [
+        (
+            Filter.by_property("Property").equal("This Value"),
+            {
+                "field": {
+                    "operator": "Equal",
+                    "target": "Property",
+                    "value": "This Value",
+                }
+            },
+        ),
+        (
+            (
+                Filter.by_property("Property").equal("This Value...")
+                & Filter.by_property("Property").equal("... and this one!")
+            ),
+            {
+                "field": {
+                    "combine": "and",
+                    "filters": [
+                        {
+                            "operator": "Equal",
+                            "target": "Property",
+                            "value": "This Value...",
+                        },
+                        {
+                            "operator": "Equal",
+                            "target": "Property",
+                            "value": "... and this one!",
+                        },
+                    ],
+                },
+            },
+        ),
+        (
+            (
+                Filter.by_property("Property").equal("This Value...")
+                | Filter.by_property("Property").equal("... or this one?")
+            ),
+            {
+                "field": {
+                    "combine": "or",
+                    "filters": [
+                        {
+                            "operator": "Equal",
+                            "target": "Property",
+                            "value": "This Value...",
+                        },
+                        {
+                            "operator": "Equal",
+                            "target": "Property",
+                            "value": "... or this one?",
+                        },
+                    ],
+                },
+            },
+        ),
+    ],
+)
+def test_serialise_filter(field, expect):
+    class TestModel(BaseModel):
+        model_config = ConfigDict(arbitrary_types_allowed=True)
+        field: Annotated[_Filters, serialise_filter]
+
+    model = TestModel(field=field)
+    serialised = model.model_dump(mode="json")
     assert serialised == expect
 
 
