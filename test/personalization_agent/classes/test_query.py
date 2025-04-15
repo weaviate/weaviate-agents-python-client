@@ -103,7 +103,9 @@ def test_serialise_filter(field, expect):
     "field, expect",
     [
         (
-            HybridVector.near_text(query="aaaa", move_to=Move(force=1, concepts=["aa"])),
+            HybridVector.near_text(
+                query="aaaa", move_to=Move(force=1, concepts=["aa"])
+            ),
             {
                 "field": {
                     "distance": None,
