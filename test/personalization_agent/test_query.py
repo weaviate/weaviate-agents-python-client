@@ -1,4 +1,3 @@
-from typing import Any, Dict, List, Union
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -6,11 +5,11 @@ import httpx
 import pytest
 import weaviate.classes as wvc
 
-from weaviate_agents.personalization.query import PersonalizedQuery
 from weaviate_agents.personalization.classes import (
     PersonalizationRequest,
     PersonalizedQueryResponse,
 )
+from weaviate_agents.personalization.query import PersonalizedQuery
 
 
 def test_near_text(mock_httpx: Mock, personalization_request: PersonalizationRequest):
