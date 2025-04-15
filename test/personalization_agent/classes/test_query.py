@@ -4,10 +4,9 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 from weaviate.collections.classes.filters import Filter, _Filters
 from weaviate.collections.classes.grpc import (
+    HybridVector,
     HybridVectorType,
     Move,
-    _HybridNearText,
-    _HybridNearVector,
 )
 
 from weaviate_agents.personalization.classes.query import (
@@ -104,7 +103,7 @@ def test_serialise_filter(field, expect):
     "field, expect",
     [
         (
-            _HybridNearText(text="aaaa", move_to=Move(force=1, concepts=["aa"])),
+            HybridVector.near_text(query="aaaa", move_to=Move(force=1, concepts=["aa"])),
             {
                 "field": {
                     "distance": None,
@@ -117,7 +116,7 @@ def test_serialise_filter(field, expect):
             },
         ),
         (
-            _HybridNearVector(vector=[1, 2, 3], distance=0.5),
+            HybridVector.near_vector(vector=[1, 2, 3], distance=0.5),
             {
                 "field": {
                     "serialised_class": "_HybridNearVector",
