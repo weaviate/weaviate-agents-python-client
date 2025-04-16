@@ -3,17 +3,17 @@ from uuid import UUID
 
 import httpx
 from weaviate.classes.config import DataType
-from weaviate.collections.classes.filters import _Filters
 from weaviate.client import WeaviateClient
+from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.base import _BaseAgent
 from weaviate_agents.personalization.classes import (
+    GetObjectsRequest,
     Persona,
     PersonaInteraction,
     PersonaInteractionResponse,
     PersonalizationAgentGetObjectsResponse,
     PersonalizationRequest,
-    GetObjectsRequest,
 )
 from weaviate_agents.personalization.query import PersonalizedQuery
 

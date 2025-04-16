@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import httpx
 import pytest
@@ -7,8 +7,8 @@ import weaviate.classes as wvc
 
 from weaviate_agents.personalization.personalization_agent import (
     PersonalizationAgent,
-    PersonalizedQuery,
     PersonalizationAgentGetObjectsResponse,
+    PersonalizedQuery,
 )
 
 
