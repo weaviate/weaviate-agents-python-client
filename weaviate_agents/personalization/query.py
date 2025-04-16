@@ -185,5 +185,7 @@ class PersonalizedQuery:
             json=self._get_request_data(query_parameters),
             timeout=self.timeout,
         )
-        response_data = response.raise_for_status().json()
-        return PersonalizedQueryResponse.model_validate(response_data)
+        if response.is_error:
+            raise Exception(response.text)
+
+        return PersonalizedQueryResponse.model_validate(response.json())
