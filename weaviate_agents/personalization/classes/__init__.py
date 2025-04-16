@@ -6,7 +6,6 @@ from .query import (
     NearTextQueryParameters,
     QueryParameters,
     QueryRequest,
-    serialise_filter,
 )
 from .request import GetObjectsRequest, PersonalizationRequest
 from .response import (
@@ -30,5 +29,4 @@ __all__ = [
     "NearTextQueryParameters",
     "QueryParameters",
     "QueryRequest",
-    "serialise_filter"
 ]
