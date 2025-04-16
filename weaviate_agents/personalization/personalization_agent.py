@@ -391,7 +391,7 @@ class PersonalizationAgent(_BaseAgent):
             filters=filters,
         )
         request_data = {
-            "objects_request": objects_request.model_dump(mode='json'),
+            "objects_request": objects_request.model_dump(mode="json"),
             "personalization_request": {
                 "collection_name": self._reference_collection,
                 "headers": self._connection.additional_headers,

@@ -6,6 +6,7 @@ from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.personalization.classes.query import serialise_filter
 
+
 class PersonalizationRequest(BaseModel):
     collection_name: str
     create: bool = True

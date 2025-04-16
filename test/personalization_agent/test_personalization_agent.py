@@ -27,13 +27,13 @@ class DummyClient:
             str: The test bearer token prefixed with 'Bearer '.
         """
         return "Bearer test-token"
-    
+
 
 @pytest.fixture
 def agent() -> PersonalizationAgent:
     return PersonalizationAgent(
         client=DummyClient(),
-        reference_collection='TestCollection',
+        reference_collection="TestCollection",
     )
 
 
@@ -42,25 +42,29 @@ def test_query(agent: PersonalizationAgent):
     assert isinstance(query, PersonalizedQuery)
 
 
-@pytest.mark.parametrize('filters, filter_request', [
-    (None, None),
-    (
-        wvc.query.Filter.by_property("title").not_equal("Avatar"),
-        {'operator': 'NotEqual', 'target': 'title', 'value': 'Avatar'}
-    ),
-    (
+@pytest.mark.parametrize(
+    "filters, filter_request",
+    [
+        (None, None),
         (
-            wvc.query.Filter.by_property("title").not_equal("Avatar")
-            & wvc.query.Filter.by_property("genres").not_equal("comedy")
+            wvc.query.Filter.by_property("title").not_equal("Avatar"),
+            {"operator": "NotEqual", "target": "title", "value": "Avatar"},
         ),
-        {
-            'combine': 'and', 'filters': [
-                {'operator': 'NotEqual', 'target': 'title', 'value': 'Avatar'},
-                {'operator': 'NotEqual', 'target': 'genres', 'value': 'comedy'},
-            ]
-        },
-    ),
-])
+        (
+            (
+                wvc.query.Filter.by_property("title").not_equal("Avatar")
+                & wvc.query.Filter.by_property("genres").not_equal("comedy")
+            ),
+            {
+                "combine": "and",
+                "filters": [
+                    {"operator": "NotEqual", "target": "title", "value": "Avatar"},
+                    {"operator": "NotEqual", "target": "genres", "value": "comedy"},
+                ],
+            },
+        ),
+    ],
+)
 def test_get_objects(agent: PersonalizationAgent, monkeypatch, filters, filter_request):
     mock_response = {
         "objects": [
@@ -70,7 +74,7 @@ def test_get_objects(agent: PersonalizationAgent, monkeypatch, filters, filter_r
                 "personalized_rank": None,
                 "properties": {
                     "title": "The Crush",
-                    'genres': ['Drama', 'Thriller', 'Horror']
+                    "genres": ["Drama", "Thriller", "Horror"],
                 },
             },
             {
@@ -79,7 +83,7 @@ def test_get_objects(agent: PersonalizationAgent, monkeypatch, filters, filter_r
                 "personalized_rank": None,
                 "properties": {
                     "title": "Armed Response",
-                    'genres': ['Action', 'Horror', 'Thriller']
+                    "genres": ["Action", "Horror", "Thriller"],
                 },
             },
         ],
@@ -99,32 +103,34 @@ def test_get_objects(agent: PersonalizationAgent, monkeypatch, filters, filter_r
         request=httpx.Request("post", "http://dummy-agent"),
         json=mock_response,
     )
-    monkeypatch.setattr("weaviate_agents.personalization.personalization_agent.httpx", mock_httpx)
+    monkeypatch.setattr(
+        "weaviate_agents.personalization.personalization_agent.httpx", mock_httpx
+    )
 
-    persona_id = UUID('32a31598-42a8-4ed2-92d0-1273c7dbdcb0')
+    persona_id = UUID("32a31598-42a8-4ed2-92d0-1273c7dbdcb0")
     recommendations = agent.get_objects(
         persona_id=persona_id,
         filters=filters,
     )
     expected_request = {
-        'objects_request': {
-            'persona_id': '32a31598-42a8-4ed2-92d0-1273c7dbdcb0',
-            'limit': 10,
-            'recent_interactions_count': 100,
-            'exclude_interacted_items': True,
-            'decay_rate': 0.1,
-            'exclude_items': [],
-            'use_agent_ranking': True,
-            'explain_results': True,
-            'instruction': None,
-            'filters': filter_request,
+        "objects_request": {
+            "persona_id": "32a31598-42a8-4ed2-92d0-1273c7dbdcb0",
+            "limit": 10,
+            "recent_interactions_count": 100,
+            "exclude_interacted_items": True,
+            "decay_rate": 0.1,
+            "exclude_items": [],
+            "use_agent_ranking": True,
+            "explain_results": True,
+            "instruction": None,
+            "filters": filter_request,
         },
-        'personalization_request': {
-            'collection_name': 'TestCollection',
-            'headers': {'Authorization': 'test-token'},
-            'item_collection_vector_name': None,
-            'create': False
-        }
+        "personalization_request": {
+            "collection_name": "TestCollection",
+            "headers": {"Authorization": "test-token"},
+            "item_collection_vector_name": None,
+            "create": False,
+        },
     }
 
     mock_httpx.post.assert_called_once()
@@ -132,4 +138,4 @@ def test_get_objects(agent: PersonalizationAgent, monkeypatch, filters, filter_r
     assert request_json == expected_request
 
     assert isinstance(recommendations, PersonalizationAgentGetObjectsResponse)
-    assert recommendations.model_dump(mode='json') == mock_response
+    assert recommendations.model_dump(mode="json") == mock_response
