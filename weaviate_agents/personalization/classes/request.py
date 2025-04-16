@@ -1,4 +1,4 @@
-from typing import Annotated, Dict, Union
+from typing import Annotated, Dict, List, Union, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -22,8 +22,8 @@ class GetObjectsRequest(BaseModel):
     recent_interactions_count: int = 100
     exclude_interacted_items: bool = True
     decay_rate: float = 0.1
-    exclude_items: list[str] = []
+    exclude_items: List[str] = []
     use_agent_ranking: bool = True
     explain_results: bool = True
-    instruction: str | None = None
-    filters: Annotated[_Filters, serialise_filter] | None = None
+    instruction: Optional[str] = None
+    filters: Optional[Annotated[_Filters, serialise_filter]] = None
