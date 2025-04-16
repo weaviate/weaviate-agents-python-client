@@ -1,9 +1,11 @@
+from .core import Usage
 from .personalization import (
     Persona,
     PersonaInteraction,
     PersonaInteractionResponse,
     PersonalizationAgentGetObjectsResponse,
     PersonalizedObject,
+    PersonalizedQueryResponse,
 )
 from .query import (
     AggregationResult,
@@ -23,7 +25,6 @@ from .query import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
-    Usage,
 )
 from .transformation import (
     AppendPropertyOperation,
@@ -64,4 +65,5 @@ __all__ = [
     "PersonaInteractionResponse",
     "PersonalizationAgentGetObjectsResponse",
     "PersonalizedObject",
+    "PersonalizedQueryResponse",
 ]

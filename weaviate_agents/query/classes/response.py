@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import Dict, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel
 
+from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
 
 
@@ -121,14 +122,6 @@ class AggregationResult(BaseModel):
     filters: list[
         Union["BooleanPropertyFilter", "IntegerPropertyFilter", "TextPropertyFilter"]
     ] = []
-
-
-class Usage(BaseModel):
-    requests: Union[int, str] = 0
-    request_tokens: Union[int, str, None] = None
-    response_tokens: Union[int, str, None] = None
-    total_tokens: Union[int, str, None] = None
-    details: Union[Dict[str, int], Dict[str, str], None] = None
 
 
 class AggregationResultWithCollection(AggregationResult):

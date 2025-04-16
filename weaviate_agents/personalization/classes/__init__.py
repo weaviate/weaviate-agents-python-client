@@ -1,5 +1,18 @@
+from ...classes.core import Usage
 from .persona import Persona, PersonaInteraction, PersonaInteractionResponse
-from .response import PersonalizationAgentGetObjectsResponse, PersonalizedObject, Usage
+from .query import (
+    BM25QueryParameters,
+    HybridQueryParameters,
+    NearTextQueryParameters,
+    QueryParameters,
+    QueryRequest,
+)
+from .request import PersonalizationRequest
+from .response import (
+    PersonalizationAgentGetObjectsResponse,
+    PersonalizedObject,
+    PersonalizedQueryResponse,
+)
 
 __all__ = [
     "Persona",
@@ -8,4 +21,11 @@ __all__ = [
     "PersonalizationAgentGetObjectsResponse",
     "PersonalizedObject",
     "Usage",
+    "PersonalizedQueryResponse",
+    "PersonalizationRequest",
+    "BM25QueryParameters",
+    "HybridQueryParameters",
+    "NearTextQueryParameters",
+    "QueryParameters",
+    "QueryRequest",
 ]
