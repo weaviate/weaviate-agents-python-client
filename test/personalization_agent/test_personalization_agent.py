@@ -32,7 +32,7 @@ class DummyClient:
 @pytest.fixture
 def agent() -> PersonalizationAgent:
     return PersonalizationAgent(
-        client=DummyClient(),
+        client=DummyClient(),  # type: ignore
         reference_collection="TestCollection",
     )
 
