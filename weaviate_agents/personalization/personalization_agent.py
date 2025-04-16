@@ -449,7 +449,7 @@ class PersonalizationAgent(_BaseAgent):
         overfetch_factor: float = 1.5,
         recent_interactions_count: int = 100,
         decay_rate: float = 0.1,
-    ):
+    ) -> PersonalizedQuery:
         personalization_request = PersonalizationRequest(
             collection_name=self._reference_collection,
             headers=self._connection.additional_headers,
