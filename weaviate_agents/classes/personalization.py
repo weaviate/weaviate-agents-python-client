@@ -4,6 +4,7 @@ from weaviate_agents.personalization.classes import (
     PersonaInteractionResponse,
     PersonalizationAgentGetObjectsResponse,
     PersonalizedObject,
+    PersonalizedQueryResponse,
     Usage,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "PersonaInteractionResponse",
     "PersonalizationAgentGetObjectsResponse",
     "PersonalizedObject",
+    "PersonalizedQueryResponse",
     "Usage",
 ]

@@ -5,6 +5,7 @@ from .personalization import (
     PersonaInteractionResponse,
     PersonalizationAgentGetObjectsResponse,
     PersonalizedObject,
+    PersonalizedQueryResponse,
 )
 from .query import (
     AggregationResult,
@@ -64,4 +65,5 @@ __all__ = [
     "PersonaInteractionResponse",
     "PersonalizationAgentGetObjectsResponse",
     "PersonalizedObject",
+    "PersonalizedQueryResponse",
 ]

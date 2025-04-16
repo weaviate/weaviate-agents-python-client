@@ -57,6 +57,7 @@ def test_class_exports():
         PersonaInteractionResponse,
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
+        PersonalizedQueryResponse,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
@@ -99,6 +100,7 @@ def test_class_exports():
         PersonaInteractionResponse,
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
+        PersonalizedQueryResponse,
     ]
 
     for cls in classes:
@@ -137,6 +139,7 @@ def test_class_exports():
         "PersonaInteractionResponse",
         "PersonalizationAgentGetObjectsResponse",
         "PersonalizedObject",
+        "PersonalizedQueryResponse",
     ]
 
     assert hasattr(
