@@ -379,22 +379,19 @@ class PersonalizationAgent(_BaseAgent):
             recent_interactions_count: The number of recent interactions to consider
         """
         objects_request = GetObjectsRequest(
-            ...
+            persona_id=persona_id,
+            limit=limit,
+            recent_interactions_count=recent_interactions_count,
+            exclude_interacted_items=exclude_interacted_items,
+            decay_rate=decay_rate,
+            exclude_items=exclude_items,
+            use_agent_ranking=use_agent_ranking,
+            explain_results=explain_results,
+            instruction=instruction,
+            filters=filters,
         )
         request_data = {
             "objects_request": objects_request.model_dump(mode='json'),
-            # TODO: Add get_personalization_request method?
-            #"objects_request": {
-            #    "persona_id": str(persona_id),
-            #    "limit": limit,
-            #    "recent_interactions_count": recent_interactions_count,
-            #    "exclude_interacted_items": exclude_interacted_items,
-            #    "decay_rate": decay_rate,
-            #    "exclude_items": exclude_items,
-            #    "use_agent_ranking": use_agent_ranking,
-            #    "explain_results": explain_results,
-            #    "instruction": instruction,
-            #},
             "personalization_request": {
                 "collection_name": self._reference_collection,
                 "headers": self._connection.additional_headers,
