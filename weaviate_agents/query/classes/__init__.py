@@ -1,3 +1,4 @@
+from ...classes.core import Usage
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
@@ -16,7 +17,6 @@ from .response import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
-    Usage,
 )
 
 __all__ = [

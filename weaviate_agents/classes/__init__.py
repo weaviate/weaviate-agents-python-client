@@ -1,3 +1,4 @@
+from .core import Usage
 from .personalization import (
     Persona,
     PersonaInteraction,
@@ -23,7 +24,6 @@ from .query import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
-    Usage,
 )
 from .transformation import (
     AppendPropertyOperation,

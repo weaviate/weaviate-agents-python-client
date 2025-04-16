@@ -1,17 +1,11 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 from weaviate.collections.classes.internal import MetadataReturn
 from weaviate.outputs.query import Object, QueryReturn
 
-
-class Usage(BaseModel):
-    requests: Union[int, str] = 0
-    request_tokens: Union[int, str, None] = None
-    response_tokens: Union[int, str, None] = None
-    total_tokens: Union[int, str, None] = None
-    details: Union[Dict[str, int], Dict[str, str], None] = None
+from weaviate_agents.classes.core import Usage
 
 
 class PersonalizedObject(BaseModel):

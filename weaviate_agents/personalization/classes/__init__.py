@@ -1,3 +1,4 @@
+from ...classes.core import Usage
 from .persona import Persona, PersonaInteraction, PersonaInteractionResponse
 from .query import (
     BM25QueryParameters,
@@ -11,7 +12,6 @@ from .response import (
     PersonalizationAgentGetObjectsResponse,
     PersonalizedObject,
     PersonalizedQueryResponse,
-    Usage,
 )
 
 __all__ = [
