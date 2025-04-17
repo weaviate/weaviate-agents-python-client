@@ -3,13 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-weaviate-agents-python-client documentation
-===========================================
+Weaviate Agents
+===============
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+Welcom to the Weaviate Agents Python Client documentation!
 
+Installation
+------------
+
+In order to install the Weaviate Python client together with the agents component, run:
+
+.. code-block:: zsh
+
+   pip install weaviate-client[agents] --upgrade
 
 .. toctree::
    :maxdepth: 2
