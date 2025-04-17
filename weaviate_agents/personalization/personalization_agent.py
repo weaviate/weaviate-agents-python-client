@@ -388,6 +388,7 @@ class PersonalizationAgent(_BaseAgent):
             use_agent_ranking: Whether to use agent ranking for the results
             explain_results: Whether to explain the results
             instruction: Optional instruction to guide the personalization process
+            filters: Optional filters to apply to the results
         """
         objects_request = GetObjectsRequest(
             persona_id=persona_id,
