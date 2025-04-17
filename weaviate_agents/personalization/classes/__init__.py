@@ -7,7 +7,7 @@ from .query import (
     QueryParameters,
     QueryRequest,
 )
-from .request import PersonalizationRequest
+from .request import GetObjectsRequest, PersonalizationRequest
 from .response import (
     PersonalizationAgentGetObjectsResponse,
     PersonalizedObject,
@@ -22,6 +22,7 @@ __all__ = [
     "PersonalizedObject",
     "Usage",
     "PersonalizedQueryResponse",
+    "GetObjectsRequest",
     "PersonalizationRequest",
     "BM25QueryParameters",
     "HybridQueryParameters",
