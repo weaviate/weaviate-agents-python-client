@@ -17,9 +17,10 @@ In order to install the Weaviate Python client together with the agents componen
 
    pip install weaviate-client[agents] --upgrade
 
+Agents
+------
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    weaviate_agents
 
