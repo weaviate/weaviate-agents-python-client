@@ -190,3 +190,32 @@ def test_query_agent_response_model_validation():
     incomplete_data = {"original_query": "incomplete query"}
     with pytest.raises(ValidationError):
         QueryAgentResponse(**incomplete_data)
+
+
+def test_run_with_target_vector(monkeypatch):
+    """Test that QueryAgent.run correctly passes the target_vector argument in the request body."""
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        # Return a normal successful response
+        return fake_post_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with target_vector as a string
+    result = agent.run("test query", target_vector="my_vector")
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["target_vector"] == "my_vector"
+
+    # Test with target_vector as a dict (multi-collection)
+    target_vector_dict = {"test_collection": "my_vector"}
+    result = agent.run("test query", target_vector=target_vector_dict)
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["target_vector"] == target_vector_dict
