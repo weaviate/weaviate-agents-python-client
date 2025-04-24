@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 
 import httpx
 from weaviate.client import WeaviateClient
+from weaviate.collections.classes.grpc import TargetVectorJoinType
 
 from weaviate_agents.base import _BaseAgent
 from weaviate_agents.query.classes import CollectionDescription, QueryAgentResponse
@@ -54,6 +55,9 @@ class QueryAgent(_BaseAgent):
         query: str,
         view_properties: Optional[List[str]] = None,
         context: Optional[QueryAgentResponse] = None,
+        target_vector: Optional[
+            Union[TargetVectorJoinType, dict[str, TargetVectorJoinType]]
+        ] = None,
     ) -> QueryAgentResponse:
         """
         Run the query agent.
@@ -63,6 +67,9 @@ class QueryAgent(_BaseAgent):
             view_properties: Optional list of of property names the agent has the ability to view
                 across all collections.
             context: Optional previous response from the agent.
+            target_vector: Optional target vector for the query if a collection uses named vector. When
+            mulitple collections are provided to the query agent, a dictionary must be used mapping
+            collection names to target vectors.
         """
         request_body = {
             "query": query,
@@ -76,6 +83,7 @@ class QueryAgent(_BaseAgent):
             "tenant": None,
             "previous_response": context.model_dump() if context else None,
             "system_prompt": self._system_prompt,
+            "target_vector": target_vector,
         }
 
         response = httpx.post(
