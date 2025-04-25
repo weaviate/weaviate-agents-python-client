@@ -7,6 +7,17 @@ Weaviate Agents are pre-built agentic services designed to simplify common tasks
 .. warning::
    Weaviate Agents are currently only available for users of `Weaviate Cloud (WCD) <https://weaviate.io/developers/wcs/>`_. They require a connection to a WCD instance and are not available for self-hosted Weaviate clusters at this time.
 
+Available agents
+----------------
+
+The Weaviate Agents framework currently includes the following:
+
+* `Query Agent <https://weaviate.io/developers/agents/query>`_: Designed to answer natural language questions by intelligently querying the data stored within your Weaviate database.
+
+* `Transformation Agent <https://weaviate.io/developers/agents/transformation>`_: Enhances your data by manipulating it based on specific user instructions. This can involve tasks like summarizing, extracting information, or reformatting data stored in Weaviate.
+
+* `Personalization Agent <https://weaviate.io/developers/agents/personalization>`_: Customizes outputs based on persona-specific information. This agent can learn user behavior and provide recommendations tailored to individual preferences.
+
 Installation
 ------------
 
@@ -18,17 +29,17 @@ To use the Weaviate Agents, you need to install the main `weaviate-client` packa
 
 This ensures you have both the core client and the necessary components for interacting with the agents.
 
-**Troubleshooting: Force Pip to Install the Latest Version**
+**Troubleshooting: Force pip to install the latest version**
 
 If you suspect you don't have the latest agent features, or if instructed to use a specific version, you can try explicitly upgrading or installing the ``weaviate-agents`` package itself:
 
-* **To upgrade to the latest available `weaviate-agents` version:**
+* To upgrade to the latest available ``weaviate-agents`` version:
 
     .. code-block:: bash
 
        pip install -U weaviate-agents
 
-* **To install a specific `weaviate-agents` version:**
+* To install a specific ``weaviate-agents`` version:
 
     .. code-block:: bash
 
@@ -36,24 +47,12 @@ If you suspect you don't have the latest agent features, or if instructed to use
 
     *(Replace `<version_number>` with the desired version, e.g., `0.5.0`)*
 
-
-Available agents
-----------------
-
-The Weaviate Agents framework currently includes the following types:
-
-* `Query Agent <https://weaviate.io/developers/agents/query>`_: Designed to answer natural language questions by intelligently querying the data stored within your Weaviate database.
-
-* `Transformation Agent <https://weaviate.io/developers/agents/transformation>`_: Enhances your data by manipulating it based on specific user instructions. This can involve tasks like summarizing, extracting information, or reformatting data stored in Weaviate.
-
-* `Personalization Agent <https://weaviate.io/developers/agents/personalization>`_: Customizes outputs based on persona-specific information. This agent can learn user behavior and provide recommendations tailored to individual preferences.
-
 Official documentation
 --------------------
 
 For the most comprehensive and up-to-date information, examples, and guides on Weaviate Agents, please refer to the main Weaviate documentation website:
 
-* `Weaviate Agents Official Documentation <https://weaviate.io/developers/agents>`_
+* `Weaviate Agents - Official documentation <https://weaviate.io/developers/agents>`_
 
 Client API reference
 ------------------------
