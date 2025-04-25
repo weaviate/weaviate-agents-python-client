@@ -33,12 +33,6 @@ class TransformationAgent(_BaseAgent):
     ):
         """Initialize the TransformationAgent.
 
-        Warning:
-            Weaviate Agents - Transformation Agent is an early stage alpha product. The API is subject to
-            breaking changes. Please ensure you are using the latest version of the client.
-
-            For more information, see the [Weaviate Agents - Transformation Agent Docs](https://weaviate.io/developers/agents/transformation)
-
         Args:
             client: The Weaviate client connected to a Weaviate Cloud cluster.
             collection: The collection to perform transformations on.
@@ -61,7 +55,7 @@ class TransformationAgent(_BaseAgent):
         """Triggers all configured transformation operations on the collection.
 
         Returns:
-            TransformationResponse: response with workflow ID for tracking transformation progress.
+            Response with workflow ID for tracking transformation progress.
 
         Raises:
             httpx.HTTPError: If there is an error communicating with the transformation service.
@@ -130,7 +124,7 @@ class TransformationAgent(_BaseAgent):
             workflow_id: The ID of the workflow to check, obtained from TransformationResponse
 
         Returns:
-            dict: The status response from the transformation service
+            The status response from the transformation service
 
         Raises:
             httpx.HTTPError: If there is an error communicating with the transformation service

@@ -4,17 +4,14 @@ from weaviate.client import WeaviateClient
 
 
 class _BaseAgent:
-    """
-    Base class for all agents.
-    """
+    """Base class for all agents."""
 
     def __init__(
         self,
         client: WeaviateClient,
         agents_host: Union[str, None] = None,
     ):
-        """
-        Initialize the base agent.
+        """Initialize the base agent.
 
         Args:
             client: A Weaviate client instance, either sync or async.
