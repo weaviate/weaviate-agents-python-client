@@ -2,12 +2,10 @@
 Weaviate Agents
 ===============
 
-Welcome to the documentation for the Weaviate Agents Python Client!
-
 Weaviate Agents are pre-built agentic services designed to simplify common tasks when working with Large Language Models (LLMs) and your Weaviate instance. They are experts in performing Weaviate-specific data operations, streamlining AI development and data engineering workflows.
 
 .. warning::
-   Weaviate Agents are currently only available for users of **Weaviate Cloud (WCD)**. They require a connection to a WCD instance and are not available for self-hosted Weaviate clusters at this time.
+   Weaviate Agents are currently only available for users of `Weaviate Cloud (WCD) <https://weaviate.io/developers/wcs/>`_. They require a connection to a WCD instance and are not available for self-hosted Weaviate clusters at this time.
 
 Installation
 ------------
@@ -39,7 +37,7 @@ If you suspect you don't have the latest agent features, or if instructed to use
     *(Replace `<version_number>` with the desired version, e.g., `0.5.0`)*
 
 
-Available Agents
+Available agents
 ----------------
 
 The Weaviate Agents framework currently includes the following types:
@@ -50,14 +48,14 @@ The Weaviate Agents framework currently includes the following types:
 
 * `Personalization Agent <https://weaviate.io/developers/agents/personalization>`_: Customizes outputs based on persona-specific information. This agent can learn user behavior and provide recommendations tailored to individual preferences.
 
-Official Documentation
+Official documentation
 --------------------
 
 For the most comprehensive and up-to-date information, examples, and guides on Weaviate Agents, please refer to the main Weaviate documentation website:
 
 * `Weaviate Agents Official Documentation <https://weaviate.io/developers/agents>`_
 
-Client API Documentation
+Client API reference
 ------------------------
 
 Detailed documentation for the Python client classes and functions corresponding to these agents can be found below:
