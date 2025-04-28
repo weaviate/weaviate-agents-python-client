@@ -53,7 +53,7 @@ class QueryAgent(_BaseAgent):
     def run(
         self,
         query: str,
-        view_properties: Optional[List[str]] = None,
+        view_properties: Optional[dict[str, list[str]]] = None,
         context: Optional[QueryAgentResponse] = None,
         target_vector: Optional[
             Union[TargetVectorJoinType, dict[str, TargetVectorJoinType]]
