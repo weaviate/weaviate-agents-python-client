@@ -1,4 +1,5 @@
 from typing import List, Union
+from uuid import UUID
 
 import httpx
 from weaviate.client import WeaviateClient
@@ -51,18 +52,7 @@ class TransformationAgent(_BaseAgent):
 
         self.t_host = f"{self._agents_host}/transformation"
 
-    def update_all(self) -> TransformationResponse:
-        """Triggers all configured transformation operations on the collection.
-
-        Returns:
-            Response with workflow ID for tracking transformation progress.
-
-        Raises:
-            httpx.HTTPError: If there is an error communicating with the transformation service.
-            ValueError: If the operations are not properly configured or if there are duplicate
-                property operations.
-        """
-        # Convert operations to request format
+    def _build_request_operations(self) -> list:
         request_operations = []
         for operation in self.operations:
             if operation.operation_type == OperationType.APPEND:
@@ -98,24 +88,36 @@ class TransformationAgent(_BaseAgent):
                     "Only APPEND and UPDATE operations are supported."
                 )
             request_operations.append(request_operation)
+        return request_operations
 
-        request = {
-            "collection": self.collection,
-            "operations": request_operations,
-            "headers": self._connection.additional_headers,
-        }
-
+    def _post_transformation(self, request: dict) -> TransformationResponse:
         with httpx.Client(timeout=self._timeout) as client:
             response = client.post(
                 self.t_host + "/properties",
                 json=request,
                 headers=self._headers,
             )
-
             if response.is_error:
                 raise Exception(response.text)
-
             return TransformationResponse(**response.json())
+
+    def update_all(self) -> TransformationResponse:
+        """Triggers all configured transformation operations on the collection.
+
+        Returns:
+            TransformationResponse: response with workflow ID for tracking transformation progress.
+
+        Raises:
+            httpx.HTTPError: If there is an error communicating with the transformation service.
+            ValueError: If the operations are not properly configured or if there are duplicate
+                property operations.
+        """
+        request = {
+            "collection": self.collection,
+            "operations": self._build_request_operations(),
+            "headers": self._connection.additional_headers,
+        }
+        return self._post_transformation(request)
 
     def get_status(self, workflow_id: str) -> dict:
         """Check the status of a transformation workflow.
@@ -139,3 +141,25 @@ class TransformationAgent(_BaseAgent):
                 raise Exception(response.text)
 
             return response.json()
+
+    def update_by_uuids(self, uuids: List[UUID]) -> TransformationResponse:
+        """Triggers all configured transformation operations on the specified UUIDs in the collection.
+
+        Args:
+            uuids: List of UUIDs to process.
+
+        Returns:
+            TransformationResponse: response with workflow ID for tracking transformation progress.
+
+        Raises:
+            httpx.HTTPError: If there is an error communicating with the transformation service.
+            ValueError: If the operations are not properly configured or if there are duplicate
+                property operations.
+        """
+        request = {
+            "collection": self.collection,
+            "operations": self._build_request_operations(),
+            "headers": self._connection.additional_headers,
+            "uuids": [str(u) for u in uuids],
+        }
+        return self._post_transformation(request)
