@@ -35,7 +35,6 @@ from .query import (
     TextPropertyFilter,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
-    Usage,
 )
 from .transformation import (
     AppendPropertyOperation,
