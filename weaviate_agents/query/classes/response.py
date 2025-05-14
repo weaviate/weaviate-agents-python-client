@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -115,11 +115,35 @@ class GeoPropertyFilter(BaseModel):
     max_distance_meters: float
 
 
+KNOWN_FILTER_TYPES = {
+    "integer",
+    "integer_array",
+    "text",
+    "text_array",
+    "boolean",
+    "boolean_array",
+    "date",
+    "date_array",
+    "geo",
+}
+
+
 class UnknownPropertyFilter(BaseModel):
     """Catch-all filter for unknown filter types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
     filter_type: str
+
+    @field_validator("filter_type", mode="after")
+    @classmethod
+    def ensure_filter_type_unknown(cls, value: str) -> str:
+        if value in KNOWN_FILTER_TYPES:
+            raise ValueError(
+                f"{value} is an known filter type, but validation failed, "
+                "so the response was not as expected. "
+                "Try upgrading the weaviate-agents package to a new version."
+            )
+        return value
 
 
 PropertyFilterType = Union[
@@ -213,11 +237,25 @@ class DatePropertyAggregation(BaseModel):
     metrics: DateMetrics
 
 
+KNOWN_AGGREGATION_TYPES = {"integer", "text", "boolean", "date"}
+
+
 class UnknownPropertyAggregation(BaseModel):
     """Catch-all aggregation for unknown aggregation types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
     aggregation_type: str
+
+    @field_validator("aggregation_type", mode="after")
+    @classmethod
+    def ensure_filter_type_unknown(cls, value: str) -> str:
+        if value in KNOWN_AGGREGATION_TYPES:
+            raise ValueError(
+                f"{value} is an known aggregation type, but validation failed, "
+                "so the response was not as expected. "
+                "Try upgrading the weaviate-agents package to a new version."
+            )
+        return value
 
 
 PropertyAggregationType = Union[
@@ -225,7 +263,7 @@ PropertyAggregationType = Union[
     TextPropertyAggregation,
     BooleanPropertyAggregation,
     DatePropertyAggregation,
-    UnknownPropertyAggregation
+    UnknownPropertyAggregation,
 ]
 
 
