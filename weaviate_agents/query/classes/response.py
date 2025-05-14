@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -115,6 +115,13 @@ class GeoPropertyFilter(BaseModel):
     max_distance_meters: float
 
 
+class UnknownPropertyFilter(BaseModel):
+    """Catch-all filter for unknown filter types, to preserve future back-compatibility."""
+
+    model_config = ConfigDict(extra="allow")
+    filter_type: str
+
+
 PropertyFilterType = Union[
     IntegerPropertyFilter,
     IntegerArrayPropertyFilter,
@@ -125,6 +132,7 @@ PropertyFilterType = Union[
     DatePropertyFilter,
     DateArrayPropertyFilter,
     GeoPropertyFilter,
+    UnknownPropertyFilter,
 ]
 
 
