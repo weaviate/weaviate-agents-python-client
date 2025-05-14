@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -20,37 +20,117 @@ class ComparisonOperator(str, Enum):
     GREATER_EQUAL = ">="
     NOT_EQUALS = "!="
     LIKE = "LIKE"
+    CONTAINS_ANY = "contains_any"
+    CONTAINS_ALL = "contains_all"
 
 
 class IntegerPropertyFilter(BaseModel):
     """Filter numeric properties using comparison operators."""
+    
+    filter_type: Literal["integer"] = Field(repr=False)
 
     property_name: str
     operator: ComparisonOperator
     value: float
 
 
+class IntegerArrayPropertyFilter(BaseModel):
+    """Filter numeric-array properties using comparison operators."""
+
+    filter_type: Literal["integer_array"] = Field(repr=False)
+
+    property_name: str
+    operator: ComparisonOperator
+    value: list[float]
+
+
 class TextPropertyFilter(BaseModel):
     """Filter text properties using equality or LIKE operators"""
+
+    filter_type: Literal["text"] = Field(repr=False)
 
     property_name: str
     operator: ComparisonOperator
     value: str
 
 
+class TextArrayPropertyFilter(BaseModel):
+    """Filter text-array properties using equality or LIKE operators"""
+
+    filter_type: Literal["text_array"] = Field(repr=False)
+
+    property_name: str
+    operator: ComparisonOperator
+    value: list[str]
+
+
 class BooleanPropertyFilter(BaseModel):
     """Filter boolean properties using equality operators"""
+
+    filter_type: Literal["boolean"] = Field(repr=False)
 
     property_name: str
     operator: ComparisonOperator
     value: bool
 
 
+class BooleanArrayPropertyFilter(BaseModel):
+    """Filter boolean-array properties using equality operators"""
+
+    filter_type: Literal["boolean_array"] = Field(repr=False)
+
+    property_name: str
+    operator: ComparisonOperator
+    value: list[bool]
+
+
+class DatePropertyFilter(BaseModel):
+    """Filter datetime properties using equality operators"""
+
+    filter_type: Literal["date"] = Field(repr=False)
+
+    property_name: str
+    operator: ComparisonOperator
+    value: str
+
+
+class DateArrayPropertyFilter(BaseModel):
+    """Filter datetime properties using equality operators"""
+
+    filter_type: Literal["date_array"] = Field(repr=False)
+
+    property_name: str
+    operator: ComparisonOperator
+    value: str
+
+
+class GeoPropertyFilter(BaseModel):
+    """Filter geo-coordinates properties"""
+
+    filter_type: Literal["geo"] = Field(repr=False)
+
+    property_name: str
+    latitude: float
+    longitude: float
+    max_distance_meters: float
+
+
+PropertyFilterType = Union[
+    IntegerPropertyFilter,
+    IntegerArrayPropertyFilter,
+    TextPropertyFilter,
+    TextArrayPropertyFilter,
+    BooleanPropertyFilter,
+    BooleanArrayPropertyFilter,
+    DatePropertyFilter,
+    DateArrayPropertyFilter,
+    GeoPropertyFilter,
+]
+
+
 class QueryResult(BaseModel):
     queries: list[str]
-    filters: list[
-        list[Union[BooleanPropertyFilter, IntegerPropertyFilter, TextPropertyFilter]]
-    ] = []
+    filters: list[list[PropertyFilterType]] = Field(discriminator='filter_type', default=[])
     filter_operators: Literal["AND", "OR"]
 
 
@@ -119,9 +199,7 @@ class AggregationResult(BaseModel):
             BooleanPropertyAggregation,
         ]
     ]
-    filters: list[
-        Union["BooleanPropertyFilter", "IntegerPropertyFilter", "TextPropertyFilter"]
-    ] = []
+    filters: list[PropertyFilterType] = Field(discriminator='filter_type', default=[])
 
 
 class AggregationResultWithCollection(AggregationResult):
