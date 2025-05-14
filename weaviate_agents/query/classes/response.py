@@ -1,6 +1,6 @@
+import warnings
 from enum import Enum
 from typing import Any, Literal, Optional, Union
-import warnings
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
