@@ -27,7 +27,7 @@ class ComparisonOperator(str, Enum):
 class IntegerPropertyFilter(BaseModel):
     """Filter numeric properties using comparison operators."""
     
-    filter_type: Literal["integer"] = Field(repr=False)
+    filter_type: Literal["integer"] = Field(repr=False, default="integer")
 
     property_name: str
     operator: ComparisonOperator
@@ -37,7 +37,7 @@ class IntegerPropertyFilter(BaseModel):
 class IntegerArrayPropertyFilter(BaseModel):
     """Filter numeric-array properties using comparison operators."""
 
-    filter_type: Literal["integer_array"] = Field(repr=False)
+    filter_type: Literal["integer_array"] = Field(repr=False, default="integer_array")
 
     property_name: str
     operator: ComparisonOperator
@@ -47,7 +47,7 @@ class IntegerArrayPropertyFilter(BaseModel):
 class TextPropertyFilter(BaseModel):
     """Filter text properties using equality or LIKE operators"""
 
-    filter_type: Literal["text"] = Field(repr=False)
+    filter_type: Literal["text"] = Field(repr=False, default="text")
 
     property_name: str
     operator: ComparisonOperator
@@ -57,7 +57,7 @@ class TextPropertyFilter(BaseModel):
 class TextArrayPropertyFilter(BaseModel):
     """Filter text-array properties using equality or LIKE operators"""
 
-    filter_type: Literal["text_array"] = Field(repr=False)
+    filter_type: Literal["text_array"] = Field(repr=False, default="text_array")
 
     property_name: str
     operator: ComparisonOperator
@@ -67,7 +67,7 @@ class TextArrayPropertyFilter(BaseModel):
 class BooleanPropertyFilter(BaseModel):
     """Filter boolean properties using equality operators"""
 
-    filter_type: Literal["boolean"] = Field(repr=False)
+    filter_type: Literal["boolean"] = Field(repr=False, default="boolean")
 
     property_name: str
     operator: ComparisonOperator
@@ -77,7 +77,7 @@ class BooleanPropertyFilter(BaseModel):
 class BooleanArrayPropertyFilter(BaseModel):
     """Filter boolean-array properties using equality operators"""
 
-    filter_type: Literal["boolean_array"] = Field(repr=False)
+    filter_type: Literal["boolean_array"] = Field(repr=False, default="boolean_array")
 
     property_name: str
     operator: ComparisonOperator
@@ -87,7 +87,7 @@ class BooleanArrayPropertyFilter(BaseModel):
 class DatePropertyFilter(BaseModel):
     """Filter datetime properties using equality operators"""
 
-    filter_type: Literal["date"] = Field(repr=False)
+    filter_type: Literal["date"] = Field(repr=False, default="date")
 
     property_name: str
     operator: ComparisonOperator
@@ -97,7 +97,7 @@ class DatePropertyFilter(BaseModel):
 class DateArrayPropertyFilter(BaseModel):
     """Filter datetime properties using equality operators"""
 
-    filter_type: Literal["date_array"] = Field(repr=False)
+    filter_type: Literal["date_array"] = Field(repr=False, default="date_array")
 
     property_name: str
     operator: ComparisonOperator
@@ -107,7 +107,7 @@ class DateArrayPropertyFilter(BaseModel):
 class GeoPropertyFilter(BaseModel):
     """Filter geo-coordinates properties"""
 
-    filter_type: Literal["geo"] = Field(repr=False)
+    filter_type: Literal["geo"] = Field(repr=False, default="geo")
 
     property_name: str
     latitude: float
