@@ -168,8 +168,18 @@ class BooleanMetrics(str, Enum):
     PERCENTAGE_FALSE = "PERCENTAGE_FALSE"
 
 
+class DateMetrics(str, Enum):
+    COUNT = "COUNT"
+    MAX = "MAXIMUM"
+    MEDIAN = "MEDIAN"
+    MIN = "MINIMUM"
+    MODE = "MODE"
+
+
 class IntegerPropertyAggregation(BaseModel):
     """Aggregate numeric properties using statistical functions"""
+
+    aggregation_type: Literal["integer"] = "integer"
 
     property_name: str
     metrics: NumericMetrics
@@ -177,6 +187,8 @@ class IntegerPropertyAggregation(BaseModel):
 
 class TextPropertyAggregation(BaseModel):
     """Aggregate text properties using frequency analysis"""
+
+    aggregation_type: Literal["text"] = "text"
 
     property_name: str
     metrics: TextMetrics
@@ -186,8 +198,35 @@ class TextPropertyAggregation(BaseModel):
 class BooleanPropertyAggregation(BaseModel):
     """Aggregate boolean properties using statistical functions"""
 
+    aggregation_type: Literal["boolean"] = "boolean"
+
     property_name: str
     metrics: BooleanMetrics
+
+
+class DatePropertyAggregation(BaseModel):
+    """Aggregate datetime properties using statistical functions."""
+
+    aggregation_type: Literal["date"] = "date"
+
+    property_name: str
+    metrics: DateMetrics
+
+
+class UnknownPropertyAggregation(BaseModel):
+    """Catch-all aggregation for unknown aggregation types, to preserve future back-compatibility."""
+
+    model_config = ConfigDict(extra="allow")
+    aggregation_type: str
+
+
+PropertyAggregationType = Union[
+    IntegerPropertyAggregation,
+    TextPropertyAggregation,
+    BooleanPropertyAggregation,
+    DatePropertyAggregation,
+    UnknownPropertyAggregation
+]
 
 
 class AggregationResult(BaseModel):
@@ -200,13 +239,7 @@ class AggregationResult(BaseModel):
 
     search_query: Optional[str] = None
     groupby_property: Optional[str] = None
-    aggregations: list[
-        Union[
-            IntegerPropertyAggregation,
-            TextPropertyAggregation,
-            BooleanPropertyAggregation,
-        ]
-    ]
+    aggregations: list[PropertyAggregationType]
     filters: list[PropertyFilterType] = []
 
 

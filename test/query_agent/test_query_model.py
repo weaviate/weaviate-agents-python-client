@@ -131,7 +131,44 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
                 }
             ]
         ],
-        "aggregations": [],
+        "aggregations": [
+            [
+                {
+                    "collection": "test_collection",
+                    "search_query": None,
+                    "groupby_property": None,
+                    "aggregations": [
+                        {
+                            "aggregation_type": "integer",
+                            "property_name": "prop_int",
+                            "metrics": "MEAN",
+                        },
+                        {
+                            "aggregation_type": "text",
+                            "property_name": "prop_text",
+                            "metrics": "COUNT",
+                            "top_occurrences_limit": 10,
+                        },
+                        {
+                            "aggregation_type": "boolean",
+                            "property_name": "prop_bool",
+                            "metrics": "PERCENTAGE_TRUE",
+                        },
+                        {
+                            "aggregation_type": "date",
+                            "property_name": "prop_date",
+                            "metrics": "MAXIMUM",
+                        },
+                        {
+                            "aggregation_type": "something_new",
+                            "property_name": "strange_property",
+                            "metrics": "XYZ",
+                        },
+                    ],
+                    "filters": [],
+                }
+            ]
+        ],
         "sources": [{"object_id": "123", "collection": "test_collection"}],
         "usage": {
             "requests": 1,
