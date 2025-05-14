@@ -4,11 +4,11 @@ from weaviate_agents.query.classes import (
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
-    CollectionDescription,
     ComparisonOperator,
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
+    QueryAgentCollection,
     QueryAgentResponse,
     QueryResult,
     QueryResultWithCollection,
@@ -20,7 +20,7 @@ from weaviate_agents.query.classes import (
 )
 
 __all__ = [
-    "CollectionDescription",
+    "QueryAgentCollection",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",

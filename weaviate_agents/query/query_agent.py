@@ -1,11 +1,10 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import httpx
 from weaviate.client import WeaviateClient
-from weaviate.collections.classes.grpc import TargetVectorJoinType
 
 from weaviate_agents.base import _BaseAgent
-from weaviate_agents.query.classes import CollectionDescription, QueryAgentResponse
+from weaviate_agents.query.classes import QueryAgentCollection, QueryAgentResponse
 
 
 class QueryAgent(_BaseAgent):
@@ -21,7 +20,7 @@ class QueryAgent(_BaseAgent):
     def __init__(
         self,
         client: WeaviateClient,
-        collections: List[Union[str, CollectionDescription]],
+        collections: Union[list[Union[str, QueryAgentCollection]], None] = None,
         agents_host: Union[str, None] = None,
         system_prompt: Union[str, None] = None,
         timeout: Union[int, None] = None,
@@ -36,7 +35,7 @@ class QueryAgent(_BaseAgent):
 
         Args:
             client: The Weaviate client connected to a Weaviate Cloud cluster.
-            collections: The collections to query.
+            collections: The collections to query. Will be overriden if passed in the `run` method.
             agents_host: Optional host of the agents service.
             system_prompt: Optional system prompt for the agent.
             timeout: The timeout for the request. Defaults to 60 seconds.
@@ -53,37 +52,34 @@ class QueryAgent(_BaseAgent):
     def run(
         self,
         query: str,
-        view_properties: Optional[List[str]] = None,
+        collections: Union[list[Union[str, QueryAgentCollection]], None] = None,
         context: Optional[QueryAgentResponse] = None,
-        target_vector: Optional[
-            Union[TargetVectorJoinType, dict[str, TargetVectorJoinType]]
-        ] = None,
     ) -> QueryAgentResponse:
         """
         Run the query agent.
 
         Args:
             query: The natural language query string for the agent.
-            view_properties: Optional list of of property names the agent has the ability to view
-                across all collections.
+            collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
-            target_vector: Optional target vector for the query if a collection uses named vector. When
-            mulitple collections are provided to the query agent, a dictionary must be used mapping
-            collection names to target vectors.
         """
+
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+
         request_body = {
             "query": query,
-            "collection_names": [
-                c.name if isinstance(c, CollectionDescription) else c
-                for c in self._collections
+            "collections": [
+                collection
+                if isinstance(collection, str)
+                else collection.model_dump(mode="json")
+                for collection in collections
             ],
             "headers": self._connection.additional_headers,
-            "collection_view_properties": view_properties,
             "limit": 20,
-            "tenant": None,
-            "previous_response": context.model_dump() if context else None,
+            "previous_response": context.model_dump(mode="json") if context else None,
             "system_prompt": self._system_prompt,
-            "target_vector": target_vector,
         }
 
         response = httpx.post(
@@ -97,41 +93,3 @@ class QueryAgent(_BaseAgent):
             raise Exception(response.text)
 
         return QueryAgentResponse(**response.json())
-
-    def add_collection(self, collection: Union[str, CollectionDescription]):
-        """Add a collection to the query agent.
-
-        Args:
-            collection: The collection to add.
-        """
-        new_collection_name = (
-            collection.name
-            if isinstance(collection, CollectionDescription)
-            else collection
-        )
-        for c in self._collections:
-            if isinstance(c, CollectionDescription):
-                if c.name == new_collection_name:
-                    return
-            elif c == new_collection_name:
-                return
-        self._collections.append(collection)
-
-    def remove_collection(self, collection: Union[str, CollectionDescription]):
-        """Remove a collection from the query agent if it exists.
-
-        Args:
-            collection: The collection to remove. Can be either a string name or CollectionDescription.
-        """
-        target_name = (
-            collection.name
-            if isinstance(collection, CollectionDescription)
-            else collection
-        )
-
-        self._collections = [
-            c
-            for c in self._collections
-            if (isinstance(c, CollectionDescription) and c.name != target_name)
-            or (isinstance(c, str) and c != target_name)
-        ]

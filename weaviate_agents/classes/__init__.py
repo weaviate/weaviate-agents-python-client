@@ -13,11 +13,11 @@ from .query import (
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
-    CollectionDescription,
     ComparisonOperator,
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
+    QueryAgentCollection,
     QueryAgentResponse,
     QueryResult,
     QueryResultWithCollection,
@@ -36,7 +36,7 @@ from .transformation import (
 )
 
 __all__ = [
-    "CollectionDescription",
+    "QueryAgentCollection",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",

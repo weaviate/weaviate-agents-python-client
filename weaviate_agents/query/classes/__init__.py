@@ -1,11 +1,11 @@
 from ...classes.core import Usage
+from .collection import QueryAgentCollection
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
-    CollectionDescription,
     ComparisonOperator,
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
@@ -20,7 +20,7 @@ from .response import (
 )
 
 __all__ = [
-    "CollectionDescription",
+    "QueryAgentCollection",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",

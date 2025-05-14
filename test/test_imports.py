@@ -9,13 +9,13 @@ def test_package_imports():
     """
     # Test direct imports from the package
     import weaviate_agents
-    from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
+    from weaviate_agents.classes.query import QueryAgentCollection, QueryAgentResponse
     from weaviate_agents.query import QueryAgent
 
     # Verify the imported items are the correct types
     assert isinstance(
-        CollectionDescription, type
-    ), "CollectionDescription should be a class"
+        QueryAgentCollection, type
+    ), "QueryAgentCollection should be a class"
     assert isinstance(QueryAgentResponse, type), "QueryAgentResponse should be a class"
     assert isinstance(QueryAgent, type), "QueryAgent should be a class"
 
@@ -43,7 +43,6 @@ def test_class_exports():
         BooleanMetrics,
         BooleanPropertyAggregation,
         BooleanPropertyFilter,
-        CollectionDescription,
         ComparisonOperator,
         DependentOperationStep,
         IntegerPropertyAggregation,
@@ -58,6 +57,7 @@ def test_class_exports():
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
         PersonalizedQueryResponse,
+        QueryAgentCollection,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
@@ -71,7 +71,7 @@ def test_class_exports():
 
     # Verify all exports are classes
     classes = [
-        CollectionDescription,
+        QueryAgentCollection,
         QueryAgentResponse,
         Source,
         ComparisonOperator,
@@ -110,7 +110,7 @@ def test_class_exports():
     import weaviate_agents.classes
 
     expected_exports = [
-        "CollectionDescription",
+        "QueryAgentCollection",
         "QueryAgentResponse",
         "Source",
         "ComparisonOperator",
