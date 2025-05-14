@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -130,7 +130,7 @@ PropertyFilterType = Union[
 
 class QueryResult(BaseModel):
     queries: list[str]
-    filters: list[list[PropertyFilterType]] = Field(discriminator='filter_type', default=[])
+    filters: list[list[PropertyFilterType]] = []
     filter_operators: Literal["AND", "OR"]
 
 
@@ -199,7 +199,7 @@ class AggregationResult(BaseModel):
             BooleanPropertyAggregation,
         ]
     ]
-    filters: list[PropertyFilterType] = Field(discriminator='filter_type', default=[])
+    filters: list[PropertyFilterType] = []
 
 
 class AggregationResultWithCollection(AggregationResult):
