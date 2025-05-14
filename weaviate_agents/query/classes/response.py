@@ -26,7 +26,7 @@ class ComparisonOperator(str, Enum):
 
 class IntegerPropertyFilter(BaseModel):
     """Filter numeric properties using comparison operators."""
-    
+
     filter_type: Literal["integer"] = Field(repr=False, default="integer")
 
     property_name: str
