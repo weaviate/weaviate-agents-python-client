@@ -101,7 +101,7 @@ class DateArrayPropertyFilter(BaseModel):
 
     property_name: str
     operator: ComparisonOperator
-    value: str
+    value: list[str]
 
 
 class GeoPropertyFilter(BaseModel):
