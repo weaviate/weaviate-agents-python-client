@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
