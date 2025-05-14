@@ -55,7 +55,82 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
     json_data = {
         "original_query": "test query",
         "collection_names": ["test_collection"],
-        "searches": [],
+        "searches": [
+            [
+                {
+                    "collection": "test_collection",
+                    "queries": ["Test query!"],
+                    "filters": [
+                        [
+                            {
+                                "filter_type": "integer",
+                                "property_name": "prop_int",
+                                "operator": "=",
+                                "value": 1.0,
+                            },
+                            {
+                                "filter_type": "integer_array",
+                                "property_name": "prop_int_aray",
+                                "operator": "contains_all",
+                                "value": [1.0, 2.0],
+                            },
+                            {
+                                "filter_type": "text",
+                                "property_name": "prop_text",
+                                "operator": "LIKE",
+                                "value": "*something*",
+                            },
+                            {
+                                "filter_type": "text_array",
+                                "property_name": "prop_text_array",
+                                "operator": "contains_any",
+                                "value": ["one", "two"],
+                            },
+                            {
+                                "filter_type": "boolean",
+                                "property_name": "prop_bool",
+                                "operator": "=",
+                                "value": True,
+                            },
+                            {
+                                "filter_type": "boolean_array",
+                                "property_name": "prop_bool_array",
+                                "operator": "contains_any",
+                                "value": [True, False],
+                            },
+                            {
+                                "filter_type": "date",
+                                "property_name": "prop_date",
+                                "operator": "<",
+                                "value": "2025-01-01T12:01:23Z",
+                            },
+                            {
+                                "filter_type": "date_array",
+                                "property_name": "prop_date_array",
+                                "operator": "contains_all",
+                                "value": [
+                                    "2025-01-01T12:01:23Z",
+                                    "2025-01-02T12:01:23Z",
+                                ],
+                            },
+                            {
+                                "filter_type": "geo",
+                                "property_name": "prop_geo",
+                                "latitude": 10.0,
+                                "longitude": 20.0,
+                                "max_distance_meters": 30.0,
+                            },
+                            {
+                                "filter_type": "something_new",
+                                "property_name": "strange_property",
+                                "value": "xyz",
+                            },
+                        ]
+                    ],
+                    "filter_operators": "AND",
+                }
+            ]
+        ],
         "aggregations": [],
         "sources": [{"object_id": "123", "collection": "test_collection"}],
         "usage": {
