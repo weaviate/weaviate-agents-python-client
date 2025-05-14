@@ -145,7 +145,7 @@ class UnknownPropertyFilter(BaseModel):
                 "Try upgrading the weaviate-agents package to a new version."
             )
         return value
-    
+
     def model_post_init(self, context: Any) -> None:
         warnings.warn(
             f"The filter_type {self.filter_type} wasn't recognised. "
@@ -263,7 +263,7 @@ class UnknownPropertyAggregation(BaseModel):
                 "Try upgrading the weaviate-agents package to a new version."
             )
         return value
-    
+
     def model_post_init(self, context: Any) -> None:
         warnings.warn(
             f"The aggregation_type {self.aggregation_type} wasn't recognised. "
