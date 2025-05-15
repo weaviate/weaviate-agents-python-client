@@ -56,7 +56,6 @@ class QueryAgent(_BaseAgent):
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")

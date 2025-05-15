@@ -71,7 +71,7 @@ class TextPropertyFilter(KnownPropertyFilterBase):
 
 
 class TextArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter text-array properties using equality or LIKE operators"""
+    """Filter text-array properties using equality or LIKE operators."""
 
     filter_type: Literal[KnownFilterType.TEXT_ARRAY] = Field(
         repr=False, default=KnownFilterType.TEXT_ARRAY
@@ -93,7 +93,7 @@ class BooleanPropertyFilter(KnownPropertyFilterBase):
 
 
 class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter boolean-array properties using equality operators"""
+    """Filter boolean-array properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.BOOLEAN_ARRAY] = Field(
         repr=False, default=KnownFilterType.BOOLEAN_ARRAY
@@ -104,7 +104,7 @@ class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class DatePropertyFilter(KnownPropertyFilterBase):
-    """Filter datetime properties using equality operators"""
+    """Filter datetime properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.DATE] = Field(
         repr=False, default=KnownFilterType.DATE
@@ -115,7 +115,7 @@ class DatePropertyFilter(KnownPropertyFilterBase):
 
 
 class DateArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter datetime properties using equality operators"""
+    """Filter datetime properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.DATE_ARRAY] = Field(
         repr=False, default=KnownFilterType.DATE_ARRAY
@@ -126,7 +126,7 @@ class DateArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class GeoPropertyFilter(KnownPropertyFilterBase):
-    """Filter geo-coordinates properties"""
+    """Filter geo-coordinates properties."""
 
     filter_type: Literal[KnownFilterType.GEO] = Field(
         repr=False, default=KnownFilterType.GEO
@@ -248,7 +248,6 @@ class TextPropertyAggregation(KnownPropertyAggregationBase):
 
 class BooleanPropertyAggregation(KnownPropertyAggregationBase):
     """Aggregate boolean properties using statistical functions."""
-
 
     aggregation_type: Literal[KnownAggregationType.BOOLEAN] = Field(
         repr=False, default=KnownAggregationType.BOOLEAN
