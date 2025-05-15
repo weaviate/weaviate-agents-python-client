@@ -60,7 +60,7 @@ class IntegerArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class TextPropertyFilter(KnownPropertyFilterBase):
-    """Filter text properties using equality or LIKE operators"""
+    """Filter text properties using equality or LIKE operators."""
 
     filter_type: Literal[KnownFilterType.TEXT] = Field(
         repr=False, default=KnownFilterType.TEXT
@@ -71,7 +71,7 @@ class TextPropertyFilter(KnownPropertyFilterBase):
 
 
 class TextArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter text-array properties using equality or LIKE operators"""
+    """Filter text-array properties using equality or LIKE operators."""
 
     filter_type: Literal[KnownFilterType.TEXT_ARRAY] = Field(
         repr=False, default=KnownFilterType.TEXT_ARRAY
@@ -82,7 +82,7 @@ class TextArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class BooleanPropertyFilter(KnownPropertyFilterBase):
-    """Filter boolean properties using equality operators"""
+    """Filter boolean properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.BOOLEAN] = Field(
         repr=False, default=KnownFilterType.BOOLEAN
@@ -93,7 +93,7 @@ class BooleanPropertyFilter(KnownPropertyFilterBase):
 
 
 class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter boolean-array properties using equality operators"""
+    """Filter boolean-array properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.BOOLEAN_ARRAY] = Field(
         repr=False, default=KnownFilterType.BOOLEAN_ARRAY
@@ -104,7 +104,7 @@ class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class DatePropertyFilter(KnownPropertyFilterBase):
-    """Filter datetime properties using equality operators"""
+    """Filter datetime properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.DATE] = Field(
         repr=False, default=KnownFilterType.DATE
@@ -115,7 +115,7 @@ class DatePropertyFilter(KnownPropertyFilterBase):
 
 
 class DateArrayPropertyFilter(KnownPropertyFilterBase):
-    """Filter datetime properties using equality operators"""
+    """Filter datetime properties using equality operators."""
 
     filter_type: Literal[KnownFilterType.DATE_ARRAY] = Field(
         repr=False, default=KnownFilterType.DATE_ARRAY
@@ -126,7 +126,7 @@ class DateArrayPropertyFilter(KnownPropertyFilterBase):
 
 
 class GeoPropertyFilter(KnownPropertyFilterBase):
-    """Filter geo-coordinates properties"""
+    """Filter geo-coordinates properties."""
 
     filter_type: Literal[KnownFilterType.GEO] = Field(
         repr=False, default=KnownFilterType.GEO
@@ -228,7 +228,7 @@ class KnownPropertyAggregationBase(BaseModel):
 
 
 class IntegerPropertyAggregation(KnownPropertyAggregationBase):
-    """Aggregate numeric properties using statistical functions"""
+    """Aggregate numeric properties using statistical functions."""
 
     aggregation_type: Literal[KnownAggregationType.INTEGER] = Field(
         repr=False, default=KnownAggregationType.INTEGER
@@ -237,7 +237,7 @@ class IntegerPropertyAggregation(KnownPropertyAggregationBase):
 
 
 class TextPropertyAggregation(KnownPropertyAggregationBase):
-    """Aggregate text properties using frequency analysis"""
+    """Aggregate text properties using frequency analysis."""
 
     aggregation_type: Literal[KnownAggregationType.TEXT] = Field(
         repr=False, default=KnownAggregationType.TEXT
@@ -247,7 +247,7 @@ class TextPropertyAggregation(KnownPropertyAggregationBase):
 
 
 class BooleanPropertyAggregation(KnownPropertyAggregationBase):
-    """Aggregate boolean properties using statistical functions"""
+    """Aggregate boolean properties using statistical functions."""
 
     aggregation_type: Literal[KnownAggregationType.BOOLEAN] = Field(
         repr=False, default=KnownAggregationType.BOOLEAN
@@ -298,8 +298,7 @@ PropertyAggregation = Union[
 
 
 class AggregationResult(BaseModel):
-    """
-    The aggregations to be performed on a collection in a vector database.
+    """The aggregations to be performed on a collection in a vector database.
 
     They should be based on the original user query and can include multiple
     aggregations across different properties and metrics.
@@ -340,11 +339,6 @@ class QueryAgentResponse(BaseModel):
     sources: list[Source]
 
     def display(self) -> None:
-        """
-        Display a pretty-printed summary of the QueryAgentResponse object.
-
-        Returns:
-            None
-        """
+        """Display a pretty-printed summary of the QueryAgentResponse object."""
         print_query_agent_response(self)
         return None

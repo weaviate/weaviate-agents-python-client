@@ -27,12 +27,6 @@ class QueryAgent(_BaseAgent):
     ):
         """Initialize the QueryAgent.
 
-        Warning:
-            Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-            breaking changes. Please ensure you are using the latest version.
-
-            For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
-
         Args:
             client: The Weaviate client connected to a Weaviate Cloud cluster.
             collections: The collections to query. Will be overriden if passed in the `run` method.
@@ -55,15 +49,13 @@ class QueryAgent(_BaseAgent):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> QueryAgentResponse:
-        """
-        Run the query agent.
+        """Run the query agent.
 
         Args:
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
