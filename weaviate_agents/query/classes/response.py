@@ -282,7 +282,7 @@ class UnknownPropertyAggregation(BaseModel):
         )
 
 
-PropertyAggregationType = Union[
+PropertyAggregation = Union[
     KnownPropertyAggregationBase,
     UnknownPropertyAggregation,
 ]
@@ -298,7 +298,7 @@ class AggregationResult(BaseModel):
 
     search_query: Optional[str] = None
     groupby_property: Optional[str] = None
-    aggregations: list[PropertyAggregationType]
+    aggregations: list[PropertyAggregation]
     filters: list[PropertyFilter] = []
 
 
