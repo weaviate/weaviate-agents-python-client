@@ -2,7 +2,7 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
+from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
 from weaviate_agents.query import QueryAgent
 
 
@@ -251,50 +251,6 @@ def test_run_failure(monkeypatch):
     )
 
 
-def test_add_and_remove_collection():
-    """Test the add_collection and remove_collection methods of the QueryAgent.
-
-    Returns:
-        None.
-    """
-    dummy_client = DummyClient()
-    initial_collections = [
-        "col1",
-        CollectionDescription(name="col2", description="desc2"),
-    ]
-    agent = QueryAgent(
-        dummy_client, initial_collections, agents_host="http://dummy-agent"
-    )
-    agent._connection = dummy_client
-    agent._headers = dummy_client.additional_headers
-
-    # Test add_collection: adding a duplicate should not increase the number of collections.
-    agent.add_collection("col1")
-    assert len(agent._collections) == 2
-
-    # Add a new collection as a string.
-    agent.add_collection("col3")
-    assert len(agent._collections) == 3
-
-    # Add a collection as a CollectionDescription with a duplicate name.
-    agent.add_collection(
-        CollectionDescription(name="col2", description="different desc")
-    )
-    assert len(agent._collections) == 3
-
-    # Remove collection by string.
-    agent.remove_collection("col1")
-    assert len(agent._collections) == 2
-
-    # Remove collection using CollectionDescription (by name).
-    agent.remove_collection(CollectionDescription(name="col2", description="any desc"))
-    assert len(agent._collections) == 1
-
-    # Removing a non-existing collection should not raise an error.
-    agent.remove_collection("non_existing")
-    assert len(agent._collections) == 1
-
-
 def test_query_agent_response_model_validation():
     """Test that the QueryAgentResponse model raises a ValidationError when required fields are missing.
 
@@ -317,19 +273,33 @@ def test_run_with_target_vector(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", fake_post_with_capture)
     dummy_client = DummyClient()
-    agent = QueryAgent(
-        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
-    )
+    agent = QueryAgent(dummy_client, agents_host="http://dummy-agent")
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test with target_vector as a string
-    result = agent.run("test query", target_vector="my_vector")
+    # Test with single target vector
+    result = agent.run(
+        "test query",
+        collections=[
+            QueryAgentCollectionConfig(
+                name="test_collection", target_vector="my_vector"
+            )
+        ],
+    )
     assert isinstance(result, QueryAgentResponse)
-    assert captured["json"]["target_vector"] == "my_vector"
+    assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
-    # Test with target_vector as a dict (multi-collection)
-    target_vector_dict = {"test_collection": "my_vector"}
-    result = agent.run("test query", target_vector=target_vector_dict)
+    # Test with multiple target vectors
+    result = agent.run(
+        "test query",
+        collections=[
+            QueryAgentCollectionConfig(
+                name="test_collection", target_vector=["first_vector", "second_vector"]
+            )
+        ],
+    )
     assert isinstance(result, QueryAgentResponse)
-    assert captured["json"]["target_vector"] == target_vector_dict
+    assert captured["json"]["collections"][0]["target_vector"] == [
+        "first_vector",
+        "second_vector",
+    ]

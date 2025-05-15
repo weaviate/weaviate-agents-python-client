@@ -14,7 +14,6 @@ from .query import (
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
-    CollectionDescription,
     ComparisonOperator,
     DateArrayPropertyFilter,
     DateMetrics,
@@ -25,6 +24,7 @@ from .query import (
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
+    QueryAgentCollectionConfig,
     QueryAgentResponse,
     QueryResult,
     QueryResultWithCollection,
@@ -46,7 +46,7 @@ from .transformation import (
 )
 
 __all__ = [
-    "CollectionDescription",
+    "QueryAgentCollectionConfig",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",
