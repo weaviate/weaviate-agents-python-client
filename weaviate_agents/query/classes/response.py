@@ -146,18 +146,18 @@ class UnknownPropertyFilter(BaseModel):
     """Catch-all filter for unknown filter types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
-    filter_type: str
+    filter_type: None
 
-    @field_validator("filter_type", mode="after")
+    @field_validator("filter_type", mode="before")
     @classmethod
-    def ensure_filter_type_unknown(cls, value: str) -> str:
+    def ensure_filter_type_unknown(cls, value: Any) -> None:
         if value in set(KnownFilterType):
             raise ValueError(
                 f"{value} is an known filter type, but validation failed, "
                 "so the response was not as expected. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
-        return value
+        return None
 
     def model_post_init(self, context: Any) -> None:
         warnings.warn(
@@ -273,18 +273,18 @@ class UnknownPropertyAggregation(BaseModel):
     """Catch-all aggregation for unknown aggregation types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
-    aggregation_type: str
+    aggregation_type: None
 
-    @field_validator("aggregation_type", mode="after")
+    @field_validator("aggregation_type", mode="before")
     @classmethod
-    def ensure_filter_type_unknown(cls, value: str) -> str:
+    def ensure_filter_type_unknown(cls, value: Any) -> None:
         if value in set(KnownAggregationType):
             raise ValueError(
                 f"{value} is an known aggregation type, but validation failed, "
                 "so the response was not as expected. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
-        return value
+        return None
 
     def model_post_init(self, context: Any) -> None:
         warnings.warn(
