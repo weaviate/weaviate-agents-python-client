@@ -7,11 +7,6 @@ from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
 
 
-class CollectionDescription(BaseModel):
-    name: str
-    description: str
-
-
 class ComparisonOperator(str, Enum):
     EQUALS = "="
     LESS_THAN = "<"
