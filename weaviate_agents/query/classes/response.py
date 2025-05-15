@@ -282,7 +282,10 @@ class UnknownPropertyAggregation(BaseModel):
         )
 
 
-PropertyAggregationType = Union[KnownPropertyAggregationBase, UnknownPropertyAggregation]
+PropertyAggregationType = Union[
+    KnownPropertyAggregationBase,
+    UnknownPropertyAggregation,
+]
 
 
 class AggregationResult(BaseModel):
