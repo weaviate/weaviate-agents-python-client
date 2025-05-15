@@ -2,7 +2,7 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
+from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
 from weaviate_agents.query import QueryAgent
 
 
@@ -55,8 +55,120 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
     json_data = {
         "original_query": "test query",
         "collection_names": ["test_collection"],
-        "searches": [],
-        "aggregations": [],
+        "searches": [
+            [
+                {
+                    "collection": "test_collection",
+                    "queries": ["Test query!"],
+                    "filters": [
+                        [
+                            {
+                                "filter_type": "integer",
+                                "property_name": "prop_int",
+                                "operator": "=",
+                                "value": 1.0,
+                            },
+                            {
+                                "filter_type": "integer_array",
+                                "property_name": "prop_int_aray",
+                                "operator": "contains_all",
+                                "value": [1.0, 2.0],
+                            },
+                            {
+                                "filter_type": "text",
+                                "property_name": "prop_text",
+                                "operator": "LIKE",
+                                "value": "*something*",
+                            },
+                            {
+                                "filter_type": "text_array",
+                                "property_name": "prop_text_array",
+                                "operator": "contains_any",
+                                "value": ["one", "two"],
+                            },
+                            {
+                                "filter_type": "boolean",
+                                "property_name": "prop_bool",
+                                "operator": "=",
+                                "value": True,
+                            },
+                            {
+                                "filter_type": "boolean_array",
+                                "property_name": "prop_bool_array",
+                                "operator": "contains_any",
+                                "value": [True, False],
+                            },
+                            {
+                                "filter_type": "date",
+                                "property_name": "prop_date",
+                                "operator": "<",
+                                "value": "2025-01-01T12:01:23Z",
+                            },
+                            {
+                                "filter_type": "date_array",
+                                "property_name": "prop_date_array",
+                                "operator": "contains_all",
+                                "value": [
+                                    "2025-01-01T12:01:23Z",
+                                    "2025-01-02T12:01:23Z",
+                                ],
+                            },
+                            {
+                                "filter_type": "geo",
+                                "property_name": "prop_geo",
+                                "latitude": 10.0,
+                                "longitude": 20.0,
+                                "max_distance_meters": 30.0,
+                            },
+                            {
+                                "filter_type": "something_new",
+                                "property_name": "strange_property",
+                                "value": "xyz",
+                            },
+                        ]
+                    ],
+                    "filter_operators": "AND",
+                }
+            ]
+        ],
+        "aggregations": [
+            [
+                {
+                    "collection": "test_collection",
+                    "search_query": None,
+                    "groupby_property": None,
+                    "aggregations": [
+                        {
+                            "aggregation_type": "integer",
+                            "property_name": "prop_int",
+                            "metrics": "MEAN",
+                        },
+                        {
+                            "aggregation_type": "text",
+                            "property_name": "prop_text",
+                            "metrics": "COUNT",
+                            "top_occurrences_limit": 10,
+                        },
+                        {
+                            "aggregation_type": "boolean",
+                            "property_name": "prop_bool",
+                            "metrics": "PERCENTAGE_TRUE",
+                        },
+                        {
+                            "aggregation_type": "date",
+                            "property_name": "prop_date",
+                            "metrics": "MAXIMUM",
+                        },
+                        {
+                            "aggregation_type": "something_new",
+                            "property_name": "strange_property",
+                            "metrics": "XYZ",
+                        },
+                    ],
+                    "filters": [],
+                }
+            ]
+        ],
         "sources": [{"object_id": "123", "collection": "test_collection"}],
         "usage": {
             "requests": 1,
@@ -106,7 +218,9 @@ def test_run_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    result = agent.run("test query")
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run("test query")
     assert isinstance(result, QueryAgentResponse)
     assert result.original_query == "test query"
     assert result.collection_names == ["test_collection"]
@@ -137,50 +251,6 @@ def test_run_failure(monkeypatch):
     )
 
 
-def test_add_and_remove_collection():
-    """Test the add_collection and remove_collection methods of the QueryAgent.
-
-    Returns:
-        None.
-    """
-    dummy_client = DummyClient()
-    initial_collections = [
-        "col1",
-        CollectionDescription(name="col2", description="desc2"),
-    ]
-    agent = QueryAgent(
-        dummy_client, initial_collections, agents_host="http://dummy-agent"
-    )
-    agent._connection = dummy_client
-    agent._headers = dummy_client.additional_headers
-
-    # Test add_collection: adding a duplicate should not increase the number of collections.
-    agent.add_collection("col1")
-    assert len(agent._collections) == 2
-
-    # Add a new collection as a string.
-    agent.add_collection("col3")
-    assert len(agent._collections) == 3
-
-    # Add a collection as a CollectionDescription with a duplicate name.
-    agent.add_collection(
-        CollectionDescription(name="col2", description="different desc")
-    )
-    assert len(agent._collections) == 3
-
-    # Remove collection by string.
-    agent.remove_collection("col1")
-    assert len(agent._collections) == 2
-
-    # Remove collection using CollectionDescription (by name).
-    agent.remove_collection(CollectionDescription(name="col2", description="any desc"))
-    assert len(agent._collections) == 1
-
-    # Removing a non-existing collection should not raise an error.
-    agent.remove_collection("non_existing")
-    assert len(agent._collections) == 1
-
-
 def test_query_agent_response_model_validation():
     """Test that the QueryAgentResponse model raises a ValidationError when required fields are missing.
 
@@ -203,19 +273,33 @@ def test_run_with_target_vector(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", fake_post_with_capture)
     dummy_client = DummyClient()
-    agent = QueryAgent(
-        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
-    )
+    agent = QueryAgent(dummy_client, agents_host="http://dummy-agent")
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test with target_vector as a string
-    result = agent.run("test query", target_vector="my_vector")
+    # Test with single target vector
+    result = agent.run(
+        "test query",
+        collections=[
+            QueryAgentCollectionConfig(
+                name="test_collection", target_vector="my_vector"
+            )
+        ],
+    )
     assert isinstance(result, QueryAgentResponse)
-    assert captured["json"]["target_vector"] == "my_vector"
+    assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
-    # Test with target_vector as a dict (multi-collection)
-    target_vector_dict = {"test_collection": "my_vector"}
-    result = agent.run("test query", target_vector=target_vector_dict)
+    # Test with multiple target vectors
+    result = agent.run(
+        "test query",
+        collections=[
+            QueryAgentCollectionConfig(
+                name="test_collection", target_vector=["first_vector", "second_vector"]
+            )
+        ],
+    )
     assert isinstance(result, QueryAgentResponse)
-    assert captured["json"]["target_vector"] == target_vector_dict
+    assert captured["json"]["collections"][0]["target_vector"] == [
+        "first_vector",
+        "second_vector",
+    ]

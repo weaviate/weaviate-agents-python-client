@@ -1,12 +1,19 @@
 from ...classes.core import Usage
+from .collection import QueryAgentCollectionConfig
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
+    BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
-    CollectionDescription,
     ComparisonOperator,
+    DateArrayPropertyFilter,
+    DateMetrics,
+    DatePropertyAggregation,
+    DatePropertyFilter,
+    GeoPropertyFilter,
+    IntegerArrayPropertyFilter,
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
@@ -14,13 +21,16 @@ from .response import (
     QueryResult,
     QueryResultWithCollection,
     Source,
+    TextArrayPropertyFilter,
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
+    UnknownPropertyAggregation,
+    UnknownPropertyFilter,
 )
 
 __all__ = [
-    "CollectionDescription",
+    "QueryAgentCollectionConfig",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",
@@ -38,4 +48,14 @@ __all__ = [
     "Usage",
     "AggregationResultWithCollection",
     "QueryResultWithCollection",
+    "BooleanArrayPropertyFilter",
+    "DateArrayPropertyFilter",
+    "DateMetrics",
+    "DatePropertyAggregation",
+    "DatePropertyFilter",
+    "IntegerArrayPropertyFilter",
+    "TextArrayPropertyFilter",
+    "GeoPropertyFilter",
+    "UnknownPropertyAggregation",
+    "UnknownPropertyFilter",
 ]

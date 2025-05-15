@@ -9,13 +9,16 @@ def test_package_imports():
     """
     # Test direct imports from the package
     import weaviate_agents
-    from weaviate_agents.classes.query import CollectionDescription, QueryAgentResponse
+    from weaviate_agents.classes.query import (
+        QueryAgentCollectionConfig,
+        QueryAgentResponse,
+    )
     from weaviate_agents.query import QueryAgent
 
     # Verify the imported items are the correct types
     assert isinstance(
-        CollectionDescription, type
-    ), "CollectionDescription should be a class"
+        QueryAgentCollectionConfig, type
+    ), "QueryAgentCollection should be a class"
     assert isinstance(QueryAgentResponse, type), "QueryAgentResponse should be a class"
     assert isinstance(QueryAgent, type), "QueryAgent should be a class"
 
@@ -40,12 +43,18 @@ def test_class_exports():
         AggregationResult,
         AggregationResultWithCollection,
         AppendPropertyOperation,
+        BooleanArrayPropertyFilter,
         BooleanMetrics,
         BooleanPropertyAggregation,
         BooleanPropertyFilter,
-        CollectionDescription,
         ComparisonOperator,
+        DateArrayPropertyFilter,
+        DateMetrics,
+        DatePropertyAggregation,
+        DatePropertyFilter,
         DependentOperationStep,
+        GeoPropertyFilter,
+        IntegerArrayPropertyFilter,
         IntegerPropertyAggregation,
         IntegerPropertyFilter,
         NumericMetrics,
@@ -58,20 +67,24 @@ def test_class_exports():
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
         PersonalizedQueryResponse,
+        QueryAgentCollectionConfig,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
         Source,
+        TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
         TextPropertyFilter,
+        UnknownPropertyAggregation,
+        UnknownPropertyFilter,
         UpdatePropertyOperation,
         Usage,
     )
 
     # Verify all exports are classes
     classes = [
-        CollectionDescription,
+        QueryAgentCollectionConfig,
         QueryAgentResponse,
         Source,
         ComparisonOperator,
@@ -86,21 +99,44 @@ def test_class_exports():
         TextPropertyAggregation,
         BooleanPropertyAggregation,
         AggregationResult,
-        Usage,
         AggregationResultWithCollection,
-        QueryResultWithCollection,
-        OperationType,
-        OperationStep,
         AppendPropertyOperation,
-        UpdatePropertyOperation,
+        BooleanArrayPropertyFilter,
+        BooleanMetrics,
+        BooleanPropertyAggregation,
+        BooleanPropertyFilter,
+        ComparisonOperator,
+        DateArrayPropertyFilter,
+        DateMetrics,
+        DatePropertyAggregation,
+        DatePropertyFilter,
         DependentOperationStep,
+        IntegerArrayPropertyFilter,
+        IntegerPropertyAggregation,
+        IntegerPropertyFilter,
+        GeoPropertyFilter,
+        NumericMetrics,
         Operations,
+        OperationStep,
+        OperationType,
         Persona,
         PersonaInteraction,
         PersonaInteractionResponse,
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
         PersonalizedQueryResponse,
+        QueryAgentResponse,
+        QueryResult,
+        QueryResultWithCollection,
+        Source,
+        TextArrayPropertyFilter,
+        TextMetrics,
+        TextPropertyAggregation,
+        TextPropertyFilter,
+        UnknownPropertyAggregation,
+        UnknownPropertyFilter,
+        UpdatePropertyOperation,
+        Usage,
     ]
 
     for cls in classes:
@@ -110,7 +146,7 @@ def test_class_exports():
     import weaviate_agents.classes
 
     expected_exports = [
-        "CollectionDescription",
+        "QueryAgentCollectionConfig",
         "QueryAgentResponse",
         "Source",
         "ComparisonOperator",
@@ -140,6 +176,16 @@ def test_class_exports():
         "PersonalizationAgentGetObjectsResponse",
         "PersonalizedObject",
         "PersonalizedQueryResponse",
+        "BooleanArrayPropertyFilter",
+        "DateArrayPropertyFilter",
+        "DateMetrics",
+        "DatePropertyAggregation",
+        "DatePropertyFilter",
+        "IntegerArrayPropertyFilter",
+        "GeoPropertyFilter",
+        "TextArrayPropertyFilter",
+        "UnknownPropertyAggregation",
+        "UnknownPropertyFilter",
     ]
 
     assert hasattr(
