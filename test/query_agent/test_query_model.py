@@ -2,7 +2,7 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from weaviate_agents.classes.query import QueryAgentCollection, QueryAgentResponse
+from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
 from weaviate_agents.query import QueryAgent
 
 
@@ -167,7 +167,9 @@ def test_run_with_target_vector(monkeypatch):
     result = agent.run(
         "test query",
         collections=[
-            QueryAgentCollection(name="test_collection", target_vector="my_vector")
+            QueryAgentCollectionConfig(
+                name="test_collection", target_vector="my_vector"
+            )
         ],
     )
     assert isinstance(result, QueryAgentResponse)
@@ -177,7 +179,7 @@ def test_run_with_target_vector(monkeypatch):
     result = agent.run(
         "test query",
         collections=[
-            QueryAgentCollection(
+            QueryAgentCollectionConfig(
                 name="test_collection", target_vector=["first_vector", "second_vector"]
             )
         ],

@@ -17,7 +17,7 @@ from .query import (
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
-    QueryAgentCollection,
+    QueryAgentCollectionConfig,
     QueryAgentResponse,
     QueryResult,
     QueryResultWithCollection,
@@ -36,7 +36,7 @@ from .transformation import (
 )
 
 __all__ = [
-    "QueryAgentCollection",
+    "QueryAgentCollectionConfig",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",

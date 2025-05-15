@@ -4,7 +4,7 @@ import httpx
 from weaviate.client import WeaviateClient
 
 from weaviate_agents.base import _BaseAgent
-from weaviate_agents.query.classes import QueryAgentCollection, QueryAgentResponse
+from weaviate_agents.query.classes import QueryAgentCollectionConfig, QueryAgentResponse
 
 
 class QueryAgent(_BaseAgent):
@@ -20,7 +20,7 @@ class QueryAgent(_BaseAgent):
     def __init__(
         self,
         client: WeaviateClient,
-        collections: Union[list[Union[str, QueryAgentCollection]], None] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         agents_host: Union[str, None] = None,
         system_prompt: Union[str, None] = None,
         timeout: Union[int, None] = None,
@@ -52,7 +52,7 @@ class QueryAgent(_BaseAgent):
     def run(
         self,
         query: str,
-        collections: Union[list[Union[str, QueryAgentCollection]], None] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> QueryAgentResponse:
         """

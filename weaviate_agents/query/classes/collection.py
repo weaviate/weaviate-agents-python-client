@@ -3,7 +3,7 @@ from typing import Union
 from pydantic import BaseModel
 
 
-class QueryAgentCollection(BaseModel):
+class QueryAgentCollectionConfig(BaseModel):
     """A collection configuration for the QueryAgent.
 
     Attributes:

@@ -1,5 +1,5 @@
 from ...classes.core import Usage
-from .collection import QueryAgentCollection
+from .collection import QueryAgentCollectionConfig
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
@@ -20,7 +20,7 @@ from .response import (
 )
 
 __all__ = [
-    "QueryAgentCollection",
+    "QueryAgentCollectionConfig",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",

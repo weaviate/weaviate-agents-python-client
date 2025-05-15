@@ -8,7 +8,7 @@ from weaviate_agents.query.classes import (
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
     NumericMetrics,
-    QueryAgentCollection,
+    QueryAgentCollectionConfig,
     QueryAgentResponse,
     QueryResult,
     QueryResultWithCollection,
@@ -20,7 +20,7 @@ from weaviate_agents.query.classes import (
 )
 
 __all__ = [
-    "QueryAgentCollection",
+    "QueryAgentCollectionConfig",
     "QueryAgentResponse",
     "Source",
     "ComparisonOperator",
