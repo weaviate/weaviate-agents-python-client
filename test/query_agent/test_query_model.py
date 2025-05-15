@@ -218,7 +218,9 @@ def test_run_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    result = agent.run("test query")
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run("test query")
     assert isinstance(result, QueryAgentResponse)
     assert result.original_query == "test query"
     assert result.collection_names == ["test_collection"]
