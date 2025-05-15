@@ -166,7 +166,18 @@ class UnknownPropertyFilter(BaseModel):
         )
 
 
-PropertyFilter = Union[KnownPropertyFilterBase, UnknownPropertyFilter]
+PropertyFilter = Union[
+    IntegerPropertyFilter,
+    IntegerArrayPropertyFilter,
+    TextPropertyFilter,
+    TextArrayPropertyFilter,
+    BooleanPropertyFilter,
+    BooleanArrayPropertyFilter,
+    DatePropertyFilter,
+    DateArrayPropertyFilter,
+    GeoPropertyFilter,
+    UnknownPropertyFilter,
+]
 
 
 class QueryResult(BaseModel):
@@ -283,7 +294,10 @@ class UnknownPropertyAggregation(BaseModel):
 
 
 PropertyAggregation = Union[
-    KnownPropertyAggregationBase,
+    IntegerPropertyAggregation,
+    TextPropertyAggregation,
+    BooleanPropertyAggregation,
+    DatePropertyAggregation,
     UnknownPropertyAggregation,
 ]
 
