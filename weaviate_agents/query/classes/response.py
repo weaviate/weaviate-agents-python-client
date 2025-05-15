@@ -25,108 +25,121 @@ class ComparisonOperator(str, Enum):
     CONTAINS_ALL = "contains_all"
 
 
-class IntegerPropertyFilter(BaseModel):
+class KnownFilterType(str, Enum):
+    INTEGER = "integer"
+    INTEGER_ARRAY = "integer_array"
+    TEXT = "text"
+    TEXT_ARRAY = "text_array"
+    BOOLEAN = "boolean"
+    BOOLEAN_ARRAY = "boolean_array"
+    DATE = "date"
+    DATE_ARRAY = "date_array"
+    GEO = "geo"
+
+
+class KnownPropertyFilterBase(BaseModel):
+    filter_type: KnownFilterType
+    property_name: str
+
+
+class IntegerPropertyFilter(KnownPropertyFilterBase):
     """Filter numeric properties using comparison operators."""
 
-    filter_type: Literal["integer"] = Field(repr=False, default="integer")
+    filter_type: Literal[KnownFilterType.INTEGER] = Field(
+        repr=False, default=KnownFilterType.INTEGER
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: float
 
 
-class IntegerArrayPropertyFilter(BaseModel):
+class IntegerArrayPropertyFilter(KnownPropertyFilterBase):
     """Filter numeric-array properties using comparison operators."""
 
-    filter_type: Literal["integer_array"] = Field(repr=False, default="integer_array")
+    filter_type: Literal[KnownFilterType.INTEGER_ARRAY] = Field(
+        repr=False, default=KnownFilterType.INTEGER_ARRAY
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: list[float]
 
 
-class TextPropertyFilter(BaseModel):
+class TextPropertyFilter(KnownPropertyFilterBase):
     """Filter text properties using equality or LIKE operators"""
 
-    filter_type: Literal["text"] = Field(repr=False, default="text")
+    filter_type: Literal[KnownFilterType.TEXT] = Field(
+        repr=False, default=KnownFilterType.TEXT
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: str
 
 
-class TextArrayPropertyFilter(BaseModel):
+class TextArrayPropertyFilter(KnownPropertyFilterBase):
     """Filter text-array properties using equality or LIKE operators"""
 
-    filter_type: Literal["text_array"] = Field(repr=False, default="text_array")
+    filter_type: Literal[KnownFilterType.TEXT_ARRAY] = Field(
+        repr=False, default=KnownFilterType.TEXT_ARRAY
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: list[str]
 
 
-class BooleanPropertyFilter(BaseModel):
+class BooleanPropertyFilter(KnownPropertyFilterBase):
     """Filter boolean properties using equality operators"""
 
-    filter_type: Literal["boolean"] = Field(repr=False, default="boolean")
+    filter_type: Literal[KnownFilterType.BOOLEAN] = Field(
+        repr=False, default=KnownFilterType.BOOLEAN
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: bool
 
 
-class BooleanArrayPropertyFilter(BaseModel):
+class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
     """Filter boolean-array properties using equality operators"""
 
-    filter_type: Literal["boolean_array"] = Field(repr=False, default="boolean_array")
+    filter_type: Literal[KnownFilterType.BOOLEAN_ARRAY] = Field(
+        repr=False, default=KnownFilterType.BOOLEAN_ARRAY
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: list[bool]
 
 
-class DatePropertyFilter(BaseModel):
+class DatePropertyFilter(KnownPropertyFilterBase):
     """Filter datetime properties using equality operators"""
 
-    filter_type: Literal["date"] = Field(repr=False, default="date")
+    filter_type: Literal[KnownFilterType.DATE] = Field(
+        repr=False, default=KnownFilterType.DATE
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: str
 
 
-class DateArrayPropertyFilter(BaseModel):
+class DateArrayPropertyFilter(KnownPropertyFilterBase):
     """Filter datetime properties using equality operators"""
 
-    filter_type: Literal["date_array"] = Field(repr=False, default="date_array")
+    filter_type: Literal[KnownFilterType.DATE_ARRAY] = Field(
+        repr=False, default=KnownFilterType.DATE_ARRAY
+    )
 
-    property_name: str
     operator: ComparisonOperator
     value: list[str]
 
 
-class GeoPropertyFilter(BaseModel):
+class GeoPropertyFilter(KnownPropertyFilterBase):
     """Filter geo-coordinates properties"""
 
-    filter_type: Literal["geo"] = Field(repr=False, default="geo")
+    filter_type: Literal[KnownFilterType.GEO] = Field(
+        repr=False, default=KnownFilterType.GEO
+    )
 
-    property_name: str
     latitude: float
     longitude: float
     max_distance_meters: float
-
-
-KNOWN_FILTER_TYPES = {
-    "integer",
-    "integer_array",
-    "text",
-    "text_array",
-    "boolean",
-    "boolean_array",
-    "date",
-    "date_array",
-    "geo",
-}
 
 
 class UnknownPropertyFilter(BaseModel):
@@ -138,7 +151,7 @@ class UnknownPropertyFilter(BaseModel):
     @field_validator("filter_type", mode="after")
     @classmethod
     def ensure_filter_type_unknown(cls, value: str) -> str:
-        if value in KNOWN_FILTER_TYPES:
+        if value in set(KnownFilterType):
             raise ValueError(
                 f"{value} is an known filter type, but validation failed, "
                 "so the response was not as expected. "
@@ -153,23 +166,12 @@ class UnknownPropertyFilter(BaseModel):
         )
 
 
-PropertyFilterType = Union[
-    IntegerPropertyFilter,
-    IntegerArrayPropertyFilter,
-    TextPropertyFilter,
-    TextArrayPropertyFilter,
-    BooleanPropertyFilter,
-    BooleanArrayPropertyFilter,
-    DatePropertyFilter,
-    DateArrayPropertyFilter,
-    GeoPropertyFilter,
-    UnknownPropertyFilter,
-]
+PropertyFilter = Union[KnownPropertyFilterBase, UnknownPropertyFilter]
 
 
 class QueryResult(BaseModel):
     queries: list[str]
-    filters: list[list[PropertyFilterType]] = []
+    filters: list[list[PropertyFilter]] = []
     filter_operators: Literal["AND", "OR"]
 
 
@@ -207,44 +209,53 @@ class DateMetrics(str, Enum):
     MODE = "MODE"
 
 
-class IntegerPropertyAggregation(BaseModel):
+class KnownAggregationType(str, Enum):
+    INTEGER = "integer"
+    TEXT = "text"
+    BOOLEAN = "boolean"
+    DATE = "date"
+
+
+class KnownPropertyAggregationBase(BaseModel):
+    aggregation_type: KnownAggregationType
+    property_name: str
+
+
+class IntegerPropertyAggregation(KnownPropertyAggregationBase):
     """Aggregate numeric properties using statistical functions"""
 
-    aggregation_type: Literal["integer"] = "integer"
-
-    property_name: str
+    aggregation_type: Literal[KnownAggregationType.INTEGER] = Field(
+        repr=False, default=KnownAggregationType.INTEGER
+    )
     metrics: NumericMetrics
 
 
-class TextPropertyAggregation(BaseModel):
+class TextPropertyAggregation(KnownPropertyAggregationBase):
     """Aggregate text properties using frequency analysis"""
 
-    aggregation_type: Literal["text"] = "text"
-
-    property_name: str
+    aggregation_type: Literal[KnownAggregationType.TEXT] = Field(
+        repr=False, default=KnownAggregationType.TEXT
+    )
     metrics: TextMetrics
     top_occurrences_limit: Optional[int] = None
 
 
-class BooleanPropertyAggregation(BaseModel):
+class BooleanPropertyAggregation(KnownPropertyAggregationBase):
     """Aggregate boolean properties using statistical functions"""
 
-    aggregation_type: Literal["boolean"] = "boolean"
-
-    property_name: str
+    aggregation_type: Literal[KnownAggregationType.BOOLEAN] = Field(
+        repr=False, default=KnownAggregationType.BOOLEAN
+    )
     metrics: BooleanMetrics
 
 
-class DatePropertyAggregation(BaseModel):
+class DatePropertyAggregation(KnownPropertyAggregationBase):
     """Aggregate datetime properties using statistical functions."""
 
-    aggregation_type: Literal["date"] = "date"
-
-    property_name: str
+    aggregation_type: Literal[KnownAggregationType.DATE] = Field(
+        repr=False, default=KnownAggregationType.DATE
+    )
     metrics: DateMetrics
-
-
-KNOWN_AGGREGATION_TYPES = {"integer", "text", "boolean", "date"}
 
 
 class UnknownPropertyAggregation(BaseModel):
@@ -256,7 +267,7 @@ class UnknownPropertyAggregation(BaseModel):
     @field_validator("aggregation_type", mode="after")
     @classmethod
     def ensure_filter_type_unknown(cls, value: str) -> str:
-        if value in KNOWN_AGGREGATION_TYPES:
+        if value in set(KnownAggregationType):
             raise ValueError(
                 f"{value} is an known aggregation type, but validation failed, "
                 "so the response was not as expected. "
@@ -271,13 +282,7 @@ class UnknownPropertyAggregation(BaseModel):
         )
 
 
-PropertyAggregationType = Union[
-    IntegerPropertyAggregation,
-    TextPropertyAggregation,
-    BooleanPropertyAggregation,
-    DatePropertyAggregation,
-    UnknownPropertyAggregation,
-]
+PropertyAggregationType = Union[KnownPropertyAggregationBase, UnknownPropertyAggregation]
 
 
 class AggregationResult(BaseModel):
@@ -291,7 +296,7 @@ class AggregationResult(BaseModel):
     search_query: Optional[str] = None
     groupby_property: Optional[str] = None
     aggregations: list[PropertyAggregationType]
-    filters: list[PropertyFilterType] = []
+    filters: list[PropertyFilter] = []
 
 
 class AggregationResultWithCollection(AggregationResult):
