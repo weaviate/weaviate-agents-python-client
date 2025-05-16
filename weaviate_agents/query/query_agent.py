@@ -7,7 +7,7 @@ from weaviate_agents.base import _BaseAgent
 from weaviate_agents.query.classes import QueryAgentCollectionConfig, QueryAgentResponse
 
 
-class QueryAgent(_BaseAgent):
+class QueryAgent(_BaseAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
 
     Warning:
