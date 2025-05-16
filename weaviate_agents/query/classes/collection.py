@@ -8,6 +8,7 @@ class QueryAgentCollectionConfig(BaseModel):
 
     Attributes:
         name: The name of the collection to query.
+        tenant: Tenant name for collections with multi-tenancy enabled.
         view_properties: Optional list of property names the agent has the ability to view
             for this specific collection.
         target_vector: Optional target vector name(s) for collections with named vectors.
@@ -15,5 +16,6 @@ class QueryAgentCollectionConfig(BaseModel):
     """
 
     name: str
+    tenant: Union[str, None] = None
     view_properties: Union[list[str], None] = None
     target_vector: Union[str, list[str], None] = None
