@@ -335,26 +335,30 @@ def test_run_with_target_vector(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with single target vector
-    result = agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector="my_vector"
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector="my_vector"
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
     # Test with multiple target vectors
-    result = agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector=["first_vector", "second_vector"]
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector=["first_vector", "second_vector"]
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == [
         "first_vector",
@@ -377,26 +381,30 @@ async def test_async_run_with_target_vector(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with single target vector
-    result = await agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector="my_vector"
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = await agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector="my_vector"
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
     # Test with multiple target vectors
-    result = await agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector=["first_vector", "second_vector"]
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = await agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector=["first_vector", "second_vector"]
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == [
         "first_vector",
