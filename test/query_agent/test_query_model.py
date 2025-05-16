@@ -238,11 +238,6 @@ def test_run_success(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_async_run_success(monkeypatch):
-    """Test that AsyncQueryAgent.run returns a valid QueryAgentResponse when the HTTP call is successful.
-
-    Returns:
-        None.
-    """
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -286,11 +281,6 @@ def test_run_failure(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_async_run_failure(monkeypatch):
-    """Test that AsyncQueryAgent.run raises an exception when the HTTP response indicates an error.
-
-    Returns:
-        None.
-    """
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -355,7 +345,8 @@ def test_run_with_target_vector(monkeypatch):
             "test query",
             collections=[
                 QueryAgentCollectionConfig(
-                    name="test_collection", target_vector=["first_vector", "second_vector"]
+                    name="test_collection",
+                    target_vector=["first_vector", "second_vector"],
                 )
             ],
         )
@@ -401,7 +392,8 @@ async def test_async_run_with_target_vector(monkeypatch):
             "test query",
             collections=[
                 QueryAgentCollectionConfig(
-                    name="test_collection", target_vector=["first_vector", "second_vector"]
+                    name="test_collection",
+                    target_vector=["first_vector", "second_vector"],
                 )
             ],
         )

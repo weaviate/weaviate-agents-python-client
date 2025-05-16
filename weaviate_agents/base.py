@@ -1,9 +1,8 @@
-from typing import Union, TypeVar, Generic
+from typing import Generic, TypeVar, Union
 
-from weaviate.client import WeaviateClient, WeaviateAsyncClient
+from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
-
-ClientType = TypeVar('ClientType', bound=Union[WeaviateClient, WeaviateAsyncClient])
+ClientType = TypeVar("ClientType", bound=Union[WeaviateClient, WeaviateAsyncClient])
 
 
 class _BaseAgent(Generic[ClientType]):

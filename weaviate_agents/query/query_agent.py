@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, Coroutine, Optional, Union, Generic
+from typing import Any, Coroutine, Generic, Optional, Union
 
 import httpx
-from weaviate.client import WeaviateClient, WeaviateAsyncClient
+from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
-from weaviate_agents.base import _BaseAgent, ClientType
+from weaviate_agents.base import ClientType, _BaseAgent
 from weaviate_agents.query.classes import QueryAgentCollectionConfig, QueryAgentResponse
 
 
