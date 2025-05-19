@@ -236,7 +236,6 @@ def test_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
-@pytest.mark.asyncio
 async def test_async_run_success(monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
     dummy_client = DummyClient()
@@ -279,7 +278,6 @@ def test_run_failure(monkeypatch):
     )
 
 
-@pytest.mark.asyncio
 async def test_async_run_failure(monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
     dummy_client = DummyClient()
@@ -357,7 +355,6 @@ def test_run_with_target_vector(monkeypatch):
     ]
 
 
-@pytest.mark.asyncio
 async def test_async_run_with_target_vector(monkeypatch):
     captured = {}
 
