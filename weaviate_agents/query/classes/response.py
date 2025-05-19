@@ -27,7 +27,7 @@ class KnownFilterType(str, Enum):
     TEXT_ARRAY = "text_array"
     BOOLEAN = "boolean"
     BOOLEAN_ARRAY = "boolean_array"
-    DATE = "date"
+    DATE = "date_range"
     DATE_ARRAY = "date_array"
     GEO = "geo"
 
@@ -103,6 +103,19 @@ class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
     value: list[bool]
 
 
+
+class DateExact(BaseModel):
+    exact_timestamp: str
+    operator: ComparisonOperator
+
+
+class DateRange(BaseModel):
+    date_from: Union[str, None]
+    date_to: Union[str, None]
+    inclusive_from: bool
+    inclusive_to: bool
+
+
 class DatePropertyFilter(KnownPropertyFilterBase):
     """Filter datetime properties using equality operators."""
 
@@ -110,8 +123,7 @@ class DatePropertyFilter(KnownPropertyFilterBase):
         repr=False, default=KnownFilterType.DATE
     )
 
-    operator: ComparisonOperator
-    value: str
+    value: Union[DateExact, DateRange]
 
 
 class DateArrayPropertyFilter(KnownPropertyFilterBase):
