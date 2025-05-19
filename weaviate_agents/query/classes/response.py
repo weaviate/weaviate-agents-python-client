@@ -103,7 +103,6 @@ class BooleanArrayPropertyFilter(KnownPropertyFilterBase):
     value: list[bool]
 
 
-
 class DateExact(BaseModel):
     exact_timestamp: str
     operator: ComparisonOperator
