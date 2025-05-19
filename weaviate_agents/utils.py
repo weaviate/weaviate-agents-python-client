@@ -13,7 +13,6 @@ console = Console()
 
 def print_query_agent_response(response: "QueryAgentResponse"):
     """Prints a formatted response from the Query Agent using rich."""
-
     console.print(
         Panel(
             response.original_query,
