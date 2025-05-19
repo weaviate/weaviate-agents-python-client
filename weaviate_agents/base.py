@@ -1,14 +1,16 @@
-from typing import Union
+from typing import Generic, TypeVar, Union
 
-from weaviate.client import WeaviateClient
+from weaviate.client import WeaviateAsyncClient, WeaviateClient
+
+ClientType = TypeVar("ClientType", bound=Union[WeaviateClient, WeaviateAsyncClient])
 
 
-class _BaseAgent:
+class _BaseAgent(Generic[ClientType]):
     """Base class for all agents."""
 
     def __init__(
         self,
-        client: WeaviateClient,
+        client: ClientType,
         agents_host: Union[str, None] = None,
     ):
         """Initialize the base agent.
@@ -18,7 +20,7 @@ class _BaseAgent:
             agents_host: Optional host URL for the agents service. If not provided,
                 will use the default agents host.
         """
-        self._client = client
+        self._client: ClientType = client
         self._connection = client._connection
         self._agents_host = agents_host or "https://api.agents.weaviate.io"
 

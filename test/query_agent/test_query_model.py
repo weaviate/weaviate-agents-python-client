@@ -3,7 +3,7 @@ import pytest
 from pydantic import ValidationError
 
 from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
-from weaviate_agents.query import QueryAgent
+from weaviate_agents.query import AsyncQueryAgent, QueryAgent
 
 
 class DummyClient:
@@ -188,6 +188,10 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
     return FakeResponse(200, json_data)
 
 
+async def fake_async_post_success(*args, **kwargs) -> FakeResponse:
+    return fake_post_success(*args, **kwargs)
+
+
 def fake_post_failure(*args, **kwargs) -> FakeResponse:
     """Simulate a failed HTTP POST response.
 
@@ -202,6 +206,10 @@ def fake_post_failure(*args, **kwargs) -> FakeResponse:
         }
     }
     return FakeResponse(400, json_data)
+
+
+async def fake_async_post_failure(*args, **kwargs):
+    return fake_post_failure(*args, **kwargs)
 
 
 def test_run_success(monkeypatch):
@@ -228,6 +236,25 @@ def test_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
+async def test_async_run_success(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = await agent.run("test query")
+    assert isinstance(result, QueryAgentResponse)
+    assert result.original_query == "test query"
+    assert result.collection_names == ["test_collection"]
+    assert result.total_time == 0.1
+    assert result.final_answer == "final answer"
+
+
 def test_run_failure(monkeypatch):
     """Test that QueryAgent.run raises an exception when the HTTP response indicates an error.
 
@@ -244,6 +271,24 @@ def test_run_failure(monkeypatch):
 
     with pytest.raises(Exception) as exc_info:
         agent.run("failure query")
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+async def test_async_run_failure(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        await agent.run("failure query")
 
     assert (
         str(exc_info.value)
@@ -278,26 +323,77 @@ def test_run_with_target_vector(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with single target vector
-    result = agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector="my_vector"
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector="my_vector"
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
     # Test with multiple target vectors
-    result = agent.run(
-        "test query",
-        collections=[
-            QueryAgentCollectionConfig(
-                name="test_collection", target_vector=["first_vector", "second_vector"]
-            )
-        ],
-    )
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection",
+                    target_vector=["first_vector", "second_vector"],
+                )
+            ],
+        )
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["collections"][0]["target_vector"] == [
+        "first_vector",
+        "second_vector",
+    ]
+
+
+async def test_async_run_with_target_vector(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["json"] = kwargs.get("json")
+        return await fake_async_post_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(dummy_client, agents_host="http://dummy-agent")
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with single target vector
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = await agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection", target_vector="my_vector"
+                )
+            ],
+        )
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
+
+    # Test with multiple target vectors
+    with pytest.warns(UserWarning):
+        # Expect a warning when parsing the unkown "something_new" filter/aggregation
+        result = await agent.run(
+            "test query",
+            collections=[
+                QueryAgentCollectionConfig(
+                    name="test_collection",
+                    target_vector=["first_vector", "second_vector"],
+                )
+            ],
+        )
     assert isinstance(result, QueryAgentResponse)
     assert captured["json"]["collections"][0]["target_vector"] == [
         "first_vector",

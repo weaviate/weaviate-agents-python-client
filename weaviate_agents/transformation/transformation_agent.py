@@ -14,7 +14,7 @@ from weaviate_agents.transformation.classes import (
 )
 
 
-class TransformationAgent(_BaseAgent):
+class TransformationAgent(_BaseAgent[WeaviateClient]):
     """An agent for running large scale transformations on data in Weaviate.
 
     Warning:
