@@ -1,3 +1,3 @@
-from .query_agent import QueryAgent
+from .query_agent import AsyncQueryAgent, QueryAgent
 
-__all__ = ["QueryAgent"]
+__all__ = ["AsyncQueryAgent", "QueryAgent"]

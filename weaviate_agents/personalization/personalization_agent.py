@@ -18,7 +18,7 @@ from weaviate_agents.personalization.classes import (
 from weaviate_agents.personalization.query import PersonalizedQuery
 
 
-class PersonalizationAgent(_BaseAgent):
+class PersonalizationAgent(_BaseAgent[WeaviateClient]):
     """An agent for personalizing search results and queries based on persona interactions.
 
     Warning:
