@@ -3,6 +3,7 @@ from typing import Generic, TypeVar, Union
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 ClientType = TypeVar("ClientType", bound=Union[WeaviateClient, WeaviateAsyncClient])
+"""Type variable for Weaviate client, :class:`~weaviate.WeaviateClient` or :class:`~weaviate.WeaviateAsyncClient`."""
 
 
 class _BaseAgent(Generic[ClientType]):

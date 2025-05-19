@@ -17,6 +17,13 @@ Subpackages
    weaviate_agents.query
    weaviate_agents.transformation
 
+weaviate\_agents.base
+----------------------
+
+.. automodule:: weaviate_agents.base
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 weaviate\_agents.utils
 ----------------------

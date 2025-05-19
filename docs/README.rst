@@ -12,7 +12,7 @@ NOTE2: This documentation is used by the `weaviate-python-client` package that p
 The `weaviate-agents` package is a sub-package of the `weaviate-python-client` package. This means that any changes of the Weaviate Agents
 Python Client will not be reflected right away, it will be update either when a new release of the `weaviate-python-client` or can be triggered
 manually from the readthedocs page directly (maintained by the Weaviate Python Client team).
-The documentation of this repo is cloned in the `build` step of the `.readthedocs.yaml <https://github.com/weaviate/weaviate-python-client/blob/main/.readthedocs.yaml>`_ file. 
+The documentation of this repo is cloned in the `build` step of the `.readthedocs.yaml <https://github.com/weaviate/weaviate-python-client/blob/main/.readthedocs.yaml>`_ file.
 
 Adding and Modifying new modules/sub-packages
 ---------------------------------------------
