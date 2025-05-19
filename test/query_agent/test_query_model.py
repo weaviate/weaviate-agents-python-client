@@ -99,10 +99,22 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
                                 "value": [True, False],
                             },
                             {
-                                "filter_type": "date",
+                                "filter_type": "date_range",
                                 "property_name": "prop_date",
-                                "operator": "<",
-                                "value": "2025-01-01T12:01:23Z",
+                                "value": {
+                                    "date_from": "2025-01-01T12:01:23Z",
+                                    "date_to": "2025-01-02T12:01:23Z",
+                                    "inclusive_from": True,
+                                    "inclusive_to": True,
+                                },
+                            },
+                            {
+                                "filter_type": "date_range",
+                                "property_name": "prop_date",
+                                "value": {
+                                    "exact_timestamp": "2025-01-01T12:01:23Z",
+                                    "operator": "=",
+                                },
                             },
                             {
                                 "filter_type": "date_array",
