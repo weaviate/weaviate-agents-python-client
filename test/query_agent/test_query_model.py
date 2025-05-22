@@ -2,7 +2,16 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
+from weaviate_agents.classes.query import (
+    AggregationResult,
+    QueryAgentCollectionConfig,
+    QueryAgentResponse,
+    QueryResult,
+    UnknownAggregationType,
+    UnknownFilterType,
+    UnknownPropertyAggregation,
+    UnknownPropertyFilter,
+)
 from weaviate_agents.query import AsyncQueryAgent, QueryAgent
 
 
@@ -132,10 +141,19 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
                                 "longitude": 20.0,
                                 "max_distance_meters": 30.0,
                             },
+                            # The something_new filter is not known,
+                            # but should be parsed into UnknownFilterType
                             {
                                 "filter_type": "something_new",
                                 "property_name": "strange_property",
                                 "value": "xyz",
+                            },
+                            # The integer filter is known but the format of the
+                            # rest of the filter is not valid,
+                            # this should still be parsed into UnknownFilterType
+                            {
+                                "filter_type": "integer",
+                                "bad_field": "bad_value",
                             },
                         ]
                     ],
@@ -171,10 +189,19 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
                             "property_name": "prop_date",
                             "metrics": "MAXIMUM",
                         },
+                        # The something_new aggregation is not known,
+                        # but should be parsed into UnknownAggregationType
                         {
                             "aggregation_type": "something_new",
                             "property_name": "strange_property",
                             "metrics": "XYZ",
+                        },
+                        # The integer aggregation is known but the format of the
+                        # rest of the aggregation is not valid,
+                        # this should still be parsed into UnknownAggregationType
+                        {
+                            "aggregation_type": "integer",
+                            "bad_field": "bad_value",
                         },
                     ],
                     "filters": [],
@@ -411,3 +438,71 @@ async def test_async_run_with_target_vector(monkeypatch):
         "first_vector",
         "second_vector",
     ]
+
+
+def test_query_result_validation_with_unknown_filter_type():
+    data = {
+        "queries": ["Test query!"],
+        "filters": [
+            [
+                # The something_new filter is not known, but should be parsed into UnknownFilterType
+                {
+                    "filter_type": "something_new",
+                    "property_name": "strange_property",
+                    "value": "xyz",
+                },
+                # The integer filter is known but the format of the rest of the filter is not valid,
+                # this should still be parsed into UnknownFilterType
+                {
+                    "filter_type": "integer",
+                    "bad_field": "bad_value",
+                },
+            ]
+        ],
+        "filter_operators": "AND",
+    }
+
+    model = QueryResult.model_validate(data)
+
+    first_filter = model.filters[0][0]
+    assert isinstance(first_filter, UnknownPropertyFilter)
+    assert isinstance(first_filter.filter_type, UnknownFilterType)
+    assert first_filter.filter_type.name == "something_new"
+
+    second_filter = model.filters[0][1]
+    assert isinstance(second_filter, UnknownPropertyFilter)
+    assert isinstance(second_filter.filter_type, UnknownFilterType)
+    assert second_filter.filter_type.name == "integer"
+
+
+def test_aggregation_result_validation_with_unknown_aggregation_type():
+    data = {
+        "aggregations": [
+            # The something_new aggregation is not known,
+            # but should be parsed into UnknownAggregationType
+            {
+                "aggregation_type": "something_new",
+                "property_name": "strange_property",
+                "metrics": "XYZ",
+            },
+            # The integer aggregation is known but the format of the
+            # rest of the aggregation is not valid,
+            # this should still be parsed into UnknownAggregationType
+            {
+                "aggregation_type": "integer",
+                "bad_field": "bad_value",
+            },
+        ],
+    }
+
+    model = AggregationResult.model_validate(data)
+
+    first_aggregation = model.aggregations[0]
+    assert isinstance(first_aggregation, UnknownPropertyAggregation)
+    assert isinstance(first_aggregation.aggregation_type, UnknownAggregationType)
+    assert first_aggregation.aggregation_type.name == "something_new"
+
+    second_aggregation = model.aggregations[1]
+    assert isinstance(second_aggregation, UnknownPropertyAggregation)
+    assert isinstance(second_aggregation.aggregation_type, UnknownAggregationType)
+    assert second_aggregation.aggregation_type.name == "integer"
