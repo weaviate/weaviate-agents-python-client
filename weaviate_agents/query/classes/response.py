@@ -1,6 +1,6 @@
 import warnings
 from enum import Enum
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -166,20 +166,18 @@ class UnknownPropertyFilter(BaseModel):
 
     @field_validator("filter_type", mode="before")
     @classmethod
-    def ensure_filter_type_unknown(cls, value: Any) -> None:
+    def catch_unknown_filter_type(cls, value):
         if value in set(KnownFilterType):
-            raise ValueError(
+            warnings.warn(
                 f"{value} is an known filter type, but validation failed, "
-                "so the response was not as expected. "
+                "Try upgrading the weaviate-agents package to a new version."
+            )
+        else:
+            warnings.warn(
+                f"The filter_type {value} wasn't recognised. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
         return None
-
-    def model_post_init(self, context: Any) -> None:
-        warnings.warn(
-            f"The filter_type {self.filter_type} wasn't recognised. "
-            "Try upgrading the weaviate-agents package to a new version."
-        )
 
 
 PropertyFilter = Union[
@@ -293,20 +291,18 @@ class UnknownPropertyAggregation(BaseModel):
 
     @field_validator("aggregation_type", mode="before")
     @classmethod
-    def ensure_filter_type_unknown(cls, value: Any) -> None:
+    def catch_unknown_aggregation_type(cls, value):
         if value in set(KnownAggregationType):
-            raise ValueError(
+            warnings.warn(
                 f"{value} is an known aggregation type, but validation failed, "
-                "so the response was not as expected. "
+                "Try upgrading the weaviate-agents package to a new version."
+            )
+        else:
+            warnings.warn(
+                f"The aggregation_type {value} wasn't recognised. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
         return None
-
-    def model_post_init(self, context: Any) -> None:
-        warnings.warn(
-            f"The aggregation_type {self.aggregation_type} wasn't recognised. "
-            "Try upgrading the weaviate-agents package to a new version."
-        )
 
 
 PropertyAggregation = Union[
