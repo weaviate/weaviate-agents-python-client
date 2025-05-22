@@ -1,4 +1,5 @@
 import warnings
+from collections import namedtuple
 from enum import Enum
 from typing import Literal, Optional, Union
 
@@ -158,15 +159,18 @@ class GeoPropertyFilter(KnownPropertyFilterBase):
     max_distance_meters: float
 
 
+UnknownFilterType = namedtuple("UnknownFilterType", ["name"])
+
+
 class UnknownPropertyFilter(BaseModel):
     """Catch-all filter for unknown filter types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
-    filter_type: None
+    filter_type: UnknownFilterType
 
     @field_validator("filter_type", mode="before")
     @classmethod
-    def catch_unknown_filter_type(cls, value):
+    def wrap_unknown_filter_type(cls, value):
         if value in set(KnownFilterType):
             warnings.warn(
                 f"{value} is an known filter type, but validation failed, "
@@ -177,7 +181,7 @@ class UnknownPropertyFilter(BaseModel):
                 f"The filter_type {value} wasn't recognised. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
-        return None
+        return UnknownFilterType(name=value)
 
 
 PropertyFilter = Union[
@@ -283,15 +287,18 @@ class DatePropertyAggregation(KnownPropertyAggregationBase):
     metrics: DateMetrics
 
 
+UnknownAggregationType = namedtuple("UnknownAggregationType", ["name"])
+
+
 class UnknownPropertyAggregation(BaseModel):
     """Catch-all aggregation for unknown aggregation types, to preserve future back-compatibility."""
 
     model_config = ConfigDict(extra="allow")
-    aggregation_type: None
+    aggregation_type: UnknownAggregationType
 
     @field_validator("aggregation_type", mode="before")
     @classmethod
-    def catch_unknown_aggregation_type(cls, value):
+    def wrap_unknown_aggregation_type(cls, value):
         if value in set(KnownAggregationType):
             warnings.warn(
                 f"{value} is an known aggregation type, but validation failed, "
@@ -302,7 +309,7 @@ class UnknownPropertyAggregation(BaseModel):
                 f"The aggregation_type {value} wasn't recognised. "
                 "Try upgrading the weaviate-agents package to a new version."
             )
-        return None
+        return UnknownAggregationType(name=value)
 
 
 PropertyAggregation = Union[
