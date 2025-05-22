@@ -108,9 +108,19 @@ class DateExact(BaseModel):
     operator: ComparisonOperator
 
 
-class DateRange(BaseModel):
-    date_from: Union[str, None]
-    date_to: Union[str, None]
+class DateRangeFrom(BaseModel):
+    date_from: str
+    inclusive_from: bool
+
+
+class DateRangeTo(BaseModel):
+    date_to: str
+    inclusive_to: bool
+
+
+class DateRangeBetween(BaseModel):
+    date_from: str
+    date_to: str
     inclusive_from: bool
     inclusive_to: bool
 
@@ -122,7 +132,7 @@ class DatePropertyFilter(KnownPropertyFilterBase):
         repr=False, default=KnownFilterType.DATE
     )
 
-    value: Union[DateExact, DateRange]
+    value: Union[DateExact, DateRangeFrom, DateRangeTo, DateRangeBetween]
 
 
 class DateArrayPropertyFilter(KnownPropertyFilterBase):
