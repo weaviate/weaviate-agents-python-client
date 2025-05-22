@@ -25,6 +25,8 @@ from .response import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
+    UnknownAggregationType,
+    UnknownFilterType,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
 )
@@ -56,6 +58,8 @@ __all__ = [
     "IntegerArrayPropertyFilter",
     "TextArrayPropertyFilter",
     "GeoPropertyFilter",
+    "UnknownAggregationType",
+    "UnknownFilterType",
     "UnknownPropertyAggregation",
     "UnknownPropertyFilter",
 ]

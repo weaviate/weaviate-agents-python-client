@@ -24,6 +24,8 @@ from weaviate_agents.query.classes import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
+    UnknownAggregationType,
+    UnknownFilterType,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
     Usage,
@@ -56,6 +58,8 @@ __all__ = [
     "IntegerArrayPropertyFilter",
     "TextArrayPropertyFilter",
     "GeoPropertyFilter",
+    "UnknownAggregationType",
+    "UnknownFilterType",
     "UnknownPropertyAggregation",
     "UnknownPropertyFilter",
 ]

@@ -33,6 +33,8 @@ from .query import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
+    UnknownAggregationType,
+    UnknownFilterType,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
 )
@@ -84,6 +86,8 @@ __all__ = [
     "IntegerArrayPropertyFilter",
     "GeoPropertyFilter",
     "TextArrayPropertyFilter",
+    "UnknownAggregationType",
+    "UnknownFilterType",
     "UnknownPropertyAggregation",
     "UnknownPropertyFilter",
 ]
