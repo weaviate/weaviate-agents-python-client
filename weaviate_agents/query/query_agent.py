@@ -3,7 +3,7 @@ from json import JSONDecodeError
 from typing import Any, AsyncGenerator, Coroutine, Generator, Generic, Optional, Union
 
 import httpx
-from httpx_sse import ServerSentEvent, connect_sse
+from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
@@ -104,12 +104,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         Generator[
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
         ],
-        Coroutine[
-            Any,
-            Any,
-            AsyncGenerator[
-                Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
-            ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
         ],
     ]:
         """Stream from the query agent. Must be implemented by subclasses."""
@@ -228,7 +224,23 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     ) -> AsyncGenerator[
         Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
     ]:
-        raise NotImplementedError
+        request_body = self._prepare_request_body(
+            query,
+            collections,
+            context,
+            include_progress=include_progress,
+        )
+        async with httpx.AsyncClient() as client:
+            async with aconnect_sse(
+                client=client,
+                method="POST",
+                url=self.agent_url + "/stream_query",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                async for sse in events.aiter_sse():
+                    yield _parse_sse(sse)
 
 
 def _parse_sse(
