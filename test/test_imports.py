@@ -16,9 +16,9 @@ def test_package_imports():
     from weaviate_agents.query import QueryAgent
 
     # Verify the imported items are the correct types
-    assert isinstance(QueryAgentCollectionConfig, type), (
-        "QueryAgentCollection should be a class"
-    )
+    assert isinstance(
+        QueryAgentCollectionConfig, type
+    ), "QueryAgentCollection should be a class"
     assert isinstance(QueryAgentResponse, type), "QueryAgentResponse should be a class"
     assert isinstance(QueryAgent, type), "QueryAgent should be a class"
 
@@ -32,9 +32,9 @@ def test_package_imports():
             "transformation",
             "utils",
         }
-        assert set(weaviate_agents.__all__) == expected_modules, (
-            "Package __all__ should contain all public modules"
-        )
+        assert (
+            set(weaviate_agents.__all__) == expected_modules
+        ), "Package __all__ should contain all public modules"
 
 
 def test_class_exports():
@@ -194,9 +194,9 @@ def test_class_exports():
         "StreamedTokens",
     ]
 
-    assert hasattr(weaviate_agents.classes, "__all__"), (
-        "Module should have __all__ defined"
-    )
-    assert set(weaviate_agents.classes.__all__) == set(expected_exports), (
-        "__all__ should contain all data model classes"
-    )
+    assert hasattr(
+        weaviate_agents.classes, "__all__"
+    ), "Module should have __all__ defined"
+    assert set(weaviate_agents.classes.__all__) == set(
+        expected_exports
+    ), "__all__ should contain all data model classes"
