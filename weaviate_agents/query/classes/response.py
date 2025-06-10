@@ -345,6 +345,7 @@ class Source(BaseModel):
 
 
 class QueryAgentResponse(BaseModel):
+    output_type: Literal["final_state"] = "final_state"
     original_query: str
     collection_names: list[str]
     searches: list[list[QueryResultWithCollection]]
@@ -363,3 +364,15 @@ class QueryAgentResponse(BaseModel):
         """Display a pretty-printed summary of the QueryAgentResponse object."""
         print_query_agent_response(self)
         return None
+
+
+class ProgressMessage(BaseModel):
+    output_type: Literal["progress_message"] = "progress_message"
+    stage: str
+    message: str
+    details: dict[str, Any] = {}
+
+
+class StreamedTokens(BaseModel):
+    output_type: Literal["streamed_tokens"] = "streamed_tokens"
+    delta: str
