@@ -67,11 +67,13 @@ def test_class_exports():
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
         PersonalizedQueryResponse,
+        ProgressMessage,
         QueryAgentCollectionConfig,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
         Source,
+        StreamedTokens,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -80,8 +82,6 @@ def test_class_exports():
         UnknownPropertyFilter,
         UpdatePropertyOperation,
         Usage,
-        ProgressMessage,
-        StreamedTokens,
     )
 
     # Verify all exports are classes

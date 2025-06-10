@@ -63,6 +63,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
+            **kwargs: Additional keyword arguments to pass to the request body.
         """
         collections = collections or self._collections
         if not collections:
