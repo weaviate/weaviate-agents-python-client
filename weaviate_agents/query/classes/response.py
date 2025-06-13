@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing_extensions import TypedDict
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -366,11 +367,20 @@ class QueryAgentResponse(BaseModel):
         return None
 
 
+class QueryWithCollection(TypedDict):
+    query: str
+    collection: str
+
+
+class ProgressDetails(TypedDict, total=False):
+    queries: list[QueryWithCollection]
+
+
 class ProgressMessage(BaseModel):
     output_type: Literal["progress_message"] = "progress_message"
     stage: str
     message: str
-    details: dict[str, Any] = {}
+    details: ProgressDetails = {}
 
 
 class StreamedTokens(BaseModel):
