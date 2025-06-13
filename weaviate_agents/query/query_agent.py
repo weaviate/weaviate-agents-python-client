@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from json import JSONDecodeError
 from typing import Any, AsyncGenerator, Coroutine, Generator, Generic, Optional, Union
 
@@ -13,6 +14,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
+from weaviate_agents.utils import live_display_state
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -111,6 +113,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]:
         """Stream from the query agent. Must be implemented by subclasses."""
         pass
+
+    @contextmanager
+    def live_display(self):
+        with live_display_state() as state:
+            yield state
 
 
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):

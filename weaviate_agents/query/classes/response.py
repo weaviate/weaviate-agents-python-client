@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
 
 from weaviate_agents.classes.core import Usage
-from weaviate_agents.utils import print_query_agent_response
+from weaviate_agents.utils import print_query_agent_response, display_context
 
 
 class ComparisonOperator(str, Enum):
@@ -363,8 +363,11 @@ class QueryAgentResponse(BaseModel):
 
     def display(self) -> None:
         """Display a pretty-printed summary of the QueryAgentResponse object."""
-        print_query_agent_response(self)
-        return None
+        state = display_context.get()
+        if state is not None:
+            state.update(self)
+        else:
+            print_query_agent_response(self)
 
 
 class QueryWithCollection(TypedDict):
@@ -382,7 +385,21 @@ class ProgressMessage(BaseModel):
     message: str
     details: ProgressDetails = {}
 
+    def display(self) -> None:
+        state = display_context.get()
+        if state is not None:
+            state.update(self)
+        else:
+            print(repr(self))
+
 
 class StreamedTokens(BaseModel):
     output_type: Literal["streamed_tokens"] = "streamed_tokens"
     delta: str
+
+    def display(self) -> None:
+        state = display_context.get()
+        if state is not None:
+            state.update(self)
+        else:
+            print(repr(self))

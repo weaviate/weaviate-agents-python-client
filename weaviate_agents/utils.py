@@ -1,12 +1,23 @@
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import TYPE_CHECKING, Union
 
 from rich.console import Console
+from rich.live import Live
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table
+from rich.text import Text
 
 if TYPE_CHECKING:
-    from weaviate_agents.query.classes import QueryAgentResponse
+    from weaviate_agents.query.classes import (
+        ProgressMessage,
+        QueryAgentResponse,
+        StreamedTokens,
+    )
 
 console = Console()
 
@@ -36,7 +47,7 @@ def print_query_agent_response(response: "QueryAgentResponse"):
                 )
             )
     if len(response.searches) == 0:
-        console.print(Panel("🔭 No Searches Run", style="indian_red", padding=1))
+        console.print(Panel("🔭 No Searches Required", style="indian_red", padding=1))
 
     for collection_aggs in response.aggregations:
         for i, agg in enumerate(collection_aggs):
@@ -49,7 +60,7 @@ def print_query_agent_response(response: "QueryAgentResponse"):
                 )
             )
     if len(response.aggregations) == 0:
-        console.print(Panel("📊 No Aggregations Run", style="indian_red", padding=1))
+        console.print(Panel("📊 No Aggregations Required", style="indian_red", padding=1))
 
     if response.missing_information:
         title = (
@@ -85,3 +96,62 @@ def print_query_agent_response(response: "QueryAgentResponse"):
     console.print(
         f"\n[bold]Total Time Taken:[/bold] {response.total_time:.2f}s", style="cyan"
     )
+
+
+display_context: ContextVar[Union[LiveDisplayState, None]] = ContextVar("display_context", default=None)
+
+
+class LiveDisplayState:
+    def __init__(self):
+        self.final_answer: str = ""
+        self.progress_messages: list[str] = []
+        self.response: Union["QueryAgentResponse", None] = None
+        self.live: Union[Live, None] = None
+
+    def render(self):
+        """Prints a formatted response from the Query Agent using rich."""
+        console.clear()
+        if self.response is not None:
+            print_query_agent_response(self.response)
+            return
+
+        console.print(Markdown("# Query Agent streaming..."))
+        if self.progress_messages:
+            for message in self.progress_messages[:-1]:
+                text = Text(message)
+                text.stylize("bright_black")
+                console.print(text)
+
+            text = Text(self.progress_messages[-1])
+            text.stylize("indian_red")
+            console.print(text)
+
+        if self.final_answer:
+            console.print(
+                Panel(self.final_answer, title="📝 Final Answer", style="cyan", padding=1)
+            )
+
+    def update(self, item: Union["ProgressMessage", "StreamedTokens", "QueryAgentResponse"]):
+        if self.live is None:
+            raise RuntimeError("LiveDisplayState.live must be set before calling update()")
+        
+        if item.output_type == "progress_message":
+            self.progress_messages.append(item.message)
+        elif item.output_type == "streamed_tokens":
+            self.final_answer += item.delta
+        elif item.output_type == "final_state":
+            self.response = item
+        self.live.update(self.render())
+
+
+@contextmanager
+def live_display_state():
+    state = LiveDisplayState()
+    token = display_context.set(state)
+
+    try:
+        with Live(state.render(), refresh_per_second=4) as live:
+            state.live = live
+            yield
+    finally:
+        display_context.reset(token)
