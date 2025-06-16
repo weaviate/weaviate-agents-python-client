@@ -201,6 +201,7 @@ FAKE_SUCCESS_JSON = {
     "final_answer": "final answer",
 }
 
+
 def fake_post_success(*args, **kwargs) -> FakeResponse:
     """Simulate a successful HTTP POST response.
 
@@ -280,26 +281,28 @@ async def test_async_run_success(monkeypatch):
 class MockIterSSESuccess:
     def iter_sse(self):
         yield ServerSentEvent(
-            event="progress_message", data=json.dumps(
+            event="progress_message",
+            data=json.dumps(
                 {
                     "output_type": "progress_message",
                     "stage": "query_analysis",
                     "message": "Analyzing query...",
                     "details": {},
                 }
-            )
+            ),
         )
         yield ServerSentEvent(
-            event="streamed_tokens", data=json.dumps(
+            event="streamed_tokens",
+            data=json.dumps(
                 {
                     "output_type": "streamed_tokens",
                     "delta": "final",
                 }
-            )
+            ),
         )
         yield ServerSentEvent(
             event="streamed_tokens",
-            data=json.dumps({"output_type": "streamed_tokens", "delta": " answer"})
+            data=json.dumps({"output_type": "streamed_tokens", "delta": " answer"}),
         )
         yield ServerSentEvent(event="final_state", data=json.dumps(FAKE_SUCCESS_JSON))
 
@@ -314,7 +317,9 @@ def mock_connect_sse_success(*args, **kwargs):
 
 
 def test_stream_success(monkeypatch):
-    monkeypatch.setattr("weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success)
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success
+    )
     dummy_client = DummyClient()
     agent = QueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -328,10 +333,12 @@ def test_stream_success(monkeypatch):
 
     assert len(all_results) == 4
 
-    assert all_results[0] == ProgressMessage(stage='query_analysis', message="Analyzing query...")
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
-    
+
     assert isinstance(all_results[3], QueryAgentResponse)
     assert all_results[3].original_query == "test query"
     assert all_results[3].collection_names == ["test_collection"]
@@ -345,7 +352,9 @@ async def mock_aconnect_sse_success(*args, **kwargs):
 
 
 async def test_async_stream_success(monkeypatch):
-    monkeypatch.setattr("weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success)
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success
+    )
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -359,10 +368,12 @@ async def test_async_stream_success(monkeypatch):
 
     assert len(all_results) == 4
 
-    assert all_results[0] == ProgressMessage(stage='query_analysis', message="Analyzing query...")
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
-    
+
     assert isinstance(all_results[3], QueryAgentResponse)
     assert all_results[3].original_query == "test query"
     assert all_results[3].collection_names == ["test_collection"]
@@ -414,35 +425,45 @@ async def test_async_run_failure(monkeypatch):
 class MockIterSSEFailure:
     def iter_sse(self):
         yield ServerSentEvent(
-            event="progress_message", data=json.dumps(
+            event="progress_message",
+            data=json.dumps(
                 {
                     "output_type": "progress_message",
                     "stage": "query_analysis",
                     "message": "Analyzing query...",
                     "details": {},
                 }
-            )
+            ),
         )
-        yield ServerSentEvent(event="error", data=json.dumps({
-            "error": {
-                "error": {
-                    "message": "Test error message",
-                    "code": "test_error_code",
-                    "details": {"info": "test detail"},
+        yield ServerSentEvent(
+            event="error",
+            data=json.dumps(
+                {
+                    "error": {
+                        "error": {
+                            "message": "Test error message",
+                            "code": "test_error_code",
+                            "details": {"info": "test detail"},
+                        }
+                    }
                 }
-            }
-        }))
+            ),
+        )
 
     async def aiter_sse(self):
         for event in self.iter_sse():
             yield event
 
+
 @contextmanager
 def mock_connect_sse_failure(*args, **kwargs):
     yield MockIterSSEFailure()
 
+
 def test_stream_failure(monkeypatch):
-    monkeypatch.setattr("weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure)
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure
+    )
     dummy_client = DummyClient()
     agent = QueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -457,7 +478,9 @@ def test_stream_failure(monkeypatch):
 
     # Should have received the progress message before the exception
     assert len(all_results) == 1
-    assert all_results[0] == ProgressMessage(stage='query_analysis', message="Analyzing query...")
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
     assert (
         str(exc_info.value)
         == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
@@ -470,7 +493,9 @@ async def mock_aconnect_sse_failure(*args, **kwargs):
 
 
 async def test_async_stream_failure(monkeypatch):
-    monkeypatch.setattr("weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure)
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure
+    )
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -485,7 +510,9 @@ async def test_async_stream_failure(monkeypatch):
 
     # Should have received the progress message before the exception
     assert len(all_results) == 1
-    assert all_results[0] == ProgressMessage(stage='query_analysis', message="Analyzing query...")
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
     assert (
         str(exc_info.value)
         == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
