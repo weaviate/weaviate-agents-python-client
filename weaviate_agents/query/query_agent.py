@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any, Coroutine, Generic, Optional, Union
+from json import JSONDecodeError
+from typing import Any, AsyncGenerator, Coroutine, Generator, Generic, Optional, Union
 
 import httpx
+from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
-from weaviate_agents.query.classes import QueryAgentCollectionConfig, QueryAgentResponse
+from weaviate_agents.query.classes import (
+    ProgressMessage,
+    QueryAgentCollectionConfig,
+    QueryAgentResponse,
+    StreamedTokens,
+)
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -41,14 +48,14 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self._system_prompt = system_prompt
 
         self._timeout = 60 if timeout is None else timeout
-
-        self.q_host = f"{self._agents_host}/agent/query"
+        self.agent_url = f"{self._agents_host}/agent"
 
     def _prepare_request_body(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
+        **kwargs,
     ) -> dict:
         """Prepare the request body for the query.
 
@@ -56,6 +63,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
+            **kwargs: Additional keyword arguments to pass to the request body.
         """
         collections = collections or self._collections
         if not collections:
@@ -73,6 +81,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             "limit": 20,
             "previous_response": context.model_dump(mode="json") if context else None,
             "system_prompt": self._system_prompt,
+            **kwargs,
         }
 
     @abstractmethod
@@ -83,6 +92,24 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         context: Optional[QueryAgentResponse] = None,
     ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
         """Run the query agent. Must be implemented by subclasses."""
+        pass
+
+    @abstractmethod
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: bool = True,
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
+    ]:
+        """Stream from the query agent. Must be implemented by subclasses."""
         pass
 
 
@@ -112,7 +139,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         request_body = self._prepare_request_body(query, collections, context)
 
         response = httpx.post(
-            self.q_host,
+            self.agent_url + "/query",
             headers=self._headers,
             json=request_body,
             timeout=self._timeout,
@@ -122,6 +149,33 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             raise Exception(response.text)
 
         return QueryAgentResponse(**response.json())
+
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: bool = True,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+    ]:
+        request_body = self._prepare_request_body(
+            query,
+            collections,
+            context,
+            include_progress=include_progress,
+        )
+        with httpx.Client() as client:
+            with connect_sse(
+                client=client,
+                method="POST",
+                url=self.agent_url + "/stream_query",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                for sse in events.iter_sse():
+                    yield _parse_sse(sse)
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -151,7 +205,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.q_host,
+                self.agent_url + "/query",
                 headers=self._headers,
                 json=request_body,
                 timeout=self._timeout,
@@ -161,3 +215,52 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 raise Exception(response.text)
 
             return QueryAgentResponse(**response.json())
+
+    async def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: bool = True,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+    ]:
+        request_body = self._prepare_request_body(
+            query,
+            collections,
+            context,
+            include_progress=include_progress,
+        )
+        async with httpx.AsyncClient() as client:
+            async with aconnect_sse(
+                client=client,
+                method="POST",
+                url=self.agent_url + "/stream_query",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                async for sse in events.aiter_sse():
+                    yield _parse_sse(sse)
+
+
+def _parse_sse(
+    sse: ServerSentEvent,
+) -> Union[ProgressMessage, StreamedTokens, QueryAgentResponse]:
+    try:
+        data = sse.json()
+    except JSONDecodeError:
+        raise Exception(f"Unable to decode response: {sse.event=}, {sse.data=}")
+
+    if sse.event == "error":
+        raise Exception(str(data["error"]))
+    elif sse.event == "progress_message":
+        return ProgressMessage.model_validate(data)
+    elif sse.event == "streamed_tokens":
+        return StreamedTokens.model_validate(data)
+    elif sse.event == "final_state":
+        return QueryAgentResponse.model_validate(data)
+    else:
+        raise Exception(
+            f"Unrecognised event type in response: {sse.event=}, {sse.data=}"
+        )

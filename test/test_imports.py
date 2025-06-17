@@ -67,11 +67,15 @@ def test_class_exports():
         PersonalizationAgentGetObjectsResponse,
         PersonalizedObject,
         PersonalizedQueryResponse,
+        ProgressDetails,
+        ProgressMessage,
         QueryAgentCollectionConfig,
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
+        QueryWithCollection,
         Source,
+        StreamedTokens,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -128,6 +132,7 @@ def test_class_exports():
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
+        QueryWithCollection,
         Source,
         TextArrayPropertyFilter,
         TextMetrics,
@@ -137,6 +142,9 @@ def test_class_exports():
         UnknownPropertyFilter,
         UpdatePropertyOperation,
         Usage,
+        ProgressDetails,
+        ProgressMessage,
+        StreamedTokens,
     ]
 
     for cls in classes:
@@ -148,6 +156,7 @@ def test_class_exports():
     expected_exports = [
         "QueryAgentCollectionConfig",
         "QueryAgentResponse",
+        "QueryWithCollection",
         "Source",
         "ComparisonOperator",
         "IntegerPropertyFilter",
@@ -186,6 +195,9 @@ def test_class_exports():
         "TextArrayPropertyFilter",
         "UnknownPropertyAggregation",
         "UnknownPropertyFilter",
+        "ProgressDetails",
+        "ProgressMessage",
+        "StreamedTokens",
     ]
 
     assert hasattr(

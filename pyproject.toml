@@ -5,6 +5,7 @@ description = "The official sub-package for the Weaviate Agents project."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "httpx-sse>=0.4.0",
     "rich>=13.9.4",
     "weaviate-client>=4.11.0",
 ]

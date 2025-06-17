@@ -1,8 +1,17 @@
+import json
+from contextlib import asynccontextmanager, contextmanager
+
 import httpx
 import pytest
+from httpx_sse import ServerSentEvent
 from pydantic import ValidationError
 
-from weaviate_agents.classes.query import QueryAgentCollectionConfig, QueryAgentResponse
+from weaviate_agents.classes.query import (
+    ProgressMessage,
+    QueryAgentCollectionConfig,
+    QueryAgentResponse,
+    StreamedTokens,
+)
 from weaviate_agents.query import AsyncQueryAgent, QueryAgent
 
 
@@ -46,158 +55,160 @@ class FakeResponse:
         return self._json
 
 
+FAKE_SUCCESS_JSON = {
+    "original_query": "test query",
+    "collection_names": ["test_collection"],
+    "searches": [
+        [
+            {
+                "collection": "test_collection",
+                "queries": ["Test query!"],
+                "filters": [
+                    [
+                        {
+                            "filter_type": "integer",
+                            "property_name": "prop_int",
+                            "operator": "=",
+                            "value": 1.0,
+                        },
+                        {
+                            "filter_type": "integer_array",
+                            "property_name": "prop_int_aray",
+                            "operator": "contains_all",
+                            "value": [1.0, 2.0],
+                        },
+                        {
+                            "filter_type": "text",
+                            "property_name": "prop_text",
+                            "operator": "LIKE",
+                            "value": "*something*",
+                        },
+                        {
+                            "filter_type": "text_array",
+                            "property_name": "prop_text_array",
+                            "operator": "contains_any",
+                            "value": ["one", "two"],
+                        },
+                        {
+                            "filter_type": "boolean",
+                            "property_name": "prop_bool",
+                            "operator": "=",
+                            "value": True,
+                        },
+                        {
+                            "filter_type": "boolean_array",
+                            "property_name": "prop_bool_array",
+                            "operator": "contains_any",
+                            "value": [True, False],
+                        },
+                        {
+                            "filter_type": "date_range",
+                            "property_name": "prop_date",
+                            "value": {
+                                "date_from": "2025-01-01T12:01:23Z",
+                                "date_to": "2025-01-02T12:01:23Z",
+                                "inclusive_from": True,
+                                "inclusive_to": True,
+                            },
+                        },
+                        {
+                            "filter_type": "date_range",
+                            "property_name": "prop_date",
+                            "value": {
+                                "exact_timestamp": "2025-01-01T12:01:23Z",
+                                "operator": "=",
+                            },
+                        },
+                        {
+                            "filter_type": "date_array",
+                            "property_name": "prop_date_array",
+                            "operator": "contains_all",
+                            "value": [
+                                "2025-01-01T12:01:23Z",
+                                "2025-01-02T12:01:23Z",
+                            ],
+                        },
+                        {
+                            "filter_type": "geo",
+                            "property_name": "prop_geo",
+                            "latitude": 10.0,
+                            "longitude": 20.0,
+                            "max_distance_meters": 30.0,
+                        },
+                        {
+                            "filter_type": "something_new",
+                            "property_name": "strange_property",
+                            "value": "xyz",
+                        },
+                    ]
+                ],
+                "filter_operators": "AND",
+            }
+        ]
+    ],
+    "aggregations": [
+        [
+            {
+                "collection": "test_collection",
+                "search_query": None,
+                "groupby_property": None,
+                "aggregations": [
+                    {
+                        "aggregation_type": "integer",
+                        "property_name": "prop_int",
+                        "metrics": "MEAN",
+                    },
+                    {
+                        "aggregation_type": "text",
+                        "property_name": "prop_text",
+                        "metrics": "COUNT",
+                        "top_occurrences_limit": 10,
+                    },
+                    {
+                        "aggregation_type": "boolean",
+                        "property_name": "prop_bool",
+                        "metrics": "PERCENTAGE_TRUE",
+                    },
+                    {
+                        "aggregation_type": "date",
+                        "property_name": "prop_date",
+                        "metrics": "MAXIMUM",
+                    },
+                    {
+                        "aggregation_type": "something_new",
+                        "property_name": "strange_property",
+                        "metrics": "XYZ",
+                    },
+                ],
+                "filters": [],
+            }
+        ]
+    ],
+    "sources": [{"object_id": "123", "collection": "test_collection"}],
+    "usage": {
+        "requests": 1,
+        "request_tokens": 10,
+        "response_tokens": 20,
+        "total_tokens": 30,
+        "details": {},
+    },
+    "total_time": 0.1,
+    "aggregation_answer": None,
+    "has_aggregation_answer": False,
+    "has_search_answer": False,
+    "is_partial_answer": False,
+    "missing_information": [],
+    "final_answer": "final answer",
+}
+
+
 def fake_post_success(*args, **kwargs) -> FakeResponse:
     """Simulate a successful HTTP POST response.
 
     Returns:
         FakeResponse: A fake HTTP response with status code 200.
     """
-    json_data = {
-        "original_query": "test query",
-        "collection_names": ["test_collection"],
-        "searches": [
-            [
-                {
-                    "collection": "test_collection",
-                    "queries": ["Test query!"],
-                    "filters": [
-                        [
-                            {
-                                "filter_type": "integer",
-                                "property_name": "prop_int",
-                                "operator": "=",
-                                "value": 1.0,
-                            },
-                            {
-                                "filter_type": "integer_array",
-                                "property_name": "prop_int_aray",
-                                "operator": "contains_all",
-                                "value": [1.0, 2.0],
-                            },
-                            {
-                                "filter_type": "text",
-                                "property_name": "prop_text",
-                                "operator": "LIKE",
-                                "value": "*something*",
-                            },
-                            {
-                                "filter_type": "text_array",
-                                "property_name": "prop_text_array",
-                                "operator": "contains_any",
-                                "value": ["one", "two"],
-                            },
-                            {
-                                "filter_type": "boolean",
-                                "property_name": "prop_bool",
-                                "operator": "=",
-                                "value": True,
-                            },
-                            {
-                                "filter_type": "boolean_array",
-                                "property_name": "prop_bool_array",
-                                "operator": "contains_any",
-                                "value": [True, False],
-                            },
-                            {
-                                "filter_type": "date_range",
-                                "property_name": "prop_date",
-                                "value": {
-                                    "date_from": "2025-01-01T12:01:23Z",
-                                    "date_to": "2025-01-02T12:01:23Z",
-                                    "inclusive_from": True,
-                                    "inclusive_to": True,
-                                },
-                            },
-                            {
-                                "filter_type": "date_range",
-                                "property_name": "prop_date",
-                                "value": {
-                                    "exact_timestamp": "2025-01-01T12:01:23Z",
-                                    "operator": "=",
-                                },
-                            },
-                            {
-                                "filter_type": "date_array",
-                                "property_name": "prop_date_array",
-                                "operator": "contains_all",
-                                "value": [
-                                    "2025-01-01T12:01:23Z",
-                                    "2025-01-02T12:01:23Z",
-                                ],
-                            },
-                            {
-                                "filter_type": "geo",
-                                "property_name": "prop_geo",
-                                "latitude": 10.0,
-                                "longitude": 20.0,
-                                "max_distance_meters": 30.0,
-                            },
-                            {
-                                "filter_type": "something_new",
-                                "property_name": "strange_property",
-                                "value": "xyz",
-                            },
-                        ]
-                    ],
-                    "filter_operators": "AND",
-                }
-            ]
-        ],
-        "aggregations": [
-            [
-                {
-                    "collection": "test_collection",
-                    "search_query": None,
-                    "groupby_property": None,
-                    "aggregations": [
-                        {
-                            "aggregation_type": "integer",
-                            "property_name": "prop_int",
-                            "metrics": "MEAN",
-                        },
-                        {
-                            "aggregation_type": "text",
-                            "property_name": "prop_text",
-                            "metrics": "COUNT",
-                            "top_occurrences_limit": 10,
-                        },
-                        {
-                            "aggregation_type": "boolean",
-                            "property_name": "prop_bool",
-                            "metrics": "PERCENTAGE_TRUE",
-                        },
-                        {
-                            "aggregation_type": "date",
-                            "property_name": "prop_date",
-                            "metrics": "MAXIMUM",
-                        },
-                        {
-                            "aggregation_type": "something_new",
-                            "property_name": "strange_property",
-                            "metrics": "XYZ",
-                        },
-                    ],
-                    "filters": [],
-                }
-            ]
-        ],
-        "sources": [{"object_id": "123", "collection": "test_collection"}],
-        "usage": {
-            "requests": 1,
-            "request_tokens": 10,
-            "response_tokens": 20,
-            "total_tokens": 30,
-            "details": {},
-        },
-        "total_time": 0.1,
-        "aggregation_answer": None,
-        "has_aggregation_answer": False,
-        "has_search_answer": False,
-        "is_partial_answer": False,
-        "missing_information": [],
-        "final_answer": "final answer",
-    }
-    return FakeResponse(200, json_data)
+    return FakeResponse(200, FAKE_SUCCESS_JSON)
 
 
 async def fake_async_post_success(*args, **kwargs) -> FakeResponse:
@@ -267,6 +278,109 @@ async def test_async_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
+class MockIterSSESuccess:
+    def iter_sse(self):
+        yield ServerSentEvent(
+            event="progress_message",
+            data=json.dumps(
+                {
+                    "output_type": "progress_message",
+                    "stage": "query_analysis",
+                    "message": "Analyzing query...",
+                    "details": {},
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="streamed_tokens",
+            data=json.dumps(
+                {
+                    "output_type": "streamed_tokens",
+                    "delta": "final",
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="streamed_tokens",
+            data=json.dumps({"output_type": "streamed_tokens", "delta": " answer"}),
+        )
+        yield ServerSentEvent(event="final_state", data=json.dumps(FAKE_SUCCESS_JSON))
+
+    async def aiter_sse(self):
+        for event in self.iter_sse():
+            yield event
+
+
+@contextmanager
+def mock_connect_sse_success(*args, **kwargs):
+    yield MockIterSSESuccess()
+
+
+def test_stream_success(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    for result in agent.stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 4
+
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedTokens(delta="final")
+    assert all_results[2] == StreamedTokens(delta=" answer")
+
+    assert isinstance(all_results[3], QueryAgentResponse)
+    assert all_results[3].original_query == "test query"
+    assert all_results[3].collection_names == ["test_collection"]
+    assert all_results[3].total_time == 0.1
+    assert all_results[3].final_answer == "final answer"
+
+
+@asynccontextmanager
+async def mock_aconnect_sse_success(*args, **kwargs):
+    yield MockIterSSESuccess()
+
+
+async def test_async_stream_success(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    async for result in agent.stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 4
+
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedTokens(delta="final")
+    assert all_results[2] == StreamedTokens(delta=" answer")
+
+    assert isinstance(all_results[3], QueryAgentResponse)
+    assert all_results[3].original_query == "test query"
+    assert all_results[3].collection_names == ["test_collection"]
+    assert all_results[3].total_time == 0.1
+    assert all_results[3].final_answer == "final answer"
+
+
 def test_run_failure(monkeypatch):
     """Test that QueryAgent.run raises an exception when the HTTP response indicates an error.
 
@@ -302,6 +416,103 @@ async def test_async_run_failure(monkeypatch):
     with pytest.raises(Exception) as exc_info:
         await agent.run("failure query")
 
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+class MockIterSSEFailure:
+    def iter_sse(self):
+        yield ServerSentEvent(
+            event="progress_message",
+            data=json.dumps(
+                {
+                    "output_type": "progress_message",
+                    "stage": "query_analysis",
+                    "message": "Analyzing query...",
+                    "details": {},
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="error",
+            data=json.dumps(
+                {
+                    "error": {
+                        "error": {
+                            "message": "Test error message",
+                            "code": "test_error_code",
+                            "details": {"info": "test detail"},
+                        }
+                    }
+                }
+            ),
+        )
+
+    async def aiter_sse(self):
+        for event in self.iter_sse():
+            yield event
+
+
+@contextmanager
+def mock_connect_sse_failure(*args, **kwargs):
+    yield MockIterSSEFailure()
+
+
+def test_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        for result in agent.stream("failure query"):
+            all_results.append(result)
+
+    # Should have received the progress message before the exception
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+@asynccontextmanager
+async def mock_aconnect_sse_failure(*args, **kwargs):
+    yield MockIterSSEFailure()
+
+
+async def test_async_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        async for result in agent.stream("failure query"):
+            all_results.append(result)
+
+    # Should have received the progress message before the exception
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
     assert (
         str(exc_info.value)
         == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
