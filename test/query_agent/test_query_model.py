@@ -227,7 +227,7 @@ FAKE_SUCCESS_JSON = {
                     ]
                 ],
                 "filter_operators": "AND",
-            }
+            },
         ]
     ],
     "aggregations": [
