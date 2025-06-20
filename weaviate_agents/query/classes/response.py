@@ -198,7 +198,7 @@ PropertyFilter = Union[
 
 
 class QueryResult(BaseModel):
-    queries: list[str]
+    queries: list[Union[str, None]]
     filters: list[list[PropertyFilter]] = []
     filter_operators: Literal["AND", "OR"]
 
