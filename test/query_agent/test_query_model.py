@@ -143,7 +143,91 @@ FAKE_SUCCESS_JSON = {
                     ]
                 ],
                 "filter_operators": "AND",
-            }
+            },
+            {
+                "collection": "test_collection",
+                "queries": [None],
+                "filters": [
+                    [
+                        {
+                            "filter_type": "integer",
+                            "property_name": "prop_int",
+                            "operator": "=",
+                            "value": 1.0,
+                        },
+                        {
+                            "filter_type": "integer_array",
+                            "property_name": "prop_int_aray",
+                            "operator": "contains_all",
+                            "value": [1.0, 2.0],
+                        },
+                        {
+                            "filter_type": "text",
+                            "property_name": "prop_text",
+                            "operator": "LIKE",
+                            "value": "*something*",
+                        },
+                        {
+                            "filter_type": "text_array",
+                            "property_name": "prop_text_array",
+                            "operator": "contains_any",
+                            "value": ["one", "two"],
+                        },
+                        {
+                            "filter_type": "boolean",
+                            "property_name": "prop_bool",
+                            "operator": "=",
+                            "value": True,
+                        },
+                        {
+                            "filter_type": "boolean_array",
+                            "property_name": "prop_bool_array",
+                            "operator": "contains_any",
+                            "value": [True, False],
+                        },
+                        {
+                            "filter_type": "date_range",
+                            "property_name": "prop_date",
+                            "value": {
+                                "date_from": "2025-01-01T12:01:23Z",
+                                "date_to": "2025-01-02T12:01:23Z",
+                                "inclusive_from": True,
+                                "inclusive_to": True,
+                            },
+                        },
+                        {
+                            "filter_type": "date_range",
+                            "property_name": "prop_date",
+                            "value": {
+                                "exact_timestamp": "2025-01-01T12:01:23Z",
+                                "operator": "=",
+                            },
+                        },
+                        {
+                            "filter_type": "date_array",
+                            "property_name": "prop_date_array",
+                            "operator": "contains_all",
+                            "value": [
+                                "2025-01-01T12:01:23Z",
+                                "2025-01-02T12:01:23Z",
+                            ],
+                        },
+                        {
+                            "filter_type": "geo",
+                            "property_name": "prop_geo",
+                            "latitude": 10.0,
+                            "longitude": 20.0,
+                            "max_distance_meters": 30.0,
+                        },
+                        {
+                            "filter_type": "something_new",
+                            "property_name": "strange_property",
+                            "value": "xyz",
+                        },
+                    ]
+                ],
+                "filter_operators": "AND",
+            },
         ]
     ],
     "aggregations": [
@@ -193,9 +277,6 @@ FAKE_SUCCESS_JSON = {
         "details": {},
     },
     "total_time": 0.1,
-    "aggregation_answer": None,
-    "has_aggregation_answer": False,
-    "has_search_answer": False,
     "is_partial_answer": False,
     "missing_information": [],
     "final_answer": "final answer",

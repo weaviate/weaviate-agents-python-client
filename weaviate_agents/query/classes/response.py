@@ -198,7 +198,7 @@ PropertyFilter = Union[
 
 
 class QueryResult(BaseModel):
-    queries: list[str]
+    queries: list[Union[str, None]]
     filters: list[list[PropertyFilter]] = []
     filter_operators: Literal["AND", "OR"]
 
@@ -353,9 +353,6 @@ class QueryAgentResponse(BaseModel):
     aggregations: list[list[AggregationResultWithCollection]]
     usage: Usage
     total_time: float
-    aggregation_answer: Optional[str] = None
-    has_aggregation_answer: bool
-    has_search_answer: bool
     is_partial_answer: bool
     missing_information: list[str]
     final_answer: str
