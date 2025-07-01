@@ -101,6 +101,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
+        include_final_state: bool = True,
     ) -> Union[
         Generator[
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
@@ -156,6 +157,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
+        include_final_state: bool = True,
     ) -> Generator[
         Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
     ]:
@@ -164,6 +166,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections,
             context,
             include_progress=include_progress,
+            include_final_state=include_final_state,
         )
         with httpx.Client() as client:
             with connect_sse(
@@ -222,6 +225,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
+        include_final_state: bool = True,
     ) -> AsyncGenerator[
         Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
     ]:
@@ -230,6 +234,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections,
             context,
             include_progress=include_progress,
+            include_final_state=include_final_state,
         )
         async with httpx.AsyncClient() as client:
             async with aconnect_sse(
