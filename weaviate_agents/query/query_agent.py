@@ -1,6 +1,16 @@
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Any, AsyncGenerator, Coroutine, Generator, Generic, Literal, Optional, Union, overload
+from typing import (
+    Any,
+    AsyncGenerator,
+    Coroutine,
+    Generator,
+    Generic,
+    Literal,
+    Optional,
+    Union,
+    overload,
+)
 
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
@@ -103,9 +113,14 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None],
-        AsyncGenerator[Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None],
-    ]: pass
+        Generator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
+    ]:
+        pass
 
     @overload
     def stream(
@@ -118,7 +133,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
-    ]: pass
+    ]:
+        pass
 
     @overload
     def stream(
@@ -131,7 +147,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[
         Generator[Union[StreamedTokens, QueryAgentResponse], None, None],
         AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None],
-    ]: pass
+    ]:
+        pass
 
     @overload
     def stream(
@@ -144,7 +161,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[
         Generator[StreamedTokens, None, None],
         AsyncGenerator[StreamedTokens, None],
-    ]: pass
+    ]:
+        pass
 
     @abstractmethod
     def stream(
@@ -158,7 +176,9 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         Generator[
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
         ],
-        AsyncGenerator[Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
     ]:
         """Stream from the query agent. Must be implemented by subclasses."""
         pass
@@ -209,7 +229,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         context: Optional[QueryAgentResponse] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
-    ) -> Generator[Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None]: ...
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+    ]: ...
 
     @overload
     def stream(
@@ -323,7 +345,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         context: Optional[QueryAgentResponse] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
-    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None]: ...
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+    ]: ...
 
     @overload
     def stream(
