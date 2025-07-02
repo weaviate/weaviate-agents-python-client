@@ -703,3 +703,71 @@ async def test_async_run_with_target_vector(monkeypatch):
         "first_vector",
         "second_vector",
     ]
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+def test_stream_with_include_progress_and_final_state(
+    monkeypatch, include_progress, include_final_state
+):
+    captured = {}
+
+    @contextmanager
+    def mock_connect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Iterate fully over the stream
+    for _ in agent.stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_final_state=include_final_state,
+    ):
+        pass
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_final_state"] == include_final_state
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+async def test_async_stream_with_include_progress_and_final_state(
+    monkeypatch, include_progress, include_final_state
+):
+    captured = {}
+
+    @asynccontextmanager
+    async def mock_aconnect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Iterate fully over the stream
+    async for _ in agent.stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_final_state=include_final_state,
+    ):
+        pass
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_final_state"] == include_final_state
