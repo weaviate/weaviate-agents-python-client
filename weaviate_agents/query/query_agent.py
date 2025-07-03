@@ -1,6 +1,16 @@
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Any, AsyncGenerator, Coroutine, Generator, Generic, Optional, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    Coroutine,
+    Generator,
+    Generic,
+    Literal,
+    Optional,
+    Union,
+    overload,
+)
 
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
@@ -94,6 +104,66 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         """Run the query agent. Must be implemented by subclasses."""
         pass
 
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
+    ]:
+        pass
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
+    ]:
+        pass
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[Union[StreamedTokens, QueryAgentResponse], None, None],
+        AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None],
+    ]:
+        pass
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[StreamedTokens, None, None],
+        AsyncGenerator[StreamedTokens, None],
+    ]:
+        pass
+
     @abstractmethod
     def stream(
         self,
@@ -101,6 +171,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
+        include_final_state: bool = True,
     ) -> Union[
         Generator[
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
@@ -150,20 +221,62 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
         return QueryAgentResponse(**response.json())
 
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+    ]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[Union[StreamedTokens, QueryAgentResponse], None, None]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[StreamedTokens, None, None]: ...
+
     def stream(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
-    ) -> Generator[
-        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
-    ]:
+        include_final_state: bool = True,
+    ):
         request_body = self._prepare_request_body(
             query,
             collections,
             context,
             include_progress=include_progress,
+            include_final_state=include_final_state,
         )
         with httpx.Client() as client:
             with connect_sse(
@@ -175,7 +288,15 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 timeout=self._timeout,
             ) as events:
                 for sse in events.iter_sse():
-                    yield _parse_sse(sse)
+                    output = _parse_sse(sse)
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, QueryAgentResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -216,20 +337,62 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
             return QueryAgentResponse(**response.json())
 
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+    ]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None]: ...
+
+    @overload
+    def stream(
+        self,
+        query: str,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        context: Optional[QueryAgentResponse] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[StreamedTokens, None]: ...
+
     async def stream(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
-    ) -> AsyncGenerator[
-        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
-    ]:
+        include_final_state: bool = True,
+    ):
         request_body = self._prepare_request_body(
             query,
             collections,
             context,
             include_progress=include_progress,
+            include_final_state=include_final_state,
         )
         async with httpx.AsyncClient() as client:
             async with aconnect_sse(
@@ -241,7 +404,15 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 timeout=self._timeout,
             ) as events:
                 async for sse in events.aiter_sse():
-                    yield _parse_sse(sse)
+                    output = _parse_sse(sse)
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, QueryAgentResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
 
 
 def _parse_sse(
