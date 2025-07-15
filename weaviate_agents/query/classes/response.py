@@ -31,6 +31,7 @@ class KnownFilterType(str, Enum):
     DATE = "date_range"
     DATE_ARRAY = "date_array"
     GEO = "geo"
+    IS_NULL = "is_null"
 
 
 class KnownPropertyFilterBase(BaseModel):
@@ -159,6 +160,16 @@ class GeoPropertyFilter(KnownPropertyFilterBase):
     max_distance_meters: float
 
 
+class IsNullPropertyFilter(KnownPropertyFilterBase):
+    """Filter by property null state."""
+
+    filter_type: Literal[KnownFilterType.IS_NULL] = Field(
+        repr=False, default=KnownFilterType.IS_NULL
+    )
+
+    is_null: bool
+
+
 class UnknownPropertyFilter(BaseModel):
     """Catch-all filter for unknown filter types, to preserve future back-compatibility."""
 
@@ -193,6 +204,7 @@ PropertyFilter = Union[
     DatePropertyFilter,
     DateArrayPropertyFilter,
     GeoPropertyFilter,
+    IsNullPropertyFilter,
     UnknownPropertyFilter,
 ]
 

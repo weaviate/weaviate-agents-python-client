@@ -57,6 +57,7 @@ def test_class_exports():
         IntegerArrayPropertyFilter,
         IntegerPropertyAggregation,
         IntegerPropertyFilter,
+        IsNullPropertyFilter,
         NumericMetrics,
         Operations,
         OperationStep,
@@ -118,6 +119,7 @@ def test_class_exports():
         IntegerArrayPropertyFilter,
         IntegerPropertyAggregation,
         IntegerPropertyFilter,
+        IsNullPropertyFilter,
         GeoPropertyFilter,
         NumericMetrics,
         Operations,
@@ -198,6 +200,7 @@ def test_class_exports():
         "ProgressDetails",
         "ProgressMessage",
         "StreamedTokens",
+        "IsNullPropertyFilter",
     ]
 
     assert hasattr(
