@@ -136,6 +136,11 @@ FAKE_SUCCESS_JSON = {
                             "max_distance_meters": 30.0,
                         },
                         {
+                            "filter_type": "is_null",
+                            "property_name": "prop_is_null",
+                            "is_null": True,
+                        },
+                        {
                             "filter_type": "something_new",
                             "property_name": "strange_property",
                             "value": "xyz",
@@ -218,6 +223,11 @@ FAKE_SUCCESS_JSON = {
                             "latitude": 10.0,
                             "longitude": 20.0,
                             "max_distance_meters": 30.0,
+                        },
+                        {
+                            "filter_type": "is_null",
+                            "property_name": "prop_is_null",
+                            "is_null": True,
                         },
                         {
                             "filter_type": "something_new",

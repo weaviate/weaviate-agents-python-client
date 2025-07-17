@@ -14,6 +14,7 @@ from weaviate_agents.query.classes import (
     IntegerArrayPropertyFilter,
     IntegerPropertyAggregation,
     IntegerPropertyFilter,
+    IsNullPropertyFilter,
     NumericMetrics,
     ProgressDetails,
     ProgressMessage,
@@ -66,4 +67,5 @@ __all__ = [
     "ProgressMessage",
     "QueryWithCollection",
     "StreamedTokens",
+    "IsNullPropertyFilter",
 ]
