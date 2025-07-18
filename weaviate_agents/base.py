@@ -28,4 +28,5 @@ class _BaseAgent(Generic[ClientType]):
         self._headers = {
             "Authorization": self._connection.get_current_bearer_token(),
             "X-Weaviate-Cluster-Url": self._client._connection.url.replace(":443", ""),
+            "X-Agent-Request-Origin": "python-client",
         }
