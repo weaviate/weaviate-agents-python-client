@@ -287,6 +287,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 headers=self._headers,
                 timeout=self._timeout,
             ) as events:
+                if events.response.is_error:
+                    events.response.read()
+                    raise Exception(events.response.text)
+
                 for sse in events.iter_sse():
                     output = _parse_sse(sse)
                     if isinstance(output, ProgressMessage):
@@ -403,6 +407,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 headers=self._headers,
                 timeout=self._timeout,
             ) as events:
+                if events.response.is_error:
+                    events.response.read()
+                    raise Exception(events.response.text)
+
                 async for sse in events.aiter_sse():
                     output = _parse_sse(sse)
                     if isinstance(output, ProgressMessage):
