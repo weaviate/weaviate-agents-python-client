@@ -370,6 +370,8 @@ async def test_async_run_success(monkeypatch):
 
 
 class MockIterSSESuccess:
+    response = FakeResponse(200, {})
+
     def iter_sse(self):
         yield ServerSentEvent(
             event="progress_message",
@@ -514,6 +516,8 @@ async def test_async_run_failure(monkeypatch):
 
 
 class MockIterSSEFailure:
+    response = FakeResponse(200, {})
+
     def iter_sse(self):
         yield ServerSentEvent(
             event="progress_message",
