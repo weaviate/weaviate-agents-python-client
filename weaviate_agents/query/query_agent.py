@@ -15,6 +15,7 @@ from typing import (
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
+from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.base import ClientType, _BaseAgent
 from weaviate_agents.query.classes import (
@@ -23,6 +24,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
+from weaviate_agents.query.search import QueryAgentSearcher
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -301,6 +303,24 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                             yield output
                     else:
                         yield output
+
+    def prepare_search(
+        self,
+        query: str,
+        filters: Optional[_Filters] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> QueryAgentSearcher:
+        collections = collections or self._collections
+        return QueryAgentSearcher(
+            client=self._client,
+            headers=self._headers,
+            timeout=self._timeout,
+            agent_url=self.agent_url,
+            query=query,
+            filters=filters,
+            collections=collections,
+            system_prompt=self._system_prompt,
+        )
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
