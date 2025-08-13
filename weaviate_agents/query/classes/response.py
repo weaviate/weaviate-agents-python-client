@@ -4,6 +4,7 @@ from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
+from weaviate.outputs.query import QueryReturn
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_query_agent_response
@@ -395,3 +396,11 @@ class ProgressMessage(BaseModel):
 class StreamedTokens(BaseModel):
     output_type: Literal["streamed_tokens"] = "streamed_tokens"
     delta: str
+
+
+class SearchModeResponse(BaseModel):
+    original_query: str
+    searches: list[QueryResultWithCollection] | None = None
+    usage: Usage
+    total_time: float
+    search_results: QueryReturn
