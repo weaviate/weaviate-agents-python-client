@@ -1,10 +1,11 @@
-from typing import Annotated, Dict, List, Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
 from weaviate.collections.classes.filters import _Filters
 
-from weaviate_agents.personalization.classes.query import serialise_filter  # TODO: move upwards
-
+from weaviate_agents.personalization.classes.query import (
+    serialise_filter,  # TODO: move upwards
+)
 from weaviate_agents.query.classes import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.response import QueryResultWithCollection
 

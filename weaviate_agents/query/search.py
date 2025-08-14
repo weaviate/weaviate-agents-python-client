@@ -4,8 +4,14 @@ import httpx
 from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.query.classes.collection import QueryAgentCollectionConfig
-from weaviate_agents.query.classes.request import SearchModeExecutionRequest, SearchModeGenerationRequest
-from weaviate_agents.query.classes.response import SearchModeResponse, QueryResultWithCollection
+from weaviate_agents.query.classes.request import (
+    SearchModeExecutionRequest,
+    SearchModeGenerationRequest,
+)
+from weaviate_agents.query.classes.response import (
+    QueryResultWithCollection,
+    SearchModeResponse,
+)
 
 
 class _BaseQueryAgentSearcher:
