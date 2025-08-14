@@ -24,7 +24,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
-from weaviate_agents.query.search import QueryAgentSearcher
+from weaviate_agents.query.search import AsyncQueryAgentSearcher, QueryAgentSearcher
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -185,6 +185,16 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         """Stream from the query agent. Must be implemented by subclasses."""
         pass
 
+    @abstractmethod
+    def prepare_search(
+        self,
+        query: str,
+        filters: Optional[_Filters] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> Union[QueryAgentSearcher, AsyncQueryAgentSearcher]:
+        """Build a searcher for the search-only mode of the query agent. Must be implemented by subclasses."""
+        pass
+
 
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
@@ -312,7 +322,6 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     ) -> QueryAgentSearcher:
         collections = collections or self._collections
         return QueryAgentSearcher(
-            client=self._client,
             headers=self._headers,
             timeout=self._timeout,
             agent_url=self.agent_url,
@@ -441,6 +450,23 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                             yield output
                     else:
                         yield output
+
+    def prepare_search(
+        self,
+        query: str,
+        filters: Optional[_Filters] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> AsyncQueryAgentSearcher:
+        collections = collections or self._collections
+        return AsyncQueryAgentSearcher(
+            headers=self._headers,
+            timeout=self._timeout,
+            agent_url=self.agent_url,
+            query=query,
+            filters=filters,
+            collections=collections,
+            system_prompt=self._system_prompt,
+        )
 
 
 def _parse_sse(
