@@ -41,7 +41,8 @@ class _BaseQueryAgentSearcher:
                 collections=self.collections,
                 limit=limit,
                 offset=offset,
-                user_filters=self.filters,
+                # TODO: Don't support user_filters yet until the backend fully supports it
+                # user_filters=self.filters,
                 system_prompt=self.system_prompt,
             ).model_dump(mode="json")
         else:
@@ -50,7 +51,8 @@ class _BaseQueryAgentSearcher:
                 collections=self.collections,
                 limit=limit,
                 offset=offset,
-                user_filters=self.filters,
+                # TODO: Don't support user_filters yet until the backend fully supports it
+                # user_filters=self.filters,
                 searches=self._cached_searches,
             ).model_dump(mode="json")
         

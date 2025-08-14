@@ -1,11 +1,7 @@
-from typing import Annotated, Optional, Union
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict
-from weaviate.collections.classes.filters import _Filters
 
-from weaviate_agents.personalization.classes.query import (
-    serialise_filter,  # TODO: move upwards
-)
 from weaviate_agents.query.classes import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.response import QueryResultWithCollection
 
@@ -17,8 +13,8 @@ class SearchModeRequestBase(BaseModel):
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
     offset: int
-    # TODO: This will need to be modified as the type isn't really right, but it's currently what the backend expects
-    user_filters: Optional[list[Annotated[_Filters, serialise_filter]]] = None
+    # TODO: Leave this for now until it's fully supported by the backend
+    user_filters: None = None
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):
