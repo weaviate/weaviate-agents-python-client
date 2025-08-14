@@ -400,7 +400,7 @@ class StreamedTokens(BaseModel):
 
 class SearchModeResponse(BaseModel):
     original_query: str
-    searches: list[QueryResultWithCollection] | None = None
+    searches: Optional[list[QueryResultWithCollection]] = None
     usage: Usage
     total_time: float
     search_results: QueryReturn
