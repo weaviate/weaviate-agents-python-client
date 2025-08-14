@@ -321,6 +321,8 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentSearcher:
         collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
         return QueryAgentSearcher(
             headers=self._headers,
             timeout=self._timeout,
@@ -458,6 +460,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncQueryAgentSearcher:
         collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
         return AsyncQueryAgentSearcher(
             headers=self._headers,
             timeout=self._timeout,
