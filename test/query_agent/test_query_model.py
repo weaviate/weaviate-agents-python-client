@@ -10,9 +10,15 @@ from weaviate_agents.classes.query import (
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
+    SearchModeResponse,
     StreamedTokens,
 )
-from weaviate_agents.query import AsyncQueryAgent, QueryAgent
+from weaviate_agents.query import (
+    AsyncQueryAgent,
+    AsyncQueryAgentSearcher,
+    QueryAgent,
+    QueryAgentSearcher,
+)
 
 
 class DummyClient:
@@ -293,6 +299,80 @@ FAKE_SUCCESS_JSON = {
 }
 
 
+FAKE_SEARCH_ONLY_SUCCESS_JSON = {
+    "original_query": "Test this search only mode!",
+    "searches": [
+        {
+            "queries": ["search query"],
+            "filters": [
+                [
+                    {
+                        "filter_type": "integer",
+                        "property_name": "test_property",
+                        "operator": ">",
+                        "value": 0.0,
+                    },
+                ]
+            ],
+            "filter_operators": "AND",
+            "collection": "test_collection",
+        }
+    ],
+    "usage": {
+        "requests": 0,
+        "request_tokens": None,
+        "response_tokens": None,
+        "total_tokens": None,
+        "details": None,
+    },
+    "total_time": 1.5,
+    "search_results": {
+        "objects": [
+            {
+                "uuid": "e6dc0a31-76f8-4bd3-b563-677ced6eb557",
+                "metadata": {
+                    "creation_time": None,
+                    "last_update_time": None,
+                    "distance": None,
+                    "certainty": None,
+                    "score": 0.43136916,
+                    "explain_score": None,
+                    "is_consistent": None,
+                    "rerank_score": None,
+                },
+                "properties": {
+                    "test_property": 1.0,
+                    "text": "hello",
+                },
+                "references": None,
+                "vector": {},
+                "collection": "test_collection",
+            },
+            {
+                "uuid": "cf5401cc-f4f1-4eb9-a6a1-173d34f94339",
+                "metadata": {
+                    "creation_time": None,
+                    "last_update_time": None,
+                    "distance": None,
+                    "certainty": None,
+                    "score": 0.40613216,
+                    "explain_score": None,
+                    "is_consistent": None,
+                    "rerank_score": None,
+                },
+                "properties": {
+                    "test_property": 2.0,
+                    "text": "world!",
+                },
+                "references": None,
+                "vector": {},
+                "collection": "test_collection",
+            }
+        ]
+    },
+}
+
+
 def fake_post_success(*args, **kwargs) -> FakeResponse:
     """Simulate a successful HTTP POST response.
 
@@ -304,6 +384,19 @@ def fake_post_success(*args, **kwargs) -> FakeResponse:
 
 async def fake_async_post_success(*args, **kwargs) -> FakeResponse:
     return fake_post_success(*args, **kwargs)
+
+
+def fake_post_search_only_success(*args, **kwargs) -> FakeResponse:
+    """Simulate a successful HTTP POST response.
+
+    Returns:
+        FakeResponse: A fake HTTP response with status code 200.
+    """
+    return FakeResponse(200, FAKE_SEARCH_ONLY_SUCCESS_JSON)
+
+
+async def fake_async_post_search_only_success(*args, **kwargs) -> FakeResponse:
+    return fake_post_search_only_success(*args, **kwargs)
 
 
 def fake_post_failure(*args, **kwargs) -> FakeResponse:
@@ -350,6 +443,69 @@ def test_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
+def test_prepare_search_returns_searcher():
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    searcher = agent.prepare_search("test query")
+    assert isinstance(searcher, QueryAgentSearcher)
+
+
+def test_search_only_mode_success(monkeypatch):
+    captured = {}
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        # Return a normal successful response
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    searcher = agent.prepare_search("test query")
+    results = searcher.execute(limit=2, offset=0)
+
+    assert isinstance(results, SearchModeResponse)
+    # This is first request, so expect no searches to have been posted
+    assert captured['json']['searches'] is None
+    assert results.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+
+    # Reset captured json, then execute search for second time
+    captured = {}
+
+    results_2 = searcher.execute(limit=2, offset=1)
+    # This time, we expect the original searches to be sent to backend
+    assert captured['json']['searches'] == FAKE_SEARCH_ONLY_SUCCESS_JSON['searches']
+    assert results_2.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+
+
+def test_search_only_mode_failure(monkeypatch):
+    monkeypatch.setattr(httpx, "post", fake_post_failure)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        searcher = agent.prepare_search("test query")
+        _ = searcher.execute(limit=2, offset=0)
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
 async def test_async_run_success(monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
     dummy_client = DummyClient()
@@ -367,6 +523,68 @@ async def test_async_run_success(monkeypatch):
     assert result.collection_names == ["test_collection"]
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
+
+def test_async_prepare_search_returns_searcher():
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    searcher = agent.prepare_search("test query")
+    assert isinstance(searcher, AsyncQueryAgentSearcher)
+
+
+async def test_async_search_only_mode_success(monkeypatch):
+    captured = {}
+    async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        # Return a normal successful response
+        return await fake_async_post_search_only_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    searcher = agent.prepare_search("test query")
+    results = await searcher.execute(limit=2, offset=0)
+
+    assert isinstance(results, SearchModeResponse)
+    # This is first request, so expect no searches to have been posted
+    assert captured['json']['searches'] is None
+    assert results.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+
+    # Reset captured json, then execute search for second time
+    captured = {}
+
+    results_2 = await searcher.execute(limit=2, offset=1)
+    # This time, we expect the original searches to be sent to backend
+    assert captured['json']['searches'] == FAKE_SEARCH_ONLY_SUCCESS_JSON['searches']
+    assert results_2.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+
+
+async def test_async_search_only_mode_failure(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        searcher = agent.prepare_search("test query")
+        _ = await searcher.execute(limit=2, offset=0)
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
 
 
 class MockIterSSESuccess:
