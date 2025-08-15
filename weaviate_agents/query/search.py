@@ -1,7 +1,6 @@
 from typing import Any, Optional, Union
 
 import httpx
-from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.query.classes.collection import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.request import (
