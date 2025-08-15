@@ -75,6 +75,7 @@ def test_class_exports():
         QueryResult,
         QueryResultWithCollection,
         QueryWithCollection,
+        SearchModeResponse,
         Source,
         StreamedTokens,
         TextArrayPropertyFilter,
@@ -135,6 +136,7 @@ def test_class_exports():
         QueryResult,
         QueryResultWithCollection,
         QueryWithCollection,
+        SearchModeResponse,
         Source,
         TextArrayPropertyFilter,
         TextMetrics,
@@ -201,6 +203,7 @@ def test_class_exports():
         "ProgressMessage",
         "StreamedTokens",
         "IsNullPropertyFilter",
+        "SearchModeResponse",
     ]
 
     assert hasattr(

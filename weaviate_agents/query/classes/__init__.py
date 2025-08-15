@@ -24,6 +24,7 @@ from .response import (
     QueryResult,
     QueryResultWithCollection,
     QueryWithCollection,
+    SearchModeResponse,
     Source,
     StreamedTokens,
     TextArrayPropertyFilter,
@@ -68,4 +69,5 @@ __all__ = [
     "QueryWithCollection",
     "StreamedTokens",
     "IsNullPropertyFilter",
+    "SearchModeResponse",
 ]
