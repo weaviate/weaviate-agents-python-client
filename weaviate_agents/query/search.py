@@ -21,7 +21,6 @@ class _BaseQueryAgentSearcher:
         timeout: int,
         agent_url: str,
         query: str,
-        filters: Optional[_Filters],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
     ):
@@ -29,7 +28,6 @@ class _BaseQueryAgentSearcher:
         self.timeout = timeout
         self.agent_url = agent_url
         self.query = query
-        self.filters = filters
         self.collections = collections
         self.system_prompt = system_prompt
         self._cached_searches: Optional[list[QueryResultWithCollection]] = None
@@ -41,8 +39,6 @@ class _BaseQueryAgentSearcher:
                 collections=self.collections,
                 limit=limit,
                 offset=offset,
-                # TODO: Don't support user_filters yet until the backend fully supports it
-                # user_filters=self.filters,
                 system_prompt=self.system_prompt,
             ).model_dump(mode="json")
         else:
@@ -51,8 +47,6 @@ class _BaseQueryAgentSearcher:
                 collections=self.collections,
                 limit=limit,
                 offset=offset,
-                # TODO: Don't support user_filters yet until the backend fully supports it
-                # user_filters=self.filters,
                 searches=self._cached_searches,
             ).model_dump(mode="json")
         

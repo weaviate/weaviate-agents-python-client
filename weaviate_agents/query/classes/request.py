@@ -13,8 +13,6 @@ class SearchModeRequestBase(BaseModel):
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
     offset: int
-    # TODO: Leave this for now until it's fully supported by the backend
-    user_filters: None = None
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):

@@ -15,7 +15,6 @@ from typing import (
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
-from weaviate.collections.classes.filters import _Filters
 
 from weaviate_agents.base import ClientType, _BaseAgent
 from weaviate_agents.query.classes import (
@@ -189,7 +188,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     def prepare_search(
         self,
         query: str,
-        filters: Optional[_Filters] = None,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> Union[QueryAgentSearcher, AsyncQueryAgentSearcher]:
         """Build a searcher for the search-only mode of the query agent. Must be implemented by subclasses."""
@@ -317,7 +315,6 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     def prepare_search(
         self,
         query: str,
-        filters: Optional[_Filters] = None,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentSearcher:
         collections = collections or self._collections
@@ -328,7 +325,6 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             timeout=self._timeout,
             agent_url=self.agent_url,
             query=query,
-            filters=filters,
             collections=collections,
             system_prompt=self._system_prompt,
         )
@@ -456,7 +452,6 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     def prepare_search(
         self,
         query: str,
-        filters: Optional[_Filters] = None,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncQueryAgentSearcher:
         collections = collections or self._collections
@@ -467,7 +462,6 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             timeout=self._timeout,
             agent_url=self.agent_url,
             query=query,
-            filters=filters,
             collections=collections,
             system_prompt=self._system_prompt,
         )
