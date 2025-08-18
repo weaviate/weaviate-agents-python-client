@@ -16,7 +16,8 @@ from weaviate_agents.query.classes.response import (
 class _BaseQueryAgentSearcher:
     def __init__(
         self,
-        headers: dict,
+        headers: dict[str, Any],
+        connection_headers: dict[str, str],
         timeout: int,
         agent_url: str,
         query: str,
@@ -24,6 +25,7 @@ class _BaseQueryAgentSearcher:
         system_prompt: Optional[str],
     ):
         self.headers = headers
+        self.connection_headers = connection_headers
         self.timeout = timeout
         self.agent_url = agent_url
         self.query = query
@@ -34,6 +36,7 @@ class _BaseQueryAgentSearcher:
     def _get_request_body(self, limit: int, offset: int) -> dict[str, Any]:
         if self._cached_searches is None:
             return SearchModeGenerationRequest(
+                headers=self.connection_headers,
                 original_query=self.query,
                 collections=self.collections,
                 limit=limit,
@@ -42,6 +45,7 @@ class _BaseQueryAgentSearcher:
             ).model_dump(mode="json")
         else:
             return SearchModeExecutionRequest(
+                headers=self.connection_headers,
                 original_query=self.query,
                 collections=self.collections,
                 limit=limit,

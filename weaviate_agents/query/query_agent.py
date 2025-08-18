@@ -322,6 +322,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             raise ValueError("No collections provided to the query agent.")
         return QueryAgentSearcher(
             headers=self._headers,
+            connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
             agent_url=self.agent_url,
             query=query,
@@ -459,6 +460,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             raise ValueError("No collections provided to the query agent.")
         return AsyncQueryAgentSearcher(
             headers=self._headers,
+            connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
             agent_url=self.agent_url,
             query=query,

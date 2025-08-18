@@ -9,6 +9,7 @@ from weaviate_agents.query.classes.response import QueryResultWithCollection
 class SearchModeRequestBase(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    headers: dict[str, str]
     original_query: str
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
