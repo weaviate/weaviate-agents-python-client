@@ -64,7 +64,7 @@ class _BaseQueryAgentSearcher:
         
 
 class QueryAgentSearcher(_BaseQueryAgentSearcher):
-    def execute(self, limit: int, offset: int) -> SearchModeResponse:
+    def execute(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         request_body = self._get_request_body(limit, offset)
         response = httpx.post(
             self.agent_url + "/search_only",
@@ -76,7 +76,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
     
 
 class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
-    async def execute(self, limit: int, offset: int) -> SearchModeResponse:
+    async def execute(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         request_body = self._get_request_body(limit, offset)
         async with httpx.AsyncClient() as client:
             response = await client.post(
