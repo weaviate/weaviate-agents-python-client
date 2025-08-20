@@ -190,7 +190,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> Union[QueryAgentSearcher, AsyncQueryAgentSearcher]:
-        """Build a searcher for the search-only mode of the query agent. Must be implemented by subclasses."""
         pass
 
 
@@ -317,6 +316,23 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentSearcher:
+        """
+        Configure a QueryAgentSearcher for the search-only mode of the query agent.
+
+        This returns a configured QueryAgentSearcher, but does not send any requests or
+        run the agent. To do that, you should call the `execute` method on the searcher.
+
+        This allows you to paginate through a consistent results set, as calling the
+        `execute` method on the searcher multiple times will result in the same underlying
+        searches being performed each time.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+
+        Returns:
+            A configured QueryAgentSearcher for the search-only mode of the query agent.
+        """
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
@@ -455,6 +471,23 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncQueryAgentSearcher:
+        """
+        Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
+
+        This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
+        run the agent. To do that, you should call the `execute` method on the searcher.
+
+        This allows you to paginate through a consistent results set, as calling the
+        `execute` method on the searcher multiple times will result in the same underlying
+        searches being performed each time.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+
+        Returns:
+            A configured AsyncQueryAgentSearcher for the search-only mode of the query agent.
+        """
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
