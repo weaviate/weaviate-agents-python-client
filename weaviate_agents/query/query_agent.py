@@ -316,8 +316,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentSearcher:
-        """
-        Configure a QueryAgentSearcher for the search-only mode of the query agent.
+        """Configure a QueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured QueryAgentSearcher, but does not send any requests or
         run the agent. To do that, you should call the `run` method on the searcher.
@@ -471,8 +470,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncQueryAgentSearcher:
-        """
-        Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
+        """Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
         run the agent. To do that, you should call the `run` method on the searcher.
