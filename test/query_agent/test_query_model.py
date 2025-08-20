@@ -367,7 +367,7 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
                 "references": None,
                 "vector": {},
                 "collection": "test_collection",
-            }
+            },
         ]
     },
 }
@@ -457,6 +457,7 @@ def test_configure_search_returns_searcher():
 
 def test_search_only_mode_success(monkeypatch):
     captured = {}
+
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
         captured["json"] = json
         # Return a normal successful response
@@ -475,16 +476,16 @@ def test_search_only_mode_success(monkeypatch):
 
     assert isinstance(results, SearchModeResponse)
     # This is first request, so expect no searches to have been posted
-    assert captured['json']['searches'] is None
-    assert results.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+    assert captured["json"]["searches"] is None
+    assert results.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
 
     # Reset captured json, then run search for second time
     captured = {}
 
     results_2 = searcher.run(limit=2, offset=1)
     # This time, we expect the original searches to be sent to backend
-    assert captured['json']['searches'] == FAKE_SEARCH_ONLY_SUCCESS_JSON['searches']
-    assert results_2.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+    assert captured["json"]["searches"] == FAKE_SEARCH_ONLY_SUCCESS_JSON["searches"]
+    assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
 
 
 def test_search_only_mode_failure(monkeypatch):
@@ -524,6 +525,7 @@ async def test_async_run_success(monkeypatch):
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
 
+
 def test_async_configure_search_returns_searcher():
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -538,6 +540,7 @@ def test_async_configure_search_returns_searcher():
 
 async def test_async_search_only_mode_success(monkeypatch):
     captured = {}
+
     async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
         captured["json"] = json
         # Return a normal successful response
@@ -556,16 +559,16 @@ async def test_async_search_only_mode_success(monkeypatch):
 
     assert isinstance(results, SearchModeResponse)
     # This is first request, so expect no searches to have been posted
-    assert captured['json']['searches'] is None
-    assert results.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+    assert captured["json"]["searches"] is None
+    assert results.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
 
     # Reset captured json, then run search for second time
     captured = {}
 
     results_2 = await searcher.run(limit=2, offset=1)
     # This time, we expect the original searches to be sent to backend
-    assert captured['json']['searches'] == FAKE_SEARCH_ONLY_SUCCESS_JSON['searches']
-    assert results_2.model_dump(mode='json') == FAKE_SEARCH_ONLY_SUCCESS_JSON
+    assert captured["json"]["searches"] == FAKE_SEARCH_ONLY_SUCCESS_JSON["searches"]
+    assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
 
 
 async def test_async_search_only_mode_failure(monkeypatch):

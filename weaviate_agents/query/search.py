@@ -52,16 +52,16 @@ class _BaseQueryAgentSearcher:
                 offset=offset,
                 searches=self._cached_searches,
             ).model_dump(mode="json")
-        
+
     def _handle_response(self, response: httpx.Response) -> SearchModeResponse:
         if response.is_error:
             raise Exception(response.text)
-        
+
         parsed_response = SearchModeResponse(**response.json())
         if parsed_response.searches:
             self._cached_searches = parsed_response.searches
         return parsed_response
-        
+
 
 class QueryAgentSearcher(_BaseQueryAgentSearcher):
     """A configured searcher for the Query Agent search-only mode.
@@ -78,6 +78,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
+
     def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """Run the search-only agent with the given `limit` and `offset` values.
 
@@ -100,7 +101,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
             timeout=self.timeout,
         )
         return self._handle_response(response)
-    
+
 
 class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
     """A configured async searcher for the Query Agent search-only mode.
@@ -117,6 +118,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
+
     async def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """Run the search-only agent with the given `limit` and `offset` values.
 
