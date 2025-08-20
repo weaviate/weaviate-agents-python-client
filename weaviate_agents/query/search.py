@@ -67,9 +67,9 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
     """
     A configured searcher for the Query Agent search-only mode.
 
-    This is configured using the `QueryAgent.prepare_search` method, which builds this class
+    This is configured using the `QueryAgent.configure_search` method, which builds this class
     but does not send any requests and run the agent. The configured search can then be run
-    using the `execute` method. You can paginate through the results set by running the `execute` method
+    using the `run` method. You can paginate through the results set by running the `run` method
     multiple times on the same searcher instance, but with different `limit` / `offset` values;
     this will result in the same underlying searches being performed each time.
 
@@ -79,9 +79,9 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
-    def execute(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
+    def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """
-        Run the searcher with the given `limit` and `offset` values.
+        Run the search-only agent with the given `limit` and `offset` values.
 
         Calling this method multiple times on the same QueryAgentSearcher instance will result
         in the same underlying searches being performed each time, allowing you to paginate
@@ -108,9 +108,9 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
     """
     A configured async searcher for the Query Agent search-only mode.
 
-    This is configured using the `AsyncQueryAgent.prepare_search` method, which builds this class
+    This is configured using the `AsyncQueryAgent.configure_search` method, which builds this class
     but does not send any requests and run the agent. The configured search can then be run
-    using the `execute` method. You can paginate through the results set by running the `execute` method
+    using the `run` method. You can paginate through the results set by running the `run` method
     multiple times on the same searcher instance, but with different `limit` / `offset` values;
     this will result in the same underlying searches being performed each time.
 
@@ -120,9 +120,9 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
-    async def execute(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
+    async def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """
-        Run the searcher with the given `limit` and `offset` values.
+        Run the search-only agent with the given `limit` and `offset` values.
 
         Calling this method multiple times on the same AsyncQueryAgentSearcher instance will result
         in the same underlying searches being performed each time, allowing you to paginate

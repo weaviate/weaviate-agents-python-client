@@ -185,7 +185,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         pass
 
     @abstractmethod
-    def prepare_search(
+    def configure_search(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -311,7 +311,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     else:
                         yield output
 
-    def prepare_search(
+    def configure_search(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -320,10 +320,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         Configure a QueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured QueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `execute` method on the searcher.
+        run the agent. To do that, you should call the `run` method on the searcher.
 
         This allows you to paginate through a consistent results set, as calling the
-        `execute` method on the searcher multiple times will result in the same underlying
+        `run` method on the searcher multiple times will result in the same underlying
         searches being performed each time.
 
         Args:
@@ -466,7 +466,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     else:
                         yield output
 
-    def prepare_search(
+    def configure_search(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -475,10 +475,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `execute` method on the searcher.
+        run the agent. To do that, you should call the `run` method on the searcher.
 
         This allows you to paginate through a consistent results set, as calling the
-        `execute` method on the searcher multiple times will result in the same underlying
+        `run` method on the searcher multiple times will result in the same underlying
         searches being performed each time.
 
         Args:
