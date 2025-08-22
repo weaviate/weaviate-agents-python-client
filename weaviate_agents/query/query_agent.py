@@ -194,6 +194,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
