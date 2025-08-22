@@ -24,12 +24,11 @@ from weaviate_agents.query.classes import (
     StreamedTokens,
 )
 from weaviate_agents.query.search import (
-    AsyncSearchModeResponse,
     AsyncQueryAgentSearcher,
+    AsyncSearchModeResponse,
     QueryAgentSearcher,
     SearchModeResponse,
 )
-
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -512,6 +511,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             system_prompt=self._system_prompt,
         )
         return await searcher.run(limit=limit)
+
 
 def _parse_sse(
     sse: ServerSentEvent,

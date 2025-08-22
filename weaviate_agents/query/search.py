@@ -74,7 +74,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
     def _handle_response(self, response: httpx.Response) -> SearchModeResponse:
         if response.is_error:
             raise Exception(response.text)
-    
+
         parsed_response = SearchModeResponse(**response.json())
         if parsed_response.searches:
             self._cached_searches = parsed_response.searches
@@ -123,7 +123,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
     def _handle_response(self, response: httpx.Response) -> AsyncSearchModeResponse:
         if response.is_error:
             raise Exception(response.text)
-    
+
         parsed_response = AsyncSearchModeResponse(**response.json())
         if parsed_response.searches:
             self._cached_searches = parsed_response.searches
@@ -164,6 +164,7 @@ class SearchModeResponse(SearchModeResponseBase[QueryAgentSearcher]):
     This will result in the same underlying searches being performed each time,
     resulting in a consistent results set across pages.
     """
+
     def next(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """Paginate the search-only results with the given `limit` and `offset` values.
 
@@ -186,6 +187,7 @@ class AsyncSearchModeResponse(SearchModeResponseBase[AsyncQueryAgentSearcher]):
     This will result in the same underlying searches being performed each time,
     resulting in a consistent results set across pages.
     """
+
     async def next(self, limit: int = 20, offset: int = 0) -> AsyncSearchModeResponse:
         """Paginate the search-only results with the given `limit` and `offset` values.
 

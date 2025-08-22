@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Coroutine, Literal, Generic, Optional, TypeVar, Union
+from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
@@ -418,5 +418,7 @@ class SearchModeResponseBase(BaseModel, ABC, Generic[SearcherT]):
     _searcher: SearcherT
 
     @abstractmethod
-    def next(self: SearchModeResponseT, limit: int = 20, offset: int = 0) -> Union[SearchModeResponseT, Coroutine[Any, Any, SearchModeResponseT]]:
+    def next(
+        self: SearchModeResponseT, limit: int = 20, offset: int = 0
+    ) -> Union[SearchModeResponseT, Coroutine[Any, Any, SearchModeResponseT]]:
         pass
