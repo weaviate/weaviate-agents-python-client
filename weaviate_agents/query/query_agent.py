@@ -23,6 +23,12 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
+from weaviate_agents.query.search import (
+    AsyncQueryAgentSearcher,
+    AsyncSearchModeResponse,
+    QueryAgentSearcher,
+    SearchModeResponse,
+)
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -183,6 +189,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         """Stream from the query agent. Must be implemented by subclasses."""
         pass
 
+    @abstractmethod
+    def search(
+        self,
+        query: str,
+        limit: int = 20,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
+        pass
+
 
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
@@ -301,6 +316,43 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                             yield output
                     else:
                         yield output
+
+    def search(
+        self,
+        query: str,
+        limit: int = 20,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> SearchModeResponse:
+        """Run the Query Agent search-only mode.
+
+        This method sends the initial search request and returns a
+        `SearchModeResponse` containing the first page of results. To paginate,
+        use the `SearchModeResponse.next()` method. This reuses the same
+        underlying searches to ensure a consistent result set across pages.
+
+        Args:
+            query: The natural language query string for the agent.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+
+        Returns:
+            A `SearchModeResponse` for the first page of results. Use
+            `response.next(limit=..., offset=...)` to paginate.
+        """
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+        searcher = QueryAgentSearcher(
+            headers=self._headers,
+            connection_headers=self._connection.additional_headers,
+            timeout=self._timeout,
+            agent_url=self.agent_url,
+            query=query,
+            collections=collections,
+            system_prompt=self._system_prompt,
+        )
+        return searcher.run(limit=limit)
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -421,6 +473,44 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                             yield output
                     else:
                         yield output
+
+    async def search(
+        self,
+        query: str,
+        limit: int = 20,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> AsyncSearchModeResponse:
+        """Run the Query Agent search-only mode.
+
+        This method sends the initial search request and returns an
+        `AsyncSearchModeResponse` containing the first page of results. To
+        paginate, use the `AsyncSearchModeResponse.next()` method. This reuses
+        the same underlying searches to ensure a consistent result set across
+        pages.
+
+        Args:
+            query: The natural language query string for the agent.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+
+        Returns:
+            An `AsyncSearchModeResponse` for the first page of results. Use
+            `await response.next(limit=..., offset=...)` to paginate.
+        """
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+        searcher = AsyncQueryAgentSearcher(
+            headers=self._headers,
+            connection_headers=self._connection.additional_headers,
+            timeout=self._timeout,
+            agent_url=self.agent_url,
+            query=query,
+            collections=collections,
+            system_prompt=self._system_prompt,
+        )
+        return await searcher.run(limit=limit)
 
 
 def _parse_sse(
