@@ -10,14 +10,15 @@ from weaviate_agents.classes.query import (
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
-    SearchModeResponse,
     StreamedTokens,
 )
 from weaviate_agents.query import (
     AsyncQueryAgent,
-    AsyncQueryAgentSearcher,
     QueryAgent,
-    QueryAgentSearcher,
+)
+from weaviate_agents.query.search import (
+    AsyncSearchModeResponse,
+    SearchModeResponse,
 )
 
 
@@ -443,18 +444,6 @@ def test_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
-def test_configure_search_returns_searcher():
-    dummy_client = DummyClient()
-    agent = QueryAgent(
-        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
-    )
-    agent._connection = dummy_client
-    agent._headers = dummy_client.additional_headers
-
-    searcher = agent.configure_search("test query")
-    assert isinstance(searcher, QueryAgentSearcher)
-
-
 def test_search_only_mode_success(monkeypatch):
     captured = {}
 
@@ -471,9 +460,7 @@ def test_search_only_mode_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    searcher = agent.configure_search("test query")
-    results = searcher.run(limit=2, offset=0)
-
+    results = agent.search("test query", limit=2)
     assert isinstance(results, SearchModeResponse)
     # This is first request, so expect no searches to have been posted
     assert captured["json"]["searches"] is None
@@ -482,7 +469,8 @@ def test_search_only_mode_success(monkeypatch):
     # Reset captured json, then run search for second time
     captured = {}
 
-    results_2 = searcher.run(limit=2, offset=1)
+    results_2 = results.next(limit=2, offset=1)
+    assert isinstance(results_2, SearchModeResponse)
     # This time, we expect the original searches to be sent to backend
     assert captured["json"]["searches"] == FAKE_SEARCH_ONLY_SUCCESS_JSON["searches"]
     assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
@@ -498,8 +486,7 @@ def test_search_only_mode_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     with pytest.raises(Exception) as exc_info:
-        searcher = agent.configure_search("test query")
-        _ = searcher.run(limit=2, offset=0)
+        _ = agent.search("test query", limit=2)
 
     assert (
         str(exc_info.value)
@@ -526,18 +513,6 @@ async def test_async_run_success(monkeypatch):
     assert result.final_answer == "final answer"
 
 
-def test_async_configure_search_returns_searcher():
-    dummy_client = DummyClient()
-    agent = AsyncQueryAgent(
-        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
-    )
-    agent._connection = dummy_client
-    agent._headers = dummy_client.additional_headers
-
-    searcher = agent.configure_search("test query")
-    assert isinstance(searcher, AsyncQueryAgentSearcher)
-
-
 async def test_async_search_only_mode_success(monkeypatch):
     captured = {}
 
@@ -554,10 +529,8 @@ async def test_async_search_only_mode_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    searcher = agent.configure_search("test query")
-    results = await searcher.run(limit=2, offset=0)
-
-    assert isinstance(results, SearchModeResponse)
+    results = await agent.search("test query", limit=2)
+    assert isinstance(results, AsyncSearchModeResponse)
     # This is first request, so expect no searches to have been posted
     assert captured["json"]["searches"] is None
     assert results.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
@@ -565,7 +538,8 @@ async def test_async_search_only_mode_success(monkeypatch):
     # Reset captured json, then run search for second time
     captured = {}
 
-    results_2 = await searcher.run(limit=2, offset=1)
+    results_2 = await results.next(limit=2, offset=1)
+    assert isinstance(results_2, AsyncSearchModeResponse)
     # This time, we expect the original searches to be sent to backend
     assert captured["json"]["searches"] == FAKE_SEARCH_ONLY_SUCCESS_JSON["searches"]
     assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
@@ -581,8 +555,7 @@ async def test_async_search_only_mode_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     with pytest.raises(Exception) as exc_info:
-        searcher = agent.configure_search("test query")
-        _ = await searcher.run(limit=2, offset=0)
+        _ = await agent.search("test query", limit=2)
 
     assert (
         str(exc_info.value)
