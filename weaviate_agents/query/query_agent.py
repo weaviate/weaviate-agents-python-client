@@ -323,21 +323,22 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> SearchModeResponse:
-        """Configure a QueryAgentSearcher for the search-only mode of the query agent.
+        """Run the Query Agent search-only mode.
 
-        This returns a configured QueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `run` method on the searcher.
-
-        This allows you to paginate through a consistent results set, as calling the
-        `run` method on the searcher multiple times will result in the same underlying
-        searches being performed each time.
+        This method sends the initial search request and returns a
+        `SearchModeResponse` containing the first page of results. To paginate,
+        use the `SearchModeResponse.next()` method. This reuses the same
+        underlying searches to ensure a consistent result set across pages.
 
         Args:
             query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
 
         Returns:
-            A configured QueryAgentSearcher for the search-only mode of the query agent.
+            A `SearchModeResponse` for the first page of results. Use
+            `response.next(limit=..., offset=...)` to paginate.
         """
         collections = collections or self._collections
         if not collections:
@@ -479,21 +480,23 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncSearchModeResponse:
-        """Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
+        """Run the Query Agent search-only mode.
 
-        This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `run` method on the searcher.
-
-        This allows you to paginate through a consistent results set, as calling the
-        `run` method on the searcher multiple times will result in the same underlying
-        searches being performed each time.
+        This method sends the initial search request and returns an
+        `AsyncSearchModeResponse` containing the first page of results. To
+        paginate, use the `AsyncSearchModeResponse.next()` method. This reuses
+        the same underlying searches to ensure a consistent result set across
+        pages.
 
         Args:
             query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
 
         Returns:
-            A configured AsyncQueryAgentSearcher for the search-only mode of the query agent.
+            An `AsyncSearchModeResponse` for the first page of results. Use
+            `await response.next(limit=..., offset=...)` to paginate.
         """
         collections = collections or self._collections
         if not collections:

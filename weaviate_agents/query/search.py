@@ -59,11 +59,10 @@ class _BaseQueryAgentSearcher:
 class QueryAgentSearcher(_BaseQueryAgentSearcher):
     """A configured searcher for the Query Agent search-only mode.
 
-    This is configured using the `QueryAgent.configure_search` method, which builds this class
-    but does not send any requests and run the agent. The configured search can then be run
-    using the `run` method. You can paginate through the results set by running the `run` method
-    multiple times on the same searcher instance, but with different `limit` / `offset` values;
-    this will result in the same underlying searches being performed each time.
+    This configured search can be run using the `run` method. This allows you to
+    paginate through the results set multiple times with different `limit` / `offset`
+    values. This will result in the same underlying searches being performed each time,
+    resulting in a consistent results set across pages.
 
     Warning:
         Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
@@ -109,11 +108,10 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
 class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
     """A configured async searcher for the Query Agent search-only mode.
 
-    This is configured using the `AsyncQueryAgent.configure_search` method, which builds this class
-    but does not send any requests and run the agent. The configured search can then be run
-    using the `run` method. You can paginate through the results set by running the `run` method
-    multiple times on the same searcher instance, but with different `limit` / `offset` values;
-    this will result in the same underlying searches being performed each time.
+    This configured search can be run using the `run` method. This allows you to
+    paginate through the results set multiple times with different `limit` / `offset`
+    values. This will result in the same underlying searches being performed each time,
+    resulting in a consistent results set across pages.
 
     Warning:
         Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
@@ -158,10 +156,44 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
 
 
 class SearchModeResponse(SearchModeResponseBase[QueryAgentSearcher]):
+    """Reponse for the Query Agent search-only mode.
+
+    This contains the results of the search, the usage, and the underlying
+    searches performed. You can paginate through the results set by calling
+    the `next` method on this reponse with different `limit` / `offset` values.
+    This will result in the same underlying searches being performed each time,
+    resulting in a consistent results set across pages.
+    """
     def next(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
+        """Paginate the search-only results with the given `limit` and `offset` values.
+
+        Args:
+            limit: The maximum number of results to return. If not specified, this defaults to 20.
+            offset: The offset to start from. If not specified, the retrieval begins from the first object in the results set.
+
+        Returns:
+            The next `SearchModeResponse` page.
+        """
         return self._searcher.run(limit=limit, offset=offset)
 
 
 class AsyncSearchModeResponse(SearchModeResponseBase[AsyncQueryAgentSearcher]):
+    """Reponse for the Query Agent search-only mode.
+
+    This contains the results of the search, the usage, and the underlying
+    searches performed. You can paginate through the results set by calling
+    the `next` method on this reponse with different `limit` / `offset` values.
+    This will result in the same underlying searches being performed each time,
+    resulting in a consistent results set across pages.
+    """
     async def next(self, limit: int = 20, offset: int = 0) -> AsyncSearchModeResponse:
+        """Paginate the search-only results with the given `limit` and `offset` values.
+
+        Args:
+            limit: The maximum number of results to return. If not specified, this defaults to 20.
+            offset: The offset to start from. If not specified, the retrieval begins from the first object in the results set.
+
+        Returns:
+            The next `SearchModeResponse` page.
+        """
         return await self._searcher.run(limit=limit, offset=offset)
