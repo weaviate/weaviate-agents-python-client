@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Optional, Union
 
 import httpx
@@ -9,7 +11,7 @@ from weaviate_agents.query.classes.request import (
 )
 from weaviate_agents.query.classes.response import (
     QueryResultWithCollection,
-    SearchModeResponse,
+    SearchModeResponseBase,
 )
 
 
@@ -53,15 +55,6 @@ class _BaseQueryAgentSearcher:
                 searches=self._cached_searches,
             ).model_dump(mode="json")
 
-    def _handle_response(self, response: httpx.Response) -> SearchModeResponse:
-        if response.is_error:
-            raise Exception(response.text)
-
-        parsed_response = SearchModeResponse(**response.json())
-        if parsed_response.searches:
-            self._cached_searches = parsed_response.searches
-        return parsed_response
-
 
 class QueryAgentSearcher(_BaseQueryAgentSearcher):
     """A configured searcher for the Query Agent search-only mode.
@@ -78,6 +71,16 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
 
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
+
+    def _handle_response(self, response: httpx.Response) -> SearchModeResponse:
+        if response.is_error:
+            raise Exception(response.text)
+    
+        parsed_response = SearchModeResponse(**response.json())
+        if parsed_response.searches:
+            self._cached_searches = parsed_response.searches
+        parsed_response._searcher = self
+        return parsed_response
 
     def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
         """Run the search-only agent with the given `limit` and `offset` values.
@@ -119,7 +122,17 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
-    async def run(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
+    def _handle_response(self, response: httpx.Response) -> AsyncSearchModeResponse:
+        if response.is_error:
+            raise Exception(response.text)
+    
+        parsed_response = AsyncSearchModeResponse(**response.json())
+        if parsed_response.searches:
+            self._cached_searches = parsed_response.searches
+        parsed_response._searcher = self
+        return parsed_response
+
+    async def run(self, limit: int = 20, offset: int = 0) -> AsyncSearchModeResponse:
         """Run the search-only agent with the given `limit` and `offset` values.
 
         Calling this method multiple times on the same AsyncQueryAgentSearcher instance will result
@@ -131,7 +144,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
             offset: The offset to start from. If not specified, the retrieval begins from the first object in the results set.
 
         Returns:
-            A `SearchModeResponse` object containing the results of the search, the usage, and the underlying searches performed.
+            An `AsyncSearchModeResponse` object containing the results of the search, the usage, and the underlying searches performed.
         """
         request_body = self._get_request_body(limit, offset)
         async with httpx.AsyncClient() as client:
@@ -142,3 +155,13 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
                 timeout=self.timeout,
             )
         return self._handle_response(response)
+
+
+class SearchModeResponse(SearchModeResponseBase[QueryAgentSearcher]):
+    def next(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
+        return self._searcher.run(limit=limit, offset=offset)
+
+
+class AsyncSearchModeResponse(SearchModeResponseBase[AsyncQueryAgentSearcher]):
+    async def next(self, limit: int = 20, offset: int = 0) -> AsyncSearchModeResponse:
+        return await self._searcher.run(limit=limit, offset=offset)

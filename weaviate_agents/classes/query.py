@@ -23,7 +23,7 @@ from weaviate_agents.query.classes import (
     QueryResult,
     QueryResultWithCollection,
     QueryWithCollection,
-    SearchModeResponse,
+    SearchModeResponseBase,
     Source,
     StreamedTokens,
     TextArrayPropertyFilter,
@@ -69,5 +69,5 @@ __all__ = [
     "QueryWithCollection",
     "StreamedTokens",
     "IsNullPropertyFilter",
-    "SearchModeResponse",
+    "SearchModeResponseBase",
 ]

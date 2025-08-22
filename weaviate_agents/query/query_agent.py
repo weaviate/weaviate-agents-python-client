@@ -23,7 +23,13 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
-from weaviate_agents.query.search import AsyncQueryAgentSearcher, QueryAgentSearcher
+from weaviate_agents.query.search import (
+    AsyncSearchModeResponse,
+    AsyncQueryAgentSearcher,
+    QueryAgentSearcher,
+    SearchModeResponse,
+)
+
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -185,11 +191,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         pass
 
     @abstractmethod
-    def configure_search(
+    def search(
         self,
         query: str,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> Union[QueryAgentSearcher, AsyncQueryAgentSearcher]:
+    ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
 
@@ -311,11 +317,12 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     else:
                         yield output
 
-    def configure_search(
+    def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> QueryAgentSearcher:
+    ) -> SearchModeResponse:
         """Configure a QueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured QueryAgentSearcher, but does not send any requests or
@@ -335,7 +342,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
-        return QueryAgentSearcher(
+        searcher = QueryAgentSearcher(
             headers=self._headers,
             connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
@@ -344,6 +351,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections=collections,
             system_prompt=self._system_prompt,
         )
+        return searcher.run(limit=limit)
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -465,11 +473,12 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     else:
                         yield output
 
-    def configure_search(
+    async def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> AsyncQueryAgentSearcher:
+    ) -> AsyncSearchModeResponse:
         """Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
 
         This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
@@ -489,7 +498,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
-        return AsyncQueryAgentSearcher(
+        searcher = AsyncQueryAgentSearcher(
             headers=self._headers,
             connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
@@ -498,7 +507,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections=collections,
             system_prompt=self._system_prompt,
         )
-
+        return await searcher.run(limit=limit)
 
 def _parse_sse(
     sse: ServerSentEvent,
