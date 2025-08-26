@@ -32,6 +32,7 @@ from .query import (
     QueryResult,
     QueryResultWithCollection,
     QueryWithCollection,
+    SearchModeResponseBase,
     Source,
     StreamedTokens,
     TextArrayPropertyFilter,
@@ -96,4 +97,5 @@ __all__ = [
     "QueryWithCollection",
     "StreamedTokens",
     "IsNullPropertyFilter",
+    "SearchModeResponseBase",
 ]
