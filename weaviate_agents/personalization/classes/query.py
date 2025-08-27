@@ -13,7 +13,12 @@ from weaviate.collections.classes.grpc import (
     TargetVectorJoinType,
 )
 from weaviate.collections.classes.internal import ReturnProperties, ReturnReferences
-from weaviate_agents.serialise import serialise_filter, serialise_hybrid_vector_type, serialise_move
+
+from weaviate_agents.serialise import (
+    serialise_filter,
+    serialise_hybrid_vector_type,
+    serialise_move,
+)
 
 
 class NearTextQueryParameters(BaseModel):
