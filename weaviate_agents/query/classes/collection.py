@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Union
 
 from pydantic import BaseModel, ConfigDict
 from weaviate.collections.classes.filters import _Filters
@@ -23,7 +23,7 @@ class QueryAgentCollectionConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
-    tenant: Optional[str] = None
-    view_properties: Optional[list[str]] = None
-    target_vector: Optional[str | list[str]] = None
-    additional_filters: Optional[Annotated[_Filters, serialise_filter]] = None
+    tenant: Union[str, None] = None
+    view_properties: Union[list[str], None] = None
+    target_vector: Union[str, list[str], None] = None
+    additional_filters: Union[Annotated[_Filters, serialise_filter], None] = None
