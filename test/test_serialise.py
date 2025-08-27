@@ -9,7 +9,7 @@ from weaviate.collections.classes.grpc import (
     Move,
 )
 
-from weaviate_agents.personalization.classes.query import (
+from weaviate_agents.serialise import (
     serialise_filter,
     serialise_hybrid_vector_type,
     serialise_move,
