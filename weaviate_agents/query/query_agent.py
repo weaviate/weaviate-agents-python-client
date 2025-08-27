@@ -23,7 +23,12 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
-from weaviate_agents.query.search import AsyncQueryAgentSearcher, QueryAgentSearcher
+from weaviate_agents.query.search import (
+    AsyncQueryAgentSearcher,
+    AsyncSearchModeResponse,
+    QueryAgentSearcher,
+    SearchModeResponse,
+)
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -185,11 +190,12 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         pass
 
     @abstractmethod
-    def configure_search(
+    def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> Union[QueryAgentSearcher, AsyncQueryAgentSearcher]:
+    ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
 
@@ -311,31 +317,33 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     else:
                         yield output
 
-    def configure_search(
+    def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> QueryAgentSearcher:
-        """Configure a QueryAgentSearcher for the search-only mode of the query agent.
+    ) -> SearchModeResponse:
+        """Run the Query Agent search-only mode.
 
-        This returns a configured QueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `run` method on the searcher.
-
-        This allows you to paginate through a consistent results set, as calling the
-        `run` method on the searcher multiple times will result in the same underlying
-        searches being performed each time.
+        This method sends the initial search request and returns a
+        `SearchModeResponse` containing the first page of results. To paginate,
+        use the `SearchModeResponse.next()` method. This reuses the same
+        underlying searches to ensure a consistent result set across pages.
 
         Args:
             query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
 
         Returns:
-            A configured QueryAgentSearcher for the search-only mode of the query agent.
+            A `SearchModeResponse` for the first page of results. Use
+            `response.next(limit=..., offset=...)` to paginate.
         """
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
-        return QueryAgentSearcher(
+        searcher = QueryAgentSearcher(
             headers=self._headers,
             connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
@@ -344,6 +352,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections=collections,
             system_prompt=self._system_prompt,
         )
+        return searcher.run(limit=limit)
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -465,31 +474,34 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     else:
                         yield output
 
-    def configure_search(
+    async def search(
         self,
         query: str,
+        limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> AsyncQueryAgentSearcher:
-        """Configure a AsyncQueryAgentSearcher for the search-only mode of the query agent.
+    ) -> AsyncSearchModeResponse:
+        """Run the Query Agent search-only mode.
 
-        This returns a configured AsyncQueryAgentSearcher, but does not send any requests or
-        run the agent. To do that, you should call the `run` method on the searcher.
-
-        This allows you to paginate through a consistent results set, as calling the
-        `run` method on the searcher multiple times will result in the same underlying
-        searches being performed each time.
+        This method sends the initial search request and returns an
+        `AsyncSearchModeResponse` containing the first page of results. To
+        paginate, use the `AsyncSearchModeResponse.next()` method. This reuses
+        the same underlying searches to ensure a consistent result set across
+        pages.
 
         Args:
             query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
+            limit: The maximum number of results to return for the first page.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
 
         Returns:
-            A configured AsyncQueryAgentSearcher for the search-only mode of the query agent.
+            An `AsyncSearchModeResponse` for the first page of results. Use
+            `await response.next(limit=..., offset=...)` to paginate.
         """
         collections = collections or self._collections
         if not collections:
             raise ValueError("No collections provided to the query agent.")
-        return AsyncQueryAgentSearcher(
+        searcher = AsyncQueryAgentSearcher(
             headers=self._headers,
             connection_headers=self._connection.additional_headers,
             timeout=self._timeout,
@@ -498,6 +510,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections=collections,
             system_prompt=self._system_prompt,
         )
+        return await searcher.run(limit=limit)
 
 
 def _parse_sse(

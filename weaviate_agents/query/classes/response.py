@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import warnings
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Literal, Optional, Union
+from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
@@ -398,9 +401,24 @@ class StreamedTokens(BaseModel):
     delta: str
 
 
-class SearchModeResponse(BaseModel):
+# This is used as a workaround for not being able to use Self to
+# type hint the next() abstract method (so that types on subclasses
+# are properly represented) due to supporting Python version < 3.11.
+# Suggested in https://peps.python.org/pep-0673/
+SearchModeResponseT = TypeVar("SearchModeResponseT", bound="SearchModeResponseBase")
+SearcherT = TypeVar("SearcherT")
+
+
+class SearchModeResponseBase(BaseModel, ABC, Generic[SearcherT]):
     original_query: str
     searches: Optional[list[QueryResultWithCollection]] = None
     usage: Usage
     total_time: float
     search_results: QueryReturn
+    _searcher: SearcherT
+
+    @abstractmethod
+    def next(
+        self: SearchModeResponseT, limit: int = 20, offset: int = 0
+    ) -> Union[SearchModeResponseT, Coroutine[Any, Any, SearchModeResponseT]]:
+        pass
