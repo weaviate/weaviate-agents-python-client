@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
 
@@ -23,3 +23,12 @@ class SearchModeExecutionRequest(SearchModeRequestBase):
 class SearchModeGenerationRequest(SearchModeRequestBase):
     searches: None = None
     system_prompt: Optional[str] = None
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatConversation(BaseModel):
+    messages: list[ChatMessage]

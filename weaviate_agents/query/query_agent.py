@@ -23,6 +23,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
+from weaviate_agents.query.classes.request import ChatConversation, ChatMessage
 from weaviate_agents.query.search import (
     AsyncQueryAgentSearcher,
     AsyncSearchModeResponse,
@@ -68,7 +69,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 
     def _prepare_request_body(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         **kwargs,
@@ -85,8 +86,13 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         if not collections:
             raise ValueError("No collections provided to the query agent.")
 
-        return {
-            "query": query,
+        query_request = (
+            query
+            if isinstance(query, str)
+            else ChatConversation(messages=query).model_dump(mode="json")
+        )
+        output = {
+            "query": query_request,
             "collections": [
                 collection
                 if isinstance(collection, str)
@@ -95,10 +101,12 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             ],
             "headers": self._connection.additional_headers,
             "limit": 20,
-            "previous_response": context.model_dump(mode="json") if context else None,
             "system_prompt": self._system_prompt,
             **kwargs,
         }
+        if context is not None:
+            output["previous_response"] = context.model_dump(mode="json")
+        return output
 
     @abstractmethod
     def run(
@@ -235,6 +243,26 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             raise Exception(response.text)
 
         return QueryAgentResponse(**response.json())
+    
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> QueryAgentResponse:
+        request_body = self._prepare_request_body(query, collections)
+
+        response = httpx.post(
+            self.agent_url + "/query",
+            headers=self._headers,
+            json=request_body,
+            timeout=self._timeout,
+        )
+
+        if response.is_error:
+            raise Exception(response.text)
+
+        return QueryAgentResponse(**response.json())
+
 
     @overload
     def stream(
@@ -379,6 +407,26 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             context: Optional previous response from the agent.
         """
         request_body = self._prepare_request_body(query, collections, context)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.agent_url + "/query",
+                headers=self._headers,
+                json=request_body,
+                timeout=self._timeout,
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            return QueryAgentResponse(**response.json())
+
+    async def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> QueryAgentResponse:
+        request_body = self._prepare_request_body(query, collections)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
