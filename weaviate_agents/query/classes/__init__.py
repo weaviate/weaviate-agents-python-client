@@ -71,4 +71,5 @@ __all__ = [
     "StreamedTokens",
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
+    "ChatMessage",
 ]
