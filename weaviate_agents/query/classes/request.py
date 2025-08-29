@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
@@ -11,7 +13,7 @@ class SearchModeRequestBase(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     headers: dict[str, str]
-    original_query: str
+    original_query: Union[str, ConversationContext]
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
     offset: int

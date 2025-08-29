@@ -209,7 +209,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     @abstractmethod
     def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
@@ -357,7 +357,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
     def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> SearchModeResponse:
@@ -536,7 +536,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
     async def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncSearchModeResponse:
