@@ -14,6 +14,7 @@ from typing import (
 
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
+from typing_extensions import deprecated
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
@@ -108,6 +109,10 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             output["previous_response"] = context.model_dump(mode="json")
         return output
 
+    @deprecated(
+        "QueryAgent.run() is deprecated and will be removed in a future release. "
+        "Use QueryAgent.ask() instead."
+    )
     @abstractmethod
     def run(
         self,
@@ -115,7 +120,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
-        """Run the query agent. Must be implemented by subclasses."""
+        """Run the query agent. Must be implemented by subclasses.
+
+        Deprecated:
+            The `run` method is deprecated; use `ask()` instead.
+        """
         pass
 
     @abstractmethod
@@ -187,6 +196,10 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]:
         pass
 
+    @deprecated(
+        "QueryAgent.stream() is deprecated and will be removed in a future release. "
+        "Use QueryAgent.ask_stream() instead."
+    )
     @abstractmethod
     def stream(
         self,
@@ -203,7 +216,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
         ],
     ]:
-        """Stream from the query agent. Must be implemented by subclasses."""
+        """Stream from the query agent.
+
+        Deprecated:
+            The `stream` method is deprecated; use `ask_stream()` instead.
+        """
         pass
 
     @overload
@@ -296,6 +313,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
+    @deprecated(
+        "QueryAgent.run() is deprecated and will be removed in a future release. Use QueryAgent.ask() instead."
+    )
     def run(
         self,
         query: str,
@@ -386,6 +406,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: Literal[False] = False,
     ) -> Generator[StreamedTokens, None, None]: ...
 
+    @deprecated(
+        "QueryAgent.stream() is deprecated and will be removed in a future release. Use QueryAgent.ask_stream() instead."
+    )
     def stream(
         self,
         query: str,
@@ -549,6 +572,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
+    @deprecated(
+        "AsyncQueryAgent.run() is deprecated and will be removed in a future release. "
+        "Use AsyncQueryAgent.ask() instead."
+    )
     async def run(
         self,
         query: str,
@@ -641,6 +668,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: Literal[False] = False,
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
+    @deprecated(
+        "AsyncQueryAgent.stream() is deprecated and will be removed in a future release. "
+        "Use AsyncQueryAgent.ask_stream() instead."
+    )
     async def stream(
         self,
         query: str,
