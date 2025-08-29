@@ -5,6 +5,7 @@ from weaviate_agents.query.classes import (
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
+    ChatMessage,
     ComparisonOperator,
     DateArrayPropertyFilter,
     DateMetrics,
@@ -70,4 +71,5 @@ __all__ = [
     "StreamedTokens",
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
+    "ChatMessage",
 ]

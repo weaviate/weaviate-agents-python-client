@@ -1,5 +1,6 @@
 from ...classes.core import Usage
 from .collection import QueryAgentCollectionConfig
+from .request import ChatMessage
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,

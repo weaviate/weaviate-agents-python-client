@@ -1,6 +1,7 @@
 from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
+from typing_extensions import TypedDict
 
 from weaviate_agents.query.classes import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.response import QueryResultWithCollection
@@ -25,10 +26,10 @@ class SearchModeGenerationRequest(SearchModeRequestBase):
     system_prompt: Optional[str] = None
 
 
-class ChatMessage(BaseModel):
+class ChatMessage(TypedDict):
     role: Literal["user", "assistant"]
     content: str
 
 
-class ChatConversation(BaseModel):
+class ConversationContext(BaseModel):
     messages: list[ChatMessage]
