@@ -118,6 +118,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         """Run the query agent. Must be implemented by subclasses."""
         pass
 
+    @abstractmethod
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
+        """Run the Query Agent ask mode."""
+        pass
+
     @overload
     def stream(
         self,
