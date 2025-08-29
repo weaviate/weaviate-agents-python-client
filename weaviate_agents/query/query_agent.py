@@ -23,7 +23,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
-from weaviate_agents.query.classes.request import ChatConversation, ChatMessage
+from weaviate_agents.query.classes.request import ConversationContext, ChatMessage
 from weaviate_agents.query.search import (
     AsyncQueryAgentSearcher,
     AsyncSearchModeResponse,
@@ -89,7 +89,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query_request = (
             query
             if isinstance(query, str)
-            else ChatConversation(messages=query).model_dump(mode="json")
+            else ConversationContext(messages=query).model_dump(mode="json")
         )
         output = {
             "query": query_request,
@@ -230,7 +230,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-        request_body = self._prepare_request_body(query, collections, context)
+        request_body = self._prepare_request_body(query=query, collections=collections, context=context)
 
         response = httpx.post(
             self.agent_url + "/query",
@@ -249,7 +249,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentResponse:
-        request_body = self._prepare_request_body(query, collections)
+        request_body = self._prepare_request_body(query=query, collections=collections)
 
         response = httpx.post(
             self.agent_url + "/query",
@@ -315,9 +315,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: bool = True,
     ):
         request_body = self._prepare_request_body(
-            query,
-            collections,
-            context,
+            query=query,
+            collections=collections,
+            context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
         )
@@ -406,7 +406,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-        request_body = self._prepare_request_body(query, collections, context)
+        request_body = self._prepare_request_body(query=query, collections=collections, context=context)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -426,7 +426,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> QueryAgentResponse:
-        request_body = self._prepare_request_body(query, collections)
+        request_body = self._prepare_request_body(query=query, collections=collections)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -492,9 +492,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: bool = True,
     ):
         request_body = self._prepare_request_body(
-            query,
-            collections,
-            context,
+            query=query,
+            collections=collections,
+            context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
         )
