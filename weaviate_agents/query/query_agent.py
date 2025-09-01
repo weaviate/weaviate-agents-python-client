@@ -460,7 +460,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 timeout=self._timeout,
             ) as events:
                 if events.response.is_error:
-                    events.response.read()
+                    await events.response.aread()
                     raise Exception(events.response.text)
 
                 async for sse in events.aiter_sse():
