@@ -6,6 +6,8 @@ import httpx
 
 from weaviate_agents.query.classes.collection import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.request import (
+    ChatMessage,
+    ConversationContext,
     SearchModeExecutionRequest,
     SearchModeGenerationRequest,
 )
@@ -22,7 +24,7 @@ class _BaseQueryAgentSearcher:
         connection_headers: dict[str, str],
         timeout: int,
         agent_url: str,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
     ):
@@ -36,10 +38,15 @@ class _BaseQueryAgentSearcher:
         self._cached_searches: Optional[list[QueryResultWithCollection]] = None
 
     def _get_request_body(self, limit: int, offset: int) -> dict[str, Any]:
+        query_request = (
+            self.query
+            if isinstance(self.query, str)
+            else ConversationContext(messages=self.query)
+        )
         if self._cached_searches is None:
             return SearchModeGenerationRequest(
                 headers=self.connection_headers,
-                original_query=self.query,
+                original_query=query_request,
                 collections=self.collections,
                 limit=limit,
                 offset=offset,
@@ -48,7 +55,7 @@ class _BaseQueryAgentSearcher:
         else:
             return SearchModeExecutionRequest(
                 headers=self.connection_headers,
-                original_query=self.query,
+                original_query=query_request,
                 collections=self.collections,
                 limit=limit,
                 offset=offset,

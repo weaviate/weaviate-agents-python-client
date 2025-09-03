@@ -14,6 +14,7 @@ from .query import (
     BooleanMetrics,
     BooleanPropertyAggregation,
     BooleanPropertyFilter,
+    ChatMessage,
     ComparisonOperator,
     DateArrayPropertyFilter,
     DateMetrics,
@@ -98,4 +99,5 @@ __all__ = [
     "StreamedTokens",
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
+    "ChatMessage",
 ]

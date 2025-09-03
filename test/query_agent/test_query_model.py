@@ -16,6 +16,7 @@ from weaviate_agents.query import (
     AsyncQueryAgent,
     QueryAgent,
 )
+from weaviate_agents.query.classes.request import ChatMessage
 from weaviate_agents.query.search import (
     AsyncSearchModeResponse,
     SearchModeResponse,
@@ -434,7 +435,7 @@ def test_run_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = agent.run("test query")
     assert isinstance(result, QueryAgentResponse)
@@ -503,7 +504,7 @@ async def test_async_run_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = await agent.run("test query")
     assert isinstance(result, QueryAgentResponse)
@@ -615,8 +616,9 @@ def test_stream_success(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    for result in agent.stream("test query"):
-        all_results.append(result)
+    with pytest.warns(DeprecationWarning):
+        for result in agent.stream("test query"):
+            all_results.append(result)
 
     assert len(all_results) == 4
 
@@ -650,8 +652,9 @@ async def test_async_stream_success(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    async for result in agent.stream("test query"):
-        all_results.append(result)
+    with pytest.warns(DeprecationWarning):
+        async for result in agent.stream("test query"):
+            all_results.append(result)
 
     assert len(all_results) == 4
 
@@ -682,8 +685,9 @@ def test_run_failure(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    with pytest.raises(Exception) as exc_info:
-        agent.run("failure query")
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(Exception) as exc_info:
+            agent.run("failure query")
 
     assert (
         str(exc_info.value)
@@ -700,8 +704,9 @@ async def test_async_run_failure(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    with pytest.raises(Exception) as exc_info:
-        await agent.run("failure query")
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(Exception) as exc_info:
+            await agent.run("failure query")
 
     assert (
         str(exc_info.value)
@@ -761,9 +766,10 @@ def test_stream_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    with pytest.raises(Exception) as exc_info:
-        for result in agent.stream("failure query"):
-            all_results.append(result)
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(Exception) as exc_info:
+            for result in agent.stream("failure query"):
+                all_results.append(result)
 
     # Should have received the progress message before the exception
     assert len(all_results) == 1
@@ -793,11 +799,362 @@ async def test_async_stream_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    with pytest.raises(Exception) as exc_info:
-        async for result in agent.stream("failure query"):
-            all_results.append(result)
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(Exception) as exc_info:
+            async for result in agent.stream("failure query"):
+                all_results.append(result)
 
     # Should have received the progress message before the exception
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+def test_ask_success_with_string_query(monkeypatch):
+    monkeypatch.setattr(httpx, "post", fake_post_success)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.warns(UserWarning):
+        result = agent.ask("test query")
+    assert isinstance(result, QueryAgentResponse)
+    assert result.original_query == "test query"
+    assert result.collection_names == ["test_collection"]
+    assert result.total_time == 0.1
+    assert result.final_answer == "final answer"
+
+
+def test_ask_success_with_chat_messages(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "hello"},
+        {"role": "assistant", "content": "hi there"},
+    ]
+
+    with pytest.warns(UserWarning):
+        result = agent.ask(chat_messages)
+
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+def test_ask_failure(monkeypatch):
+    monkeypatch.setattr(httpx, "post", fake_post_failure)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        agent.ask("failure query")
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+def test_ask_stream_success_with_string_query(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    for result in agent.ask_stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 4
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedTokens(delta="final")
+    assert all_results[2] == StreamedTokens(delta=" answer")
+    assert isinstance(all_results[3], QueryAgentResponse)
+
+
+def test_ask_stream_success_with_chat_messages(monkeypatch):
+    captured = {}
+
+    @contextmanager
+    def mock_connect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "what's up?"},
+        {"role": "assistant", "content": "all good"},
+    ]
+
+    for _ in agent.ask_stream(chat_messages):
+        pass
+
+    assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+def test_ask_stream_with_include_progress_and_final_state(
+    monkeypatch, include_progress, include_final_state
+):
+    captured = {}
+
+    @contextmanager
+    def mock_connect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    for _ in agent.ask_stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_final_state=include_final_state,
+    ):
+        pass
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_final_state"] == include_final_state
+
+
+def test_ask_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        for result in agent.ask_stream("failure query"):
+            all_results.append(result)
+
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+async def test_async_ask_success_with_string_query(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.warns(UserWarning):
+        result = await agent.ask("test query")
+    assert isinstance(result, QueryAgentResponse)
+    assert result.original_query == "test query"
+    assert result.collection_names == ["test_collection"]
+    assert result.total_time == 0.1
+    assert result.final_answer == "final answer"
+
+
+async def test_async_ask_success_with_chat_messages(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["json"] = kwargs.get("json")
+        return await fake_async_post_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "hello async"},
+        {"role": "assistant", "content": "hi!"},
+    ]
+
+    with pytest.warns(UserWarning):
+        result = await agent.ask(chat_messages)
+
+    assert isinstance(result, QueryAgentResponse)
+    assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+async def test_async_ask_failure(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        await agent.ask("failure query")
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+async def test_async_ask_stream_success_with_string_query(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    async for result in agent.ask_stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 4
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedTokens(delta="final")
+    assert all_results[2] == StreamedTokens(delta=" answer")
+    assert isinstance(all_results[3], QueryAgentResponse)
+
+
+async def test_async_ask_stream_success_with_chat_messages(monkeypatch):
+    captured = {}
+
+    @asynccontextmanager
+    async def mock_aconnect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "async what's up?"},
+        {"role": "assistant", "content": "async all good"},
+    ]
+
+    async for _ in agent.ask_stream(chat_messages):
+        pass
+
+    assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+async def test_async_ask_stream_with_include_progress_and_final_state(
+    monkeypatch, include_progress, include_final_state
+):
+    captured = {}
+
+    @asynccontextmanager
+    async def mock_aconnect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSESuccess()
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    async for _ in agent.ask_stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_final_state=include_final_state,
+    ):
+        pass
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_final_state"] == include_final_state
+
+
+async def test_async_ask_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        async for result in agent.ask_stream("failure query"):
+            all_results.append(result)
+
     assert len(all_results) == 1
     assert all_results[0] == ProgressMessage(
         stage="query_analysis", message="Analyzing query..."
@@ -835,7 +1192,7 @@ def test_run_with_target_vector(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with single target vector
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = agent.run(
             "test query",
@@ -849,7 +1206,7 @@ def test_run_with_target_vector(monkeypatch):
     assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
     # Test with multiple target vectors
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = agent.run(
             "test query",
@@ -881,7 +1238,7 @@ async def test_async_run_with_target_vector(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with single target vector
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = await agent.run(
             "test query",
@@ -895,7 +1252,7 @@ async def test_async_run_with_target_vector(monkeypatch):
     assert captured["json"]["collections"][0]["target_vector"] == "my_vector"
 
     # Test with multiple target vectors
-    with pytest.warns(UserWarning):
+    with pytest.warns((DeprecationWarning, UserWarning)):
         # Expect a warning when parsing the unkown "something_new" filter/aggregation
         result = await agent.run(
             "test query",
@@ -936,13 +1293,14 @@ def test_stream_with_include_progress_and_final_state(
     agent._headers = dummy_client.additional_headers
 
     # Iterate fully over the stream
-    for _ in agent.stream(
-        "test query",
-        collections=["test_collection"],
-        include_progress=include_progress,
-        include_final_state=include_final_state,
-    ):
-        pass
+    with pytest.warns(DeprecationWarning):
+        for _ in agent.stream(
+            "test query",
+            collections=["test_collection"],
+            include_progress=include_progress,
+            include_final_state=include_final_state,
+        ):
+            pass
     assert captured["json"]["include_progress"] == include_progress
     assert captured["json"]["include_final_state"] == include_final_state
 
@@ -970,12 +1328,13 @@ async def test_async_stream_with_include_progress_and_final_state(
     agent._headers = dummy_client.additional_headers
 
     # Iterate fully over the stream
-    async for _ in agent.stream(
-        "test query",
-        collections=["test_collection"],
-        include_progress=include_progress,
-        include_final_state=include_final_state,
-    ):
-        pass
+    with pytest.warns(DeprecationWarning):
+        async for _ in agent.stream(
+            "test query",
+            collections=["test_collection"],
+            include_progress=include_progress,
+            include_final_state=include_final_state,
+        ):
+            pass
     assert captured["json"]["include_progress"] == include_progress
     assert captured["json"]["include_final_state"] == include_final_state

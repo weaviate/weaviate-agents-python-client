@@ -14,6 +14,7 @@ from typing import (
 
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
+from typing_extensions import deprecated
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
@@ -23,6 +24,7 @@ from weaviate_agents.query.classes import (
     QueryAgentResponse,
     StreamedTokens,
 )
+from weaviate_agents.query.classes.request import ChatMessage, ConversationContext
 from weaviate_agents.query.search import (
     AsyncQueryAgentSearcher,
     AsyncSearchModeResponse,
@@ -68,7 +70,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 
     def _prepare_request_body(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
         **kwargs,
@@ -85,8 +87,13 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         if not collections:
             raise ValueError("No collections provided to the query agent.")
 
-        return {
-            "query": query,
+        query_request = (
+            query
+            if isinstance(query, str)
+            else ConversationContext(messages=query).model_dump(mode="json")
+        )
+        output = {
+            "query": query_request,
             "collections": [
                 collection
                 if isinstance(collection, str)
@@ -95,11 +102,17 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             ],
             "headers": self._connection.additional_headers,
             "limit": 20,
-            "previous_response": context.model_dump(mode="json") if context else None,
             "system_prompt": self._system_prompt,
             **kwargs,
         }
+        if context is not None:
+            output["previous_response"] = context.model_dump(mode="json")
+        return output
 
+    @deprecated(
+        "QueryAgent.run() is deprecated and will be removed in a future release. "
+        "Use QueryAgent.ask() instead."
+    )
     @abstractmethod
     def run(
         self,
@@ -107,7 +120,20 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
-        """Run the query agent. Must be implemented by subclasses."""
+        """Run the query agent. Must be implemented by subclasses.
+
+        Deprecated:
+            The `run` method is deprecated; use `ask()` instead.
+        """
+        pass
+
+    @abstractmethod
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
+        """Run the Query Agent ask mode."""
         pass
 
     @overload
@@ -170,6 +196,10 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]:
         pass
 
+    @deprecated(
+        "QueryAgent.stream() is deprecated and will be removed in a future release. "
+        "Use QueryAgent.ask_stream() instead."
+    )
     @abstractmethod
     def stream(
         self,
@@ -186,13 +216,87 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
         ],
     ]:
-        """Stream from the query agent. Must be implemented by subclasses."""
+        """Stream from the query agent.
+
+        Deprecated:
+            The `stream` method is deprecated; use `ask_stream()` instead.
+        """
+        pass
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[Union[StreamedTokens, QueryAgentResponse], None, None],
+        AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[StreamedTokens, None, None],
+        AsyncGenerator[StreamedTokens, None],
+    ]: ...
+
+    @abstractmethod
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: bool = True,
+        include_final_state: bool = True,
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+        ],
+    ]:
+        """Run the Query Agent ask mode and stream the response."""
         pass
 
     @abstractmethod
     def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
@@ -209,6 +313,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
+    @deprecated(
+        "QueryAgent.run() is deprecated and will be removed in a future release. Use QueryAgent.ask() instead."
+    )
     def run(
         self,
         query: str,
@@ -222,7 +329,28 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-        request_body = self._prepare_request_body(query, collections, context)
+        request_body = self._prepare_request_body(
+            query=query, collections=collections, context=context
+        )
+
+        response = httpx.post(
+            self.agent_url + "/query",
+            headers=self._headers,
+            json=request_body,
+            timeout=self._timeout,
+        )
+
+        if response.is_error:
+            raise Exception(response.text)
+
+        return QueryAgentResponse(**response.json())
+
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> QueryAgentResponse:
+        request_body = self._prepare_request_body(query=query, collections=collections)
 
         response = httpx.post(
             self.agent_url + "/query",
@@ -278,6 +406,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: Literal[False] = False,
     ) -> Generator[StreamedTokens, None, None]: ...
 
+    @deprecated(
+        "QueryAgent.stream() is deprecated and will be removed in a future release. Use QueryAgent.ask_stream() instead."
+    )
     def stream(
         self,
         query: str,
@@ -287,9 +418,85 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: bool = True,
     ):
         request_body = self._prepare_request_body(
-            query,
-            collections,
-            context,
+            query=query,
+            collections=collections,
+            context=context,
+            include_progress=include_progress,
+            include_final_state=include_final_state,
+        )
+        with httpx.Client() as client:
+            with connect_sse(
+                client=client,
+                method="POST",
+                url=self.agent_url + "/stream_query",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                if events.response.is_error:
+                    events.response.read()
+                    raise Exception(events.response.text)
+
+                for sse in events.iter_sse():
+                    output = _parse_sse(sse)
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, QueryAgentResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[Union[StreamedTokens, QueryAgentResponse], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[StreamedTokens, None, None]: ...
+
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: bool = True,
+        include_final_state: bool = True,
+    ):
+        """Run the Query Agent ask mode and stream the response."""
+        request_body = self._prepare_request_body(
+            query=query,
+            collections=collections,
             include_progress=include_progress,
             include_final_state=include_final_state,
         )
@@ -319,7 +526,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
     def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> SearchModeResponse:
@@ -365,6 +572,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
+    @deprecated(
+        "AsyncQueryAgent.run() is deprecated and will be removed in a future release. "
+        "Use AsyncQueryAgent.ask() instead."
+    )
     async def run(
         self,
         query: str,
@@ -378,7 +589,29 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
         """
-        request_body = self._prepare_request_body(query, collections, context)
+        request_body = self._prepare_request_body(
+            query=query, collections=collections, context=context
+        )
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.agent_url + "/query",
+                headers=self._headers,
+                json=request_body,
+                timeout=self._timeout,
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            return QueryAgentResponse(**response.json())
+
+    async def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+    ) -> QueryAgentResponse:
+        request_body = self._prepare_request_body(query=query, collections=collections)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -435,6 +668,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: Literal[False] = False,
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
+    @deprecated(
+        "AsyncQueryAgent.stream() is deprecated and will be removed in a future release. "
+        "Use AsyncQueryAgent.ask_stream() instead."
+    )
     async def stream(
         self,
         query: str,
@@ -444,9 +681,85 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: bool = True,
     ):
         request_body = self._prepare_request_body(
-            query,
-            collections,
-            context,
+            query=query,
+            collections=collections,
+            context=context,
+            include_progress=include_progress,
+            include_final_state=include_final_state,
+        )
+        async with httpx.AsyncClient() as client:
+            async with aconnect_sse(
+                client=client,
+                method="POST",
+                url=self.agent_url + "/stream_query",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                if events.response.is_error:
+                    await events.response.aread()
+                    raise Exception(events.response.text)
+
+                async for sse in events.aiter_sse():
+                    output = _parse_sse(sse)
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, QueryAgentResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[StreamedTokens, None]: ...
+
+    async def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: bool = True,
+        include_final_state: bool = True,
+    ):
+        """Run the Query Agent ask mode and stream the response."""
+        request_body = self._prepare_request_body(
+            query=query,
+            collections=collections,
             include_progress=include_progress,
             include_final_state=include_final_state,
         )
@@ -476,7 +789,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
     async def search(
         self,
-        query: str,
+        query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
     ) -> AsyncSearchModeResponse:
