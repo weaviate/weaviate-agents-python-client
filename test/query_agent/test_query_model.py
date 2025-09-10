@@ -7,6 +7,7 @@ from httpx_sse import ServerSentEvent
 from pydantic import ValidationError
 
 from weaviate_agents.classes.query import (
+    AskModeResponse,
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
@@ -301,6 +302,254 @@ FAKE_SUCCESS_JSON = {
 }
 
 
+FAKE_ASK_SUCCESS_JSON = {
+    "output_type": "final_state",
+    "searches": [
+        {
+            "query": "Test query!",
+            "filters": {
+                "combine": "AND",
+                "filters": [
+                    {
+                        "filter_type": "integer",
+                        "property_name": "prop_int",
+                        "operator": "=",
+                        "value": 1.0,
+                    },
+                    {
+                        "filter_type": "integer_array",
+                        "property_name": "prop_int_aray",
+                        "operator": "contains_all",
+                        "value": [1.0, 2.0],
+                    },
+                    {
+                        "filter_type": "text",
+                        "property_name": "prop_text",
+                        "operator": "LIKE",
+                        "value": "*something*",
+                    },
+                    {
+                        "filter_type": "text_array",
+                        "property_name": "prop_text_array",
+                        "operator": "contains_any",
+                        "value": ["one", "two"],
+                    },
+                    {
+                        "filter_type": "boolean",
+                        "property_name": "prop_bool",
+                        "operator": "=",
+                        "value": True,
+                    },
+                    {
+                        "filter_type": "boolean_array",
+                        "property_name": "prop_bool_array",
+                        "operator": "contains_any",
+                        "value": [True, False],
+                    },
+                    {
+                        "filter_type": "date_range",
+                        "property_name": "prop_date",
+                        "value": {
+                            "date_from": "2025-01-01T12:01:23Z",
+                            "date_to": "2025-01-02T12:01:23Z",
+                            "inclusive_from": True,
+                            "inclusive_to": True,
+                        },
+                    },
+                    {
+                        "filter_type": "date_range",
+                        "property_name": "prop_date",
+                        "value": {
+                            "exact_timestamp": "2025-01-01T12:01:23Z",
+                            "operator": "=",
+                        },
+                    },
+                    {
+                        "filter_type": "date_array",
+                        "property_name": "prop_date_array",
+                        "operator": "contains_all",
+                        "value": [
+                            "2025-01-01T12:01:23Z",
+                            "2025-01-02T12:01:23Z",
+                        ],
+                    },
+                    {
+                        "filter_type": "geo",
+                        "property_name": "prop_geo",
+                        "latitude": 10.0,
+                        "longitude": 20.0,
+                        "max_distance_meters": 30.0,
+                    },
+                    {
+                        "filter_type": "is_null",
+                        "property_name": "prop_is_null",
+                        "is_null": True,
+                    },
+                    {
+                        "filter_type": "something_new",
+                        "property_name": "strange_property",
+                        "value": "xyz",
+                    },
+                ],
+            },
+            "collection": "test_collection",
+        },
+        {
+            "query": None,
+            "filters": {
+                "combine": "AND",
+                "filters": [
+                    {
+                        "filter_type": "integer",
+                        "property_name": "prop_int",
+                        "operator": "=",
+                        "value": 1.0,
+                    },
+                    {
+                        "filter_type": "integer_array",
+                        "property_name": "prop_int_aray",
+                        "operator": "contains_all",
+                        "value": [1.0, 2.0],
+                    },
+                    {
+                        "filter_type": "text",
+                        "property_name": "prop_text",
+                        "operator": "LIKE",
+                        "value": "*something*",
+                    },
+                    {
+                        "filter_type": "text_array",
+                        "property_name": "prop_text_array",
+                        "operator": "contains_any",
+                        "value": ["one", "two"],
+                    },
+                    {
+                        "filter_type": "boolean",
+                        "property_name": "prop_bool",
+                        "operator": "=",
+                        "value": True,
+                    },
+                    {
+                        "filter_type": "boolean_array",
+                        "property_name": "prop_bool_array",
+                        "operator": "contains_any",
+                        "value": [True, False],
+                    },
+                    {
+                        "filter_type": "date_range",
+                        "property_name": "prop_date",
+                        "value": {
+                            "date_from": "2025-01-01T12:01:23Z",
+                            "date_to": "2025-01-02T12:01:23Z",
+                            "inclusive_from": True,
+                            "inclusive_to": True,
+                        },
+                    },
+                    {
+                        "filter_type": "date_range",
+                        "property_name": "prop_date",
+                        "value": {
+                            "exact_timestamp": "2025-01-01T12:01:23Z",
+                            "operator": "=",
+                        },
+                    },
+                    {
+                        "filter_type": "date_array",
+                        "property_name": "prop_date_array",
+                        "operator": "contains_all",
+                        "value": [
+                            "2025-01-01T12:01:23Z",
+                            "2025-01-02T12:01:23Z",
+                        ],
+                    },
+                    {
+                        "filter_type": "geo",
+                        "property_name": "prop_geo",
+                        "latitude": 10.0,
+                        "longitude": 20.0,
+                        "max_distance_meters": 30.0,
+                    },
+                    {
+                        "filter_type": "is_null",
+                        "property_name": "prop_is_null",
+                        "is_null": True,
+                    },
+                    {
+                        "filter_type": "something_new",
+                        "property_name": "strange_property",
+                        "value": "xyz",
+                    },
+                ],
+            },
+            "collection": "test_collection",
+        },
+    ],
+    "aggregations": [
+        {
+            "collection": "test_collection",
+            "groupby_property": None,
+            "aggregation": {
+                "aggregation_type": "integer",
+                "property_name": "prop_int",
+                "metrics": "MEAN",
+            },
+            "filters": None,
+        },
+        {
+            "collection": "test_collection",
+            "groupby_property": None,
+            "aggregation": {
+                "aggregation_type": "text",
+                "property_name": "prop_text",
+                "metrics": "COUNT",
+                "top_occurrences_limit": 10,
+            },
+            "filters": None,
+        },
+        {
+            "collection": "test_collection",
+            "groupby_property": None,
+            "aggregation": {
+                "aggregation_type": "boolean",
+                "property_name": "prop_bool",
+                "metrics": "PERCENTAGE_TRUE",
+            },
+            "filters": None,
+        },
+        {
+            "collection": "test_collection",
+            "groupby_property": None,
+            "aggregation": {
+                "aggregation_type": "date",
+                "property_name": "prop_date",
+                "metrics": "MAXIMUM",
+            },
+            "filters": None,
+        },
+        {
+            "collection": "test_collection",
+            "groupby_property": None,
+            "aggregation": {
+                "aggregation_type": "something_new",
+                "property_name": "strange_property",
+                "metrics": "XYZ",
+            },
+            "filters": None,
+        },
+    ],
+    "sources": [{"object_id": "123", "collection": "test_collection"}],
+    "usage": {
+        "model_units": 1,
+        "usage_in_plan": False,
+        "remaining_plan_requests": 100,
+    },
+    "total_time": 0.1,
+    "is_partial_answer": False,
+    "missing_information": [],
+    "final_answer": "final answer",
+}
+
+
 FAKE_SEARCH_ONLY_SUCCESS_JSON = {
     "original_query": "Test this search only mode!",
     "searches": [
@@ -376,12 +625,13 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
 
 
 def fake_post_success(*args, **kwargs) -> FakeResponse:
-    """Simulate a successful HTTP POST response.
-
-    Returns:
-        FakeResponse: A fake HTTP response with status code 200.
-    """
+    """Simulate a successful HTTP POST response for query mode."""
     return FakeResponse(200, FAKE_SUCCESS_JSON)
+
+
+def fake_post_success_ask(*args, **kwargs) -> FakeResponse:
+    """Simulate a successful HTTP POST response for ask mode."""
+    return FakeResponse(200, FAKE_ASK_SUCCESS_JSON)
 
 
 async def fake_async_post_success(*args, **kwargs) -> FakeResponse:
@@ -565,6 +815,9 @@ async def test_async_search_only_mode_failure(monkeypatch):
 
 
 class MockIterSSESuccess:
+    def __init__(self, data: dict):
+        self.data = data
+
     response = FakeResponse(200, {})
 
     def iter_sse(self):
@@ -592,7 +845,7 @@ class MockIterSSESuccess:
             event="streamed_tokens",
             data=json.dumps({"output_type": "streamed_tokens", "delta": " answer"}),
         )
-        yield ServerSentEvent(event="final_state", data=json.dumps(FAKE_SUCCESS_JSON))
+        yield ServerSentEvent(event="final_state", data=json.dumps(self.data))
 
     async def aiter_sse(self):
         for event in self.iter_sse():
@@ -601,7 +854,12 @@ class MockIterSSESuccess:
 
 @contextmanager
 def mock_connect_sse_success(*args, **kwargs):
-    yield MockIterSSESuccess()
+    yield MockIterSSESuccess(FAKE_SUCCESS_JSON)
+
+
+@contextmanager
+def mock_connect_sse_success_ask(*args, **kwargs):
+    yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
 
 def test_stream_success(monkeypatch):
@@ -637,7 +895,12 @@ def test_stream_success(monkeypatch):
 
 @asynccontextmanager
 async def mock_aconnect_sse_success(*args, **kwargs):
-    yield MockIterSSESuccess()
+    yield MockIterSSESuccess(FAKE_SUCCESS_JSON)
+
+
+@asynccontextmanager
+async def mock_aconnect_sse_success_ask(*args, **kwargs):
+    yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
 
 async def test_async_stream_success(monkeypatch):
@@ -816,7 +1079,7 @@ async def test_async_stream_failure(monkeypatch):
 
 
 def test_ask_success_with_string_query(monkeypatch):
-    monkeypatch.setattr(httpx, "post", fake_post_success)
+    monkeypatch.setattr(httpx, "post", fake_post_success_ask)
     dummy_client = DummyClient()
     agent = QueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -826,9 +1089,7 @@ def test_ask_success_with_string_query(monkeypatch):
 
     with pytest.warns(UserWarning):
         result = agent.ask("test query")
-    assert isinstance(result, QueryAgentResponse)
-    assert result.original_query == "test query"
-    assert result.collection_names == ["test_collection"]
+    assert isinstance(result, AskModeResponse)
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
 
@@ -838,7 +1099,7 @@ def test_ask_success_with_chat_messages(monkeypatch):
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
         captured["json"] = json
-        return fake_post_success()
+        return fake_post_success_ask()
 
     monkeypatch.setattr(httpx, "post", fake_post_with_capture)
     dummy_client = DummyClient()
@@ -856,7 +1117,7 @@ def test_ask_success_with_chat_messages(monkeypatch):
     with pytest.warns(UserWarning):
         result = agent.ask(chat_messages)
 
-    assert isinstance(result, QueryAgentResponse)
+    assert isinstance(result, AskModeResponse)
     assert captured["json"]["query"] == {"messages": chat_messages}
 
 
@@ -880,7 +1141,7 @@ def test_ask_failure(monkeypatch):
 
 def test_ask_stream_success_with_string_query(monkeypatch):
     monkeypatch.setattr(
-        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_success_ask
     )
     dummy_client = DummyClient()
     agent = QueryAgent(
@@ -899,7 +1160,7 @@ def test_ask_stream_success_with_string_query(monkeypatch):
     )
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
-    assert isinstance(all_results[3], QueryAgentResponse)
+    assert isinstance(all_results[3], AskModeResponse)
 
 
 def test_ask_stream_success_with_chat_messages(monkeypatch):
@@ -908,7 +1169,7 @@ def test_ask_stream_success_with_chat_messages(monkeypatch):
     @contextmanager
     def mock_connect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
@@ -941,7 +1202,7 @@ def test_ask_stream_with_include_progress_and_final_state(
     @contextmanager
     def mock_connect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
@@ -991,7 +1252,10 @@ def test_ask_stream_failure(monkeypatch):
 
 
 async def test_async_ask_success_with_string_query(monkeypatch):
-    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_success)
+    async def fake_async_post_with_ask(*args, **kwargs):
+        return FakeResponse(200, FAKE_ASK_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_ask)
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
         dummy_client, ["test_collection"], agents_host="http://dummy-agent"
@@ -1001,9 +1265,7 @@ async def test_async_ask_success_with_string_query(monkeypatch):
 
     with pytest.warns(UserWarning):
         result = await agent.ask("test query")
-    assert isinstance(result, QueryAgentResponse)
-    assert result.original_query == "test query"
-    assert result.collection_names == ["test_collection"]
+    assert isinstance(result, AskModeResponse)
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
 
@@ -1013,7 +1275,7 @@ async def test_async_ask_success_with_chat_messages(monkeypatch):
 
     async def fake_async_post_with_capture(*args, **kwargs):
         captured["json"] = kwargs.get("json")
-        return await fake_async_post_success()
+        return FakeResponse(200, FAKE_ASK_SUCCESS_JSON)
 
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
     dummy_client = DummyClient()
@@ -1031,7 +1293,7 @@ async def test_async_ask_success_with_chat_messages(monkeypatch):
     with pytest.warns(UserWarning):
         result = await agent.ask(chat_messages)
 
-    assert isinstance(result, QueryAgentResponse)
+    assert isinstance(result, AskModeResponse)
     assert captured["json"]["query"] == {"messages": chat_messages}
 
 
@@ -1055,7 +1317,7 @@ async def test_async_ask_failure(monkeypatch):
 
 async def test_async_ask_stream_success_with_string_query(monkeypatch):
     monkeypatch.setattr(
-        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_success_ask
     )
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -1074,7 +1336,7 @@ async def test_async_ask_stream_success_with_string_query(monkeypatch):
     )
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
-    assert isinstance(all_results[3], QueryAgentResponse)
+    assert isinstance(all_results[3], AskModeResponse)
 
 
 async def test_async_ask_stream_success_with_chat_messages(monkeypatch):
@@ -1083,7 +1345,7 @@ async def test_async_ask_stream_success_with_chat_messages(monkeypatch):
     @asynccontextmanager
     async def mock_aconnect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
@@ -1116,7 +1378,7 @@ async def test_async_ask_stream_with_include_progress_and_final_state(
     @asynccontextmanager
     async def mock_aconnect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
@@ -1280,7 +1542,7 @@ def test_stream_with_include_progress_and_final_state(
     @contextmanager
     def mock_connect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
@@ -1315,7 +1577,7 @@ async def test_async_stream_with_include_progress_and_final_state(
     @asynccontextmanager
     async def mock_aconnect_sse_capture(json, **kwargs):
         captured["json"] = json
-        yield MockIterSSESuccess()
+        yield MockIterSSESuccess(FAKE_SUCCESS_JSON)
 
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
