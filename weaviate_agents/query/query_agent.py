@@ -232,12 +232,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[
-            Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
-        ],
-        AsyncGenerator[
-            Union[ProgressMessage, StreamedTokens, AskModeResponse], None
-        ],
+        Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
     ]: ...
 
     @overload
@@ -284,12 +280,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: bool = True,
         include_final_state: bool = True,
     ) -> Union[
-        Generator[
-            Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
-        ],
-        AsyncGenerator[
-            Union[ProgressMessage, StreamedTokens, AskModeResponse], None
-        ],
+        Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
     ]:
         """Run the Query Agent ask mode and stream the response."""
         pass
