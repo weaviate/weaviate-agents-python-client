@@ -377,7 +377,7 @@ class QueryAgentResponse(BaseModel):
 
     def display(self) -> None:
         """Display a pretty-printed summary of the QueryAgentResponse object."""
-        print_query_agent_response(self, self.original_query)
+        print_query_agent_response(self)
         return None
 
 
