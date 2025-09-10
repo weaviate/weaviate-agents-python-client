@@ -43,6 +43,7 @@ def test_class_exports():
         AggregationResult,
         AggregationResultWithCollection,
         AppendPropertyOperation,
+        AskModeResponse,
         BooleanArrayPropertyFilter,
         BooleanMetrics,
         BooleanPropertyAggregation,
@@ -151,6 +152,7 @@ def test_class_exports():
         ProgressDetails,
         ProgressMessage,
         StreamedTokens,
+        AskModeResponse,
     ]
 
     for cls in classes:
@@ -207,6 +209,7 @@ def test_class_exports():
         "StreamedTokens",
         "IsNullPropertyFilter",
         "SearchModeResponseBase",
+        "AskModeResponse",
     ]
 
     assert hasattr(

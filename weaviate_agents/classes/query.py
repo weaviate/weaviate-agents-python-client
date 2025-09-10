@@ -1,6 +1,7 @@
 from weaviate_agents.query.classes import (
     AggregationResult,
     AggregationResultWithCollection,
+    AskModeResponse,
     BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
@@ -72,4 +73,5 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "AskModeResponse",
 ]

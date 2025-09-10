@@ -10,6 +10,7 @@ from .personalization import (
 from .query import (
     AggregationResult,
     AggregationResultWithCollection,
+    AskModeResponse,
     BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
@@ -100,4 +101,5 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "AskModeResponse",
 ]

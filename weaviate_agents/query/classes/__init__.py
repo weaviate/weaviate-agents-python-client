@@ -4,6 +4,7 @@ from .request import ChatMessage
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
+    AskModeResponse,
     BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
@@ -72,4 +73,5 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "AskModeResponse",
 ]
