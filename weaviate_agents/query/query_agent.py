@@ -832,10 +832,12 @@ def _parse_sse(
     sse: ServerSentEvent, mode: Literal["query"]
 ) -> Union[ProgressMessage, StreamedTokens, QueryAgentResponse]: ...
 
-@overload 
+
+@overload
 def _parse_sse(
     sse: ServerSentEvent, mode: Literal["ask"]
 ) -> Union[ProgressMessage, StreamedTokens, AskModeResponse]: ...
+
 
 def _parse_sse(
     sse: ServerSentEvent, mode: Literal["query", "ask"]

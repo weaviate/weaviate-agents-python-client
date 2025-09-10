@@ -6,8 +6,8 @@ from enum import Enum
 from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing_extensions import TypedDict
 from rich.pretty import pprint
+from typing_extensions import TypedDict
 from weaviate.outputs.query import QueryReturn
 
 from weaviate_agents.classes.core import Usage
@@ -389,19 +389,19 @@ class ModelUnitUsage(BaseModel):
 
 class FilterAndOr(BaseModel):
     combine: Literal["AND", "OR"]
-    filters: list[PropertyFilter | FilterAndOr]
+    filters: list[Union[PropertyFilter, FilterAndOr]]
 
 
 class QueryResultWithCollectionNormalized(BaseModel):
-    query: str | None
-    filters: PropertyFilter | FilterAndOr | None
+    query: Union[str, None]
+    filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):
-    groupby_property: str | None
+    groupby_property: Union[str, None]
     aggregation: PropertyAggregation
-    filters: PropertyFilter | FilterAndOr | None
+    filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
 
 
@@ -412,8 +412,8 @@ class AskModeResponse(BaseModel):
     aggregations: list[AggregationResultWithCollectionNormalized]
     usage: ModelUnitUsage
     total_time: float
-    is_partial_answer: bool | None
-    missing_information: list[str] | None
+    is_partial_answer: Union[bool, None]
+    missing_information: Union[list[str], None]
     final_answer: str
     sources: list[Source]
 
