@@ -42,6 +42,7 @@ def test_class_exports():
     from weaviate_agents.classes import (
         AggregationResult,
         AggregationResultWithCollection,
+        AggregationResultWithCollectionNormalized,
         AppendPropertyOperation,
         AskModeResponse,
         BooleanArrayPropertyFilter,
@@ -55,11 +56,13 @@ def test_class_exports():
         DatePropertyAggregation,
         DatePropertyFilter,
         DependentOperationStep,
+        FilterAndOr,
         GeoPropertyFilter,
         IntegerArrayPropertyFilter,
         IntegerPropertyAggregation,
         IntegerPropertyFilter,
         IsNullPropertyFilter,
+        ModelUnitUsage,
         NumericMetrics,
         Operations,
         OperationStep,
@@ -76,6 +79,7 @@ def test_class_exports():
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
+        QueryResultWithCollectionNormalized,
         QueryWithCollection,
         SearchModeResponseBase,
         Source,
@@ -153,6 +157,10 @@ def test_class_exports():
         ProgressMessage,
         StreamedTokens,
         AskModeResponse,
+        ModelUnitUsage,
+        FilterAndOr,
+        QueryResultWithCollectionNormalized,
+        AggregationResultWithCollectionNormalized,
     ]
 
     for cls in classes:
@@ -210,6 +218,10 @@ def test_class_exports():
         "IsNullPropertyFilter",
         "SearchModeResponseBase",
         "AskModeResponse",
+        "ModelUnitUsage",
+        "FilterAndOr",
+        "QueryResultWithCollectionNormalized",
+        "AggregationResultWithCollectionNormalized",
     ]
 
     assert hasattr(
