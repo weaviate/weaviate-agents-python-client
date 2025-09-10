@@ -7,6 +7,7 @@ from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
+from rich.pretty import pprint
 from weaviate.outputs.query import QueryReturn
 
 from weaviate_agents.classes.core import Usage
@@ -376,7 +377,49 @@ class QueryAgentResponse(BaseModel):
 
     def display(self) -> None:
         """Display a pretty-printed summary of the QueryAgentResponse object."""
-        print_query_agent_response(self)
+        print_query_agent_response(self, self.original_query)
+        return None
+
+
+class ModelUnitUsage(BaseModel):
+    model_units: int
+    usage_in_plan: bool
+    remaining_plan_requests: int
+
+
+class FilterAndOr(BaseModel):
+    combine: Literal["AND", "OR"]
+    filters: list[PropertyFilter | FilterAndOr]
+
+
+class QueryResultWithCollectionNormalized(BaseModel):
+    query: str | None
+    filters: PropertyFilter | FilterAndOr | None
+    collection: str
+
+
+class AggregationResultWithCollectionNormalized(BaseModel):
+    groupby_property: str | None
+    aggregation: PropertyAggregation
+    filters: PropertyFilter | FilterAndOr | None
+    collection: str
+
+
+class AskModeResponse(BaseModel):
+    output_type: Literal["final_state"] = "final_state"
+
+    searches: list[QueryResultWithCollectionNormalized]
+    aggregations: list[AggregationResultWithCollectionNormalized]
+    usage: ModelUnitUsage
+    total_time: float
+    is_partial_answer: bool | None
+    missing_information: list[str] | None
+    final_answer: str
+    sources: list[Source]
+
+    def display(self) -> None:
+        """Display a pretty-printed summary of the AskModeResponse object."""
+        pprint(self)
         return None
 
 
