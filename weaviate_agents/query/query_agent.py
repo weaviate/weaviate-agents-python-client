@@ -133,7 +133,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-    ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
+    ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]:
         """Run the Query Agent ask mode."""
         pass
 
@@ -233,10 +233,10 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_final_state: Literal[True] = True,
     ) -> Union[
         Generator[
-            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+            Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
         ],
         AsyncGenerator[
-            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+            Union[ProgressMessage, StreamedTokens, AskModeResponse], None
         ],
     ]: ...
 
@@ -260,8 +260,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[StreamedTokens, QueryAgentResponse], None, None],
-        AsyncGenerator[Union[StreamedTokens, QueryAgentResponse], None],
+        Generator[Union[StreamedTokens, AskModeResponse], None, None],
+        AsyncGenerator[Union[StreamedTokens, AskModeResponse], None],
     ]: ...
 
     @overload
@@ -285,10 +285,10 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_final_state: bool = True,
     ) -> Union[
         Generator[
-            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None, None
+            Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
         ],
         AsyncGenerator[
-            Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
+            Union[ProgressMessage, StreamedTokens, AskModeResponse], None
         ],
     ]:
         """Run the Query Agent ask mode and stream the response."""
