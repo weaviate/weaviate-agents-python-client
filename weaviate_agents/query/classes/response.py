@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from rich.pretty import pprint
 from typing_extensions import TypedDict
 from weaviate.outputs.query import QueryReturn
 
@@ -377,6 +378,48 @@ class QueryAgentResponse(BaseModel):
     def display(self) -> None:
         """Display a pretty-printed summary of the QueryAgentResponse object."""
         print_query_agent_response(self)
+        return None
+
+
+class ModelUnitUsage(BaseModel):
+    model_units: int
+    usage_in_plan: bool
+    remaining_plan_requests: int
+
+
+class FilterAndOr(BaseModel):
+    combine: Literal["AND", "OR"]
+    filters: list[Union[PropertyFilter, FilterAndOr]]
+
+
+class QueryResultWithCollectionNormalized(BaseModel):
+    query: Union[str, None]
+    filters: Union[PropertyFilter, FilterAndOr, None]
+    collection: str
+
+
+class AggregationResultWithCollectionNormalized(BaseModel):
+    groupby_property: Union[str, None]
+    aggregation: PropertyAggregation
+    filters: Union[PropertyFilter, FilterAndOr, None]
+    collection: str
+
+
+class AskModeResponse(BaseModel):
+    output_type: Literal["final_state"] = "final_state"
+
+    searches: list[QueryResultWithCollectionNormalized]
+    aggregations: list[AggregationResultWithCollectionNormalized]
+    usage: ModelUnitUsage
+    total_time: float
+    is_partial_answer: Union[bool, None]
+    missing_information: Union[list[str], None]
+    final_answer: str
+    sources: Union[list[Source], None]
+
+    def display(self) -> None:
+        """Display a pretty-printed summary of the AskModeResponse object."""
+        pprint(self)
         return None
 
 
