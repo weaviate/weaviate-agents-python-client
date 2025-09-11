@@ -68,6 +68,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 
         self._timeout = 60 if timeout is None else timeout
         self.agent_url = f"{self._agents_host}/agent"
+        self.query_url = f"{self._agents_host}/query"
 
     def _prepare_request_body(
         self,
@@ -346,7 +347,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         request_body = self._prepare_request_body(query=query, collections=collections)
 
         response = httpx.post(
-            self.agent_url + "/ask",
+            self.query_url + "/ask",
             headers=self._headers,
             json=request_body,
             timeout=self._timeout,
@@ -497,7 +498,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             with connect_sse(
                 client=client,
                 method="POST",
-                url=self.agent_url + "/stream_ask",
+                url=self.query_url + "/stream_ask",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
@@ -608,7 +609,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.agent_url + "/ask",
+                self.query_url + "/ask",
                 headers=self._headers,
                 json=request_body,
                 timeout=self._timeout,
@@ -760,7 +761,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             async with aconnect_sse(
                 client=client,
                 method="POST",
-                url=self.agent_url + "/stream_ask",
+                url=self.query_url + "/stream_ask",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
