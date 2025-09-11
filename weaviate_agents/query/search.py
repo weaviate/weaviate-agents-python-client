@@ -12,7 +12,7 @@ from weaviate_agents.query.classes.request import (
     SearchModeGenerationRequest,
 )
 from weaviate_agents.query.classes.response import (
-    QueryResultWithCollection,
+    QueryResultWithCollectionNormalized,
     SearchModeResponseBase,
 )
 
@@ -35,7 +35,7 @@ class _BaseQueryAgentSearcher:
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
-        self._cached_searches: Optional[list[QueryResultWithCollection]] = None
+        self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = None
 
     def _get_request_body(self, limit: int, offset: int) -> dict[str, Any]:
         query_request = (

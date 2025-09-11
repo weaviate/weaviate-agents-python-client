@@ -453,9 +453,8 @@ SearcherT = TypeVar("SearcherT")
 
 
 class SearchModeResponseBase(BaseModel, ABC, Generic[SearcherT]):
-    original_query: str
-    searches: Optional[list[QueryResultWithCollection]] = None
-    usage: Usage
+    searches: Optional[list[QueryResultWithCollectionNormalized]] = None
+    usage: ModelUnitUsage
     total_time: float
     search_results: QueryReturn
     _searcher: SearcherT

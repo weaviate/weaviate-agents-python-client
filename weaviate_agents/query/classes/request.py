@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 from typing_extensions import TypedDict
 
 from weaviate_agents.query.classes import QueryAgentCollectionConfig
-from weaviate_agents.query.classes.response import QueryResultWithCollection
+from weaviate_agents.query.classes.response import QueryResultWithCollectionNormalized
 
 
 class SearchModeRequestBase(BaseModel):
@@ -20,7 +20,7 @@ class SearchModeRequestBase(BaseModel):
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):
-    searches: list[QueryResultWithCollection]
+    searches: list[QueryResultWithCollectionNormalized]
 
 
 class SearchModeGenerationRequest(SearchModeRequestBase):
