@@ -35,7 +35,9 @@ class _BaseQueryAgentSearcher:
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
-        self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = None
+        self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
+            None
+        )
 
     def _get_request_body(self, limit: int, offset: int) -> dict[str, Any]:
         query_request = (
