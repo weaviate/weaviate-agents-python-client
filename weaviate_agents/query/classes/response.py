@@ -415,7 +415,7 @@ class AskModeResponse(BaseModel):
     is_partial_answer: Union[bool, None]
     missing_information: Union[list[str], None]
     final_answer: str
-    sources: list[Source]
+    sources: Union[list[Source], None]
 
     def display(self) -> None:
         """Display a pretty-printed summary of the AskModeResponse object."""
