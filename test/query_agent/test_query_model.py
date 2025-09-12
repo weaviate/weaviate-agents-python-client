@@ -551,30 +551,22 @@ FAKE_ASK_SUCCESS_JSON = {
 
 
 FAKE_SEARCH_ONLY_SUCCESS_JSON = {
-    "original_query": "Test this search only mode!",
     "searches": [
         {
-            "queries": ["search query"],
-            "filters": [
-                [
-                    {
-                        "filter_type": "integer",
-                        "property_name": "test_property",
-                        "operator": ">",
-                        "value": 0.0,
-                    },
-                ]
-            ],
-            "filter_operators": "AND",
+            "query": "search query",
+            "filters": {
+                "filter_type": "integer",
+                "property_name": "test_property",
+                "operator": ">",
+                "value": 0.0,
+            },
             "collection": "test_collection",
         }
     ],
     "usage": {
-        "requests": 0,
-        "request_tokens": None,
-        "response_tokens": None,
-        "total_tokens": None,
-        "details": None,
+        "model_units": 1,
+        "usage_in_plan": False,
+        "remaining_plan_requests": 100,
     },
     "total_time": 1.5,
     "search_results": {

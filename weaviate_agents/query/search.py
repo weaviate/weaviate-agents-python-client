@@ -12,7 +12,7 @@ from weaviate_agents.query.classes.request import (
     SearchModeGenerationRequest,
 )
 from weaviate_agents.query.classes.response import (
-    QueryResultWithCollection,
+    QueryResultWithCollectionNormalized,
     SearchModeResponseBase,
 )
 
@@ -23,7 +23,7 @@ class _BaseQueryAgentSearcher:
         headers: dict[str, Any],
         connection_headers: dict[str, str],
         timeout: int,
-        agent_url: str,
+        query_url: str,
         query: Union[str, list[ChatMessage]],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
@@ -31,11 +31,13 @@ class _BaseQueryAgentSearcher:
         self.headers = headers
         self.connection_headers = connection_headers
         self.timeout = timeout
-        self.agent_url = agent_url
+        self.query_url = query_url
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
-        self._cached_searches: Optional[list[QueryResultWithCollection]] = None
+        self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
+            None
+        )
 
     def _get_request_body(self, limit: int, offset: int) -> dict[str, Any]:
         query_request = (
@@ -104,7 +106,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
         """
         request_body = self._get_request_body(limit, offset)
         response = httpx.post(
-            self.agent_url + "/search_only",
+            self.query_url + "/search_only",
             headers=self.headers,
             json=request_body,
             timeout=self.timeout,
@@ -154,7 +156,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
         request_body = self._get_request_body(limit, offset)
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.agent_url + "/search_only",
+                self.query_url + "/search_only",
                 headers=self.headers,
                 json=request_body,
                 timeout=self.timeout,
