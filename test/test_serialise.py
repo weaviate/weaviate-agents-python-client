@@ -1,5 +1,5 @@
-from typing import Annotated
 from datetime import datetime, timezone
+from typing import Annotated
 
 import pytest
 from pydantic import BaseModel, ConfigDict
