@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 import pytest
@@ -82,6 +83,173 @@ def test_serialise_move():
                             "operator": "Equal",
                             "target": "Property",
                             "value": "... or this one?",
+                        },
+                    ],
+                },
+            },
+        ),
+        (
+            (
+                (
+                    Filter.by_property("prop_str").equal("a")
+                    | Filter.by_property("prop_str").equal("b")
+                )
+                & Filter.by_property("prop_int").greater_than("c")
+            ),
+            {
+                "field": {
+                    "combine": "and",
+                    "filters": [
+                        {
+                            "combine": "or",
+                            "filters": [
+                                {
+                                    "operator": "Equal",
+                                    "target": "prop_str",
+                                    "value": "a",
+                                },
+                                {
+                                    "operator": "Equal",
+                                    "target": "prop_str",
+                                    "value": "b",
+                                },
+                            ],
+                        },
+                        {
+                            "operator": "GreaterThan",
+                            "target": "prop_int",
+                            "value": "c",
+                        },
+                    ],
+                },
+            },
+        ),
+        (
+            (
+                (
+                    (
+                        Filter.by_property("prop_str_1").equal("a")
+                        | Filter.by_property("prop_str_1").equal("b")
+                    )
+                    & (
+                        Filter.by_property("prop_str_2").equal("c")
+                        | Filter.by_property("prop_str_2").equal("d")
+                    )
+                )
+                & (
+                    (
+                        Filter.by_property("prop_int").greater_than(1)
+                        | Filter.by_property("prop_int").less_than(-1)
+                    )
+                    & (
+                        (
+                            Filter.by_property("prop_str_3").like("*hello*")
+                            & Filter.by_property("prop_str_3").like("*world*")
+                        )
+                        | (
+                            Filter.by_creation_time().less_than(
+                                datetime.fromtimestamp(1757669274, tz=timezone.utc)
+                            )
+                            | Filter.by_update_time().greater_than(
+                                datetime.fromtimestamp(1757669274, tz=timezone.utc)
+                            )
+                        )
+                    )
+                )
+            ),
+            {
+                "field": {
+                    "combine": "and",
+                    "filters": [
+                        {
+                            "combine": "and",
+                            "filters": [
+                                {
+                                    "combine": "or",
+                                    "filters": [
+                                        {
+                                            "operator": "Equal",
+                                            "target": "prop_str_1",
+                                            "value": "a",
+                                        },
+                                        {
+                                            "operator": "Equal",
+                                            "target": "prop_str_1",
+                                            "value": "b",
+                                        },
+                                    ],
+                                },
+                                {
+                                    "combine": "or",
+                                    "filters": [
+                                        {
+                                            "operator": "Equal",
+                                            "target": "prop_str_2",
+                                            "value": "c",
+                                        },
+                                        {
+                                            "operator": "Equal",
+                                            "target": "prop_str_2",
+                                            "value": "d",
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "combine": "and",
+                            "filters": [
+                                {
+                                    "combine": "or",
+                                    "filters": [
+                                        {
+                                            "operator": "GreaterThan",
+                                            "target": "prop_int",
+                                            "value": 1,
+                                        },
+                                        {
+                                            "operator": "LessThan",
+                                            "target": "prop_int",
+                                            "value": -1,
+                                        },
+                                    ],
+                                },
+                                {
+                                    "combine": "or",
+                                    "filters": [
+                                        {
+                                            "combine": "and",
+                                            "filters": [
+                                                {
+                                                    "operator": "Like",
+                                                    "target": "prop_str_3",
+                                                    "value": "*hello*",
+                                                },
+                                                {
+                                                    "operator": "Like",
+                                                    "target": "prop_str_3",
+                                                    "value": "*world*",
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            "combine": "or",
+                                            "filters": [
+                                                {
+                                                    "operator": "LessThan",
+                                                    "target": "_creationTimeUnix",
+                                                    "value": "2025-09-12T09:27:54Z",
+                                                },
+                                                {
+                                                    "operator": "GreaterThan",
+                                                    "target": "_lastUpdateTimeUnix",
+                                                    "value": "2025-09-12T09:27:54Z",
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
                         },
                     ],
                 },
