@@ -9,7 +9,6 @@ from weaviate.collections.classes.filters import (
     _FilterAnd,
     _FilterOr,
     _Filters,
-    _FilterValue,
 )
 from weaviate.collections.classes.grpc import (
     HybridVectorType,
@@ -38,23 +37,29 @@ class _FilterAndOrSerialise(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     combine: Literal["and", "or"]
-    filters: list[_Filters]
+    filters: list[Union[_Filters, _FilterAndOrSerialise]]
 
 
 @PlainSerializer
 def serialise_filter(
-    filter_and_or_value: Union[_FilterAnd, _FilterOr, _FilterValue],
-) -> Union[_FilterValue, _FilterAndOrSerialise]:
-    if isinstance(filter_and_or_value, _FilterValue):
+    filter_and_or_value: _Filters,
+) -> Union[_Filters, _FilterAndOrSerialise]:
+    return _serialise_filter_level(filter_and_or_value)
+
+
+def _serialise_filter_level(
+    filter_and_or_value: _Filters,
+) -> Union[_Filters, _FilterAndOrSerialise]:
+    if not isinstance(filter_and_or_value, (_FilterAnd, _FilterOr)):
         return filter_and_or_value
 
-    if isinstance(filter_and_or_value, _FilterAnd):
-        combine: Literal["and", "or"] = "and"
-    elif isinstance(filter_and_or_value, _FilterOr):
-        combine = "or"
-    else:
-        raise TypeError(f"Unknown filter type {type(filter_and_or_value)}")
-    return _FilterAndOrSerialise(combine=combine, filters=filter_and_or_value.filters)
+    combine: Literal["and", "or"] = (
+        "and" if isinstance(filter_and_or_value, _FilterAnd) else "or"
+    )
+    return _FilterAndOrSerialise(
+        combine=combine,
+        filters=[_serialise_filter_level(f) for f in filter_and_or_value.filters],
+    )
 
 
 # A set of models to help serialise HybridVectorType, which is a union of
