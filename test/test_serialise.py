@@ -1,4 +1,5 @@
 from typing import Annotated
+from datetime import datetime, timezone
 
 import pytest
 from pydantic import BaseModel, ConfigDict
@@ -146,8 +147,12 @@ def test_serialise_move():
                             & Filter.by_property("prop_str_3").like("*world*")
                         )
                         | (
-                            Filter.by_creation_time().less_than(1757669274)
-                            | Filter.by_update_time().greater_than(1757669274)
+                            Filter.by_creation_time().less_than(
+                                datetime.fromtimestamp(1757669274, tz=timezone.utc)
+                            )
+                            | Filter.by_update_time().greater_than(
+                                datetime.fromtimestamp(1757669274, tz=timezone.utc)
+                            )
                         )
                     )
                 )
@@ -233,12 +238,12 @@ def test_serialise_move():
                                                 {
                                                     "operator": "LessThan",
                                                     "target": "_creationTimeUnix",
-                                                    "value": 1757669274,
+                                                    "value": "2025-09-12T09:27:54Z",
                                                 },
                                                 {
                                                     "operator": "GreaterThan",
                                                     "target": "_lastUpdateTimeUnix",
-                                                    "value": 1757669274,
+                                                    "value": "2025-09-12T09:27:54Z",
                                                 },
                                             ],
                                         },
