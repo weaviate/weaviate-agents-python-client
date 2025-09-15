@@ -37,11 +37,7 @@ from weaviate_agents.query.search import (
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     """An agent for executing agentic queries against Weaviate.
 
-    Warning:
-        Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version of the client.
-
-        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def __init__(
@@ -122,7 +118,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
-        """Run the query agent. Must be implemented by subclasses.
+        """Run the query agent.
 
         Deprecated:
             The `run` method is deprecated; use `ask()` instead.
@@ -300,11 +296,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
 
-    Warning:
-        Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version of the client.
-
-        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     @deprecated(
@@ -559,11 +551,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     """An agent for executing agentic queries against Weaviate.
 
-    Warning:
-        Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version of the client.
-
-        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     @deprecated(

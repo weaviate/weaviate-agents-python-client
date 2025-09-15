@@ -73,11 +73,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
     values. This will result in the same underlying searches being performed each time,
     resulting in a consistent results set across pages.
 
-    Warning:
-        Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version of the client.
-
-        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def _handle_response(self, response: httpx.Response) -> SearchModeResponse:
@@ -122,11 +118,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
     values. This will result in the same underlying searches being performed each time,
     resulting in a consistent results set across pages.
 
-    Warning:
-        Weaviate Agents - Query Agent is an early stage alpha product. The API is subject to
-        breaking changes. Please ensure you are using the latest version of the client.
-
-        For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
     """
 
     def _handle_response(self, response: httpx.Response) -> AsyncSearchModeResponse:
