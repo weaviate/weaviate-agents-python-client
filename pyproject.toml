@@ -1,6 +1,6 @@
 [project]
 name = "weaviate-agents"
-version = "1.0.0"
+version = "1.0.1"
 description = "The official sub-package for the Weaviate Agents project."
 readme = "README.md"
 requires-python = ">=3.9"

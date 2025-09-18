@@ -6,12 +6,11 @@ from enum import Enum
 from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from rich.pretty import pprint
 from typing_extensions import TypedDict
 from weaviate.outputs.query import QueryReturn
 
 from weaviate_agents.classes.core import Usage
-from weaviate_agents.utils import print_query_agent_response
+from weaviate_agents.utils import print_ask_mode_response, print_query_agent_response
 
 
 class ComparisonOperator(str, Enum):
@@ -419,7 +418,7 @@ class AskModeResponse(BaseModel):
 
     def display(self) -> None:
         """Display a pretty-printed summary of the AskModeResponse object."""
-        pprint(self)
+        print_ask_mode_response(self)
         return None
 
 
