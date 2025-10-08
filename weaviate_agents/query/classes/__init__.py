@@ -29,6 +29,7 @@ from .response import (
     QueryResult,
     QueryResultWithCollection,
     QueryResultWithCollectionNormalized,
+    QuerySort,
     QueryWithCollection,
     SearchModeResponseBase,
     Source,
@@ -82,4 +83,5 @@ __all__ = [
     "FilterAndOr",
     "QueryResultWithCollectionNormalized",
     "AggregationResultWithCollectionNormalized",
+    "QuerySort",
 ]

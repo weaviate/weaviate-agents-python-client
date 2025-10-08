@@ -391,10 +391,17 @@ class FilterAndOr(BaseModel):
     filters: list[Union[PropertyFilter, FilterAndOr]]
 
 
+class QuerySort(BaseModel):
+    property_name: str
+    order: Literal["ascending", "descending"]
+    tie_break: Union[QuerySort, None]
+
+
 class QueryResultWithCollectionNormalized(BaseModel):
     query: Union[str, None]
     filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
+    sort_property: Union[QuerySort, None] = None
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):
