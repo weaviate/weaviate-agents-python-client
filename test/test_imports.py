@@ -80,6 +80,7 @@ def test_class_exports():
         QueryResult,
         QueryResultWithCollection,
         QueryResultWithCollectionNormalized,
+        QuerySort,
         QueryWithCollection,
         SearchModeResponseBase,
         Source,
@@ -142,6 +143,7 @@ def test_class_exports():
         QueryAgentResponse,
         QueryResult,
         QueryResultWithCollection,
+        QuerySort,
         QueryWithCollection,
         SearchModeResponseBase,
         Source,
@@ -222,6 +224,7 @@ def test_class_exports():
         "FilterAndOr",
         "QueryResultWithCollectionNormalized",
         "AggregationResultWithCollectionNormalized",
+        "QuerySort",
     ]
 
     assert hasattr(

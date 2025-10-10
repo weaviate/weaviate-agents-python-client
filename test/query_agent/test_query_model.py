@@ -561,7 +561,18 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
                 "value": 0.0,
             },
             "collection": "test_collection",
-        }
+            "sort_property": None,
+        },
+        {
+            "query": None,
+            "filters": None,
+            "collection": "test_collection",
+            "sort_property": {
+                "property_name": "test_property",
+                "order": "ascending",
+                "tie_break": None,
+            },
+        },
     ],
     "usage": {
         "model_units": 1,

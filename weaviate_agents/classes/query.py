@@ -28,6 +28,7 @@ from weaviate_agents.query.classes import (
     QueryResult,
     QueryResultWithCollection,
     QueryResultWithCollectionNormalized,
+    QuerySort,
     QueryWithCollection,
     SearchModeResponseBase,
     Source,
@@ -82,4 +83,5 @@ __all__ = [
     "FilterAndOr",
     "QueryResultWithCollectionNormalized",
     "AggregationResultWithCollectionNormalized",
+    "QuerySort",
 ]
