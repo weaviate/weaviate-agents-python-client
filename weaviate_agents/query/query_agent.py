@@ -149,10 +149,9 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             "tool_call_source_limit": 20,
             # TODO: The think-mode agent has agent + final answer prompts,
             # so what's the best way to handle both of them here (with a single _system_prompt attr)?
-            #"system_prompt": self._system_prompt,
+            # "system_prompt": self._system_prompt,
             "agent_system_prompt": None,
             "final_answer_system_prompt": None,
-
             "include_progress": include_progress,
             "include_thoughts": include_thoughts,
             "include_final_state": include_final_state,
@@ -346,8 +345,19 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None],
-        AsyncGenerator[Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None],
+        Generator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+            ],
+            None,
+            None,
+        ],
+        AsyncGenerator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+            ],
+            None,
+        ],
     ]: ...
 
     @overload
@@ -372,8 +382,12 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None],
-        AsyncGenerator[Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None],
+        Generator[
+            Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None
+        ],
     ]: ...
 
     @overload
@@ -398,8 +412,12 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None],
-        AsyncGenerator[Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None],
+        Generator[
+            Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None
+        ],
     ]: ...
 
     @overload
@@ -450,8 +468,19 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ) -> Union[
-        Generator[Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None],
-        AsyncGenerator[Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None],
+        Generator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+            ],
+            None,
+            None,
+        ],
+        AsyncGenerator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+            ],
+            None,
+        ],
     ]:
         """Run the Query Agent think mode and stream the response."""
         pass
@@ -692,7 +721,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Generator[
-        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse],
+        None,
+        None,
     ]: ...
 
     @overload
@@ -703,7 +734,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
-    ) -> Generator[Union[ProgressMessage, StreamedThoughts, StreamedTokens], None, None]: ...
+    ) -> Generator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens], None, None
+    ]: ...
 
     @overload
     def think_stream(
@@ -713,7 +746,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> Generator[Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None]: ...
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None
+    ]: ...
 
     @overload
     def think_stream(
@@ -733,7 +768,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
-    ) -> Generator[Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None]: ...
+    ) -> Generator[
+        Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None
+    ]: ...
 
     @overload
     def think_stream(
@@ -1076,7 +1113,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> AsyncGenerator[
-        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse], None
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse],
+        None,
     ]: ...
 
     @overload
@@ -1087,7 +1125,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
-    ) -> AsyncGenerator[Union[ProgressMessage, StreamedThoughts, StreamedTokens], None]: ...
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens], None
+    ]: ...
 
     @overload
     def think_stream(
@@ -1097,7 +1137,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None]: ...
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None
+    ]: ...
 
     @overload
     def think_stream(
@@ -1117,7 +1159,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
-    ) -> AsyncGenerator[Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None]: ...
+    ) -> AsyncGenerator[
+        Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None
+    ]: ...
 
     @overload
     def think_stream(
@@ -1251,7 +1295,14 @@ def _parse_sse(
 
 def _parse_sse(
     sse: ServerSentEvent, mode: Literal["query", "ask", "think"]
-) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, QueryAgentResponse, AskModeResponse, ThinkingModeResponse]:
+) -> Union[
+    ProgressMessage,
+    StreamedThoughts,
+    StreamedTokens,
+    QueryAgentResponse,
+    AskModeResponse,
+    ThinkingModeResponse,
+]:
     try:
         data = sse.json()
     except JSONDecodeError:
