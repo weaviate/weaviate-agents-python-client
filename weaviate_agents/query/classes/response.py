@@ -435,6 +435,7 @@ class ThinkingModeResponse(BaseModel):
     final_answer: str
     usage: ModelUnitUsage
     queries: list[AskModeResponse]
+    total_time: float
 
 
 class QueryWithCollection(TypedDict):

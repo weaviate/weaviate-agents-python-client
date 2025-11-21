@@ -561,6 +561,7 @@ FAKE_THINK_SUCCESS_JSON = {
         "remaining_plan_requests": 100,
     },
     "queries": [FAKE_ASK_SUCCESS_JSON],
+    "total_time": 1.5,
 }
 
 
