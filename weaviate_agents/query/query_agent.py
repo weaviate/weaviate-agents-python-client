@@ -23,9 +23,9 @@ from weaviate_agents.query.classes import (
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
+    ResearchModeResponse,
     StreamedThoughts,
     StreamedTokens,
-    ThinkingModeResponse,
 )
 from weaviate_agents.query.classes.request import ChatMessage, ConversationContext
 from weaviate_agents.query.search import (
@@ -109,7 +109,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             output["previous_response"] = context.model_dump(mode="json")
         return output
 
-    def _prepare_think_mode_request_body(
+    def _prepare_research_mode_request_body(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -118,7 +118,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ) -> dict:
-        """Prepare the request body for the think-mode query.
+        """Prepare the request body for the research-mode query.
 
         Args:
             query: The natural language query string for the agent.
@@ -147,7 +147,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             ],
             "headers": self._connection.additional_headers,
             "tool_call_source_limit": 20,
-            # TODO: The think-mode agent has agent + final answer prompts,
+            # TODO: The research-mode agent has agent + final answer prompts,
             # so what's the best way to handle both of them here (with a single _system_prompt attr)?
             # "system_prompt": self._system_prompt,
             "agent_system_prompt": None,
@@ -337,7 +337,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         pass
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -347,21 +347,21 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[
         Generator[
             Union[
-                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
             ],
             None,
             None,
         ],
         AsyncGenerator[
             Union[
-                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
             ],
             None,
         ],
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -374,7 +374,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -383,15 +383,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_final_state: Literal[True] = True,
     ) -> Union[
         Generator[
-            Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None
+            Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None, None
         ],
         AsyncGenerator[
-            Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None
+            Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None
         ],
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -404,7 +404,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -413,15 +413,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_final_state: Literal[True] = True,
     ) -> Union[
         Generator[
-            Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None
+            Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None, None
         ],
         AsyncGenerator[
-            Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None
+            Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None
         ],
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -434,7 +434,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -442,12 +442,12 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
     ) -> Union[
-        Generator[Union[StreamedTokens, ThinkingModeResponse], None, None],
-        AsyncGenerator[Union[StreamedTokens, ThinkingModeResponse], None],
+        Generator[Union[StreamedTokens, ResearchModeResponse], None, None],
+        AsyncGenerator[Union[StreamedTokens, ResearchModeResponse], None],
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -460,7 +460,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ]: ...
 
     @abstractmethod
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -470,19 +470,19 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[
         Generator[
             Union[
-                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
             ],
             None,
             None,
         ],
         AsyncGenerator[
             Union[
-                ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
             ],
             None,
         ],
     ]:
-        """Run the Query Agent think mode and stream the response."""
+        """Run the Query Agent research mode and stream the response."""
         pass
 
     @abstractmethod
@@ -713,7 +713,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                         yield output
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -721,13 +721,13 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Generator[
-        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse],
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse],
         None,
         None,
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -739,7 +739,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -747,11 +747,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
     ) -> Generator[
-        Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None, None
+        Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None, None
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -761,7 +761,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -769,11 +769,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Generator[
-        Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None, None
+        Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None, None
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -783,17 +783,17 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     ) -> Generator[Union[StreamedThoughts, StreamedTokens], None, None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> Generator[Union[StreamedTokens, ThinkingModeResponse], None, None]: ...
+    ) -> Generator[Union[StreamedTokens, ResearchModeResponse], None, None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -802,7 +802,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: Literal[False] = False,
     ) -> Generator[StreamedTokens, None, None]: ...
 
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -810,8 +810,8 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ):
-        """Run the Query Agent think mode and stream the response."""
-        request_body = self._prepare_think_mode_request_body(
+        """Run the Query Agent research mode and stream the response."""
+        request_body = self._prepare_research_mode_request_body(
             query=query,
             collections=collections,
             include_progress=include_progress,
@@ -822,7 +822,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             with connect_sse(
                 client=client,
                 method="POST",
-                url=self.query_url + "/stream_think",
+                url=self.query_url + "/stream_research",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
@@ -832,14 +832,14 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     raise Exception(events.response.text)
 
                 for sse in events.iter_sse():
-                    output = _parse_sse(sse, mode="think")
+                    output = _parse_sse(sse, mode="research")
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
                     elif isinstance(output, StreamedThoughts):
                         if include_thoughts:
                             yield output
-                    elif isinstance(output, ThinkingModeResponse):
+                    elif isinstance(output, ResearchModeResponse):
                         if include_final_state:
                             yield output
                     else:
@@ -1105,7 +1105,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                         yield output
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1113,12 +1113,12 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> AsyncGenerator[
-        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse],
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse],
         None,
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1130,7 +1130,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1138,11 +1138,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
     ) -> AsyncGenerator[
-        Union[ProgressMessage, StreamedTokens, ThinkingModeResponse], None
+        Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1152,7 +1152,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1160,11 +1160,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> AsyncGenerator[
-        Union[StreamedThoughts, StreamedTokens, ThinkingModeResponse], None
+        Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None
     ]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1174,17 +1174,17 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     ) -> AsyncGenerator[Union[StreamedThoughts, StreamedTokens], None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> AsyncGenerator[Union[StreamedTokens, ThinkingModeResponse], None]: ...
+    ) -> AsyncGenerator[Union[StreamedTokens, ResearchModeResponse], None]: ...
 
     @overload
-    def think_stream(
+    def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1193,7 +1193,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: Literal[False] = False,
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
-    async def think_stream(
+    async def research_stream(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
@@ -1201,8 +1201,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ):
-        """Run the Query Agent think mode and stream the response."""
-        request_body = self._prepare_think_mode_request_body(
+        """Run the Query Agent research mode and stream the response."""
+        request_body = self._prepare_research_mode_request_body(
             query=query,
             collections=collections,
             include_progress=include_progress,
@@ -1213,7 +1213,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             async with aconnect_sse(
                 client=client,
                 method="POST",
-                url=self.query_url + "/stream_think",
+                url=self.query_url + "/stream_research",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
@@ -1223,14 +1223,14 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     raise Exception(events.response.text)
 
                 async for sse in events.aiter_sse():
-                    output = _parse_sse(sse, mode="think")
+                    output = _parse_sse(sse, mode="research")
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
                     elif isinstance(output, StreamedThoughts):
                         if include_thoughts:
                             yield output
-                    elif isinstance(output, ThinkingModeResponse):
+                    elif isinstance(output, ResearchModeResponse):
                         if include_final_state:
                             yield output
                     else:
@@ -1289,19 +1289,19 @@ def _parse_sse(
 
 @overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["think"]
-) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, ThinkingModeResponse]: ...
+    sse: ServerSentEvent, mode: Literal["research"]
+) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse]: ...
 
 
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["query", "ask", "think"]
+    sse: ServerSentEvent, mode: Literal["query", "ask", "research"]
 ) -> Union[
     ProgressMessage,
     StreamedThoughts,
     StreamedTokens,
     QueryAgentResponse,
     AskModeResponse,
-    ThinkingModeResponse,
+    ResearchModeResponse,
 ]:
     try:
         data = sse.json()
@@ -1321,8 +1321,8 @@ def _parse_sse(
             return QueryAgentResponse.model_validate(data)
         elif mode == "ask":
             return AskModeResponse.model_validate(data)
-        elif mode == "think":
-            return ThinkingModeResponse.model_validate(data)
+        elif mode == "research":
+            return ResearchModeResponse.model_validate(data)
     else:
         raise Exception(
             f"Unrecognised event type in response: {sse.event=}, {sse.data=}"

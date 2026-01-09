@@ -82,6 +82,7 @@ def test_class_exports():
         QueryResultWithCollectionNormalized,
         QuerySort,
         QueryWithCollection,
+        ResearchModeResponse,
         SearchModeResponseBase,
         Source,
         StreamedThoughts,
@@ -90,7 +91,6 @@ def test_class_exports():
         TextMetrics,
         TextPropertyAggregation,
         TextPropertyFilter,
-        ThinkingModeResponse,
         UnknownPropertyAggregation,
         UnknownPropertyFilter,
         UpdatePropertyOperation,
@@ -149,7 +149,7 @@ def test_class_exports():
         QueryWithCollection,
         SearchModeResponseBase,
         Source,
-        ThinkingModeResponse,
+        ResearchModeResponse,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -230,7 +230,7 @@ def test_class_exports():
         "AggregationResultWithCollectionNormalized",
         "QuerySort",
         "StreamedThoughts",
-        "ThinkingModeResponse",
+        "ResearchModeResponse",
     ]
 
     assert hasattr(

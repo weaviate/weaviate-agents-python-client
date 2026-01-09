@@ -429,7 +429,7 @@ class AskModeResponse(BaseModel):
         return None
 
 
-class ThinkingModeResponse(BaseModel):
+class ResearchModeResponse(BaseModel):
     output_type: Literal["final_state"] = "final_state"
 
     final_answer: str

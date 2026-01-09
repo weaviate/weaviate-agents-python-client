@@ -30,6 +30,7 @@ from weaviate_agents.query.classes import (
     QueryResultWithCollectionNormalized,
     QuerySort,
     QueryWithCollection,
+    ResearchModeResponse,
     SearchModeResponseBase,
     Source,
     StreamedThoughts,
@@ -38,7 +39,6 @@ from weaviate_agents.query.classes import (
     TextMetrics,
     TextPropertyAggregation,
     TextPropertyFilter,
-    ThinkingModeResponse,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
     Usage,
@@ -86,6 +86,6 @@ __all__ = [
     "QueryResultWithCollectionNormalized",
     "AggregationResultWithCollectionNormalized",
     "QuerySort",
-    "ThinkingModeResponse",
+    "ResearchModeResponse",
     "StreamedThoughts",
 ]
