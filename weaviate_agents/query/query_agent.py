@@ -103,7 +103,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
-            "limit": 20,
             "system_prompt": self._system_prompt,
             **kwargs,
         }
@@ -148,7 +147,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
-            "tool_call_source_limit": 20,
             # TODO: The research-mode agent has agent + final answer prompts,
             # so what's the best way to handle both of them here (with a single _system_prompt attr)?
             # "system_prompt": self._system_prompt,
