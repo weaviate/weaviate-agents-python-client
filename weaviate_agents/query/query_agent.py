@@ -56,7 +56,9 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             client: The Weaviate client connected to a Weaviate Cloud cluster.
             collections: The collections to query. Will be overriden if passed in the `run` method.
             agents_host: Optional host of the agents service.
-            system_prompt: Optional system prompt for the agent.
+            system_prompt: Optional prompt to control the tone, format, and style of the agent's
+                final response. This prompt is applied when generating the answer after all
+                research and data retrieval is complete.
             timeout: The timeout for the request. Defaults to 60 seconds.
         """
         super().__init__(client, agents_host)
@@ -114,6 +116,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: bool = True,
         include_thoughts: bool = True,
         include_final_state: bool = True,
@@ -123,6 +126,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         Args:
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the research phase.
             include_progress: Whether to include progress messages in the stream.
             include_thoughts: Whether to include streamed thoughts in the stream.
             include_final_state: Whether to include the final state in the stream.
@@ -147,11 +151,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
-            # TODO: The research-mode agent has agent + final answer prompts,
-            # so what's the best way to handle both of them here (with a single _system_prompt attr)?
-            # "system_prompt": self._system_prompt,
-            "agent_system_prompt": None,
-            "final_answer_system_prompt": None,
+            "agent_system_prompt": reasoning_prompt,
+            "final_answer_system_prompt": self._system_prompt,
             "include_progress": include_progress,
             "include_thoughts": include_thoughts,
             "include_final_state": include_final_state,
@@ -340,6 +341,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -364,6 +366,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -377,6 +380,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -394,6 +398,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -407,6 +412,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -424,6 +430,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -437,6 +444,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -450,6 +458,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -463,6 +472,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: bool = True,
         include_thoughts: bool = True,
         include_final_state: bool = True,
@@ -481,7 +491,19 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             None,
         ],
     ]:
-        """Run the Query Agent research mode and stream the response."""
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
         pass
 
     @abstractmethod
@@ -716,6 +738,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -730,6 +753,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -742,6 +766,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -754,6 +779,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -764,6 +790,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -776,6 +803,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -786,6 +814,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -796,6 +825,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -805,14 +835,28 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: bool = True,
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ):
-        """Run the Query Agent research mode and stream the response."""
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
         request_body = self._prepare_research_mode_request_body(
             query=query,
             collections=collections,
+            reasoning_prompt=reasoning_prompt,
             include_progress=include_progress,
             include_thoughts=include_thoughts,
             include_final_state=include_final_state,
@@ -1108,6 +1152,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -1121,6 +1166,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -1133,6 +1179,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -1145,6 +1192,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -1155,6 +1203,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[True] = True,
@@ -1167,6 +1216,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[True] = True,
         include_final_state: Literal[False] = False,
@@ -1177,6 +1227,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[True] = True,
@@ -1187,6 +1238,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_thoughts: Literal[False] = False,
         include_final_state: Literal[False] = False,
@@ -1196,14 +1248,28 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
         include_progress: bool = True,
         include_thoughts: bool = True,
         include_final_state: bool = True,
     ):
-        """Run the Query Agent research mode and stream the response."""
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
         request_body = self._prepare_research_mode_request_body(
             query=query,
             collections=collections,
+            reasoning_prompt=reasoning_prompt,
             include_progress=include_progress,
             include_thoughts=include_thoughts,
             include_final_state=include_final_state,
