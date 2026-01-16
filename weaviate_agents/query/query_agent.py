@@ -115,7 +115,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
-        context: Optional[QueryAgentResponse] = None,
         include_progress: bool = True,
         include_thoughts: bool = True,
         include_final_state: bool = True,
@@ -125,7 +124,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         Args:
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
-            context: Optional previous response from the agent.
             include_progress: Whether to include progress messages in the stream.
             include_thoughts: Whether to include streamed thoughts in the stream.
             include_final_state: Whether to include the final state in the stream.
