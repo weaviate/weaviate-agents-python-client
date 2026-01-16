@@ -95,9 +95,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         output = {
             "query": query_request,
             "collections": [
-                collection
-                if isinstance(collection, str)
-                else collection.model_dump(mode="json")
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
@@ -140,9 +142,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         output = {
             "query": query_request,
             "collections": [
-                collection
-                if isinstance(collection, str)
-                else collection.model_dump(mode="json")
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
@@ -156,8 +160,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             "include_thoughts": include_thoughts,
             "include_final_state": include_final_state,
         }
-        if context is not None:
-            output["previous_response"] = context.model_dump(mode="json")
+
         return output
 
     @deprecated(
