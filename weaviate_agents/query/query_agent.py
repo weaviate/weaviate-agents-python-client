@@ -23,6 +23,8 @@ from weaviate_agents.query.classes import (
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
+    ResearchModeResponse,
+    StreamedThoughts,
     StreamedTokens,
 )
 from weaviate_agents.query.classes.request import ChatMessage, ConversationContext
@@ -54,7 +56,9 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             client: The Weaviate client connected to a Weaviate Cloud cluster.
             collections: The collections to query. Will be overriden if passed in the `run` method.
             agents_host: Optional host of the agents service.
-            system_prompt: Optional system prompt for the agent.
+            system_prompt: Optional prompt to control the tone, format, and style of the agent's
+                final response. This prompt is applied when generating the answer after all
+                research and data retrieval is complete.
             timeout: The timeout for the request. Defaults to 60 seconds.
         """
         super().__init__(client, agents_host)
@@ -93,18 +97,67 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         output = {
             "query": query_request,
             "collections": [
-                collection
-                if isinstance(collection, str)
-                else collection.model_dump(mode="json")
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
                 for collection in collections
             ],
             "headers": self._connection.additional_headers,
-            "limit": 20,
             "system_prompt": self._system_prompt,
             **kwargs,
         }
         if context is not None:
             output["previous_response"] = context.model_dump(mode="json")
+        return output
+
+    def _prepare_research_mode_request_body(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: bool = True,
+        include_thoughts: bool = True,
+        include_final_state: bool = True,
+    ) -> dict:
+        """Prepare the request body for the research-mode query.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the research phase.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+
+        query_request = (
+            query
+            if isinstance(query, str)
+            else ConversationContext(messages=query).model_dump(mode="json")
+        )
+        output = {
+            "query": query_request,
+            "collections": [
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
+                for collection in collections
+            ],
+            "headers": self._connection.additional_headers,
+            "agent_system_prompt": reasoning_prompt,
+            "final_answer_system_prompt": self._system_prompt,
+            "include_progress": include_progress,
+            "include_thoughts": include_thoughts,
+            "include_final_state": include_final_state,
+        }
+
         return output
 
     @deprecated(
@@ -281,6 +334,176 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
     ]:
         """Run the Query Agent ask mode and stream the response."""
+        pass
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
+            ],
+            None,
+            None,
+        ],
+        AsyncGenerator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
+            ],
+            None,
+        ],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedThoughts, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedThoughts, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None
+        ],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[
+            Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None, None
+        ],
+        AsyncGenerator[
+            Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None
+        ],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[Union[StreamedThoughts, StreamedTokens], None, None],
+        AsyncGenerator[Union[StreamedThoughts, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Union[
+        Generator[Union[StreamedTokens, ResearchModeResponse], None, None],
+        AsyncGenerator[Union[StreamedTokens, ResearchModeResponse], None],
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Union[
+        Generator[StreamedTokens, None, None],
+        AsyncGenerator[StreamedTokens, None],
+    ]: ...
+
+    @abstractmethod
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: bool = True,
+        include_thoughts: bool = True,
+        include_final_state: bool = True,
+    ) -> Union[
+        Generator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
+            ],
+            None,
+            None,
+        ],
+        AsyncGenerator[
+            Union[
+                ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse
+            ],
+            None,
+        ],
+    ]:
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
         pass
 
     @abstractmethod
@@ -505,6 +728,161 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                         if include_progress:
                             yield output
                     elif isinstance(output, AskModeResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse],
+        None,
+        None,
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens], None, None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None, None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[
+        Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None, None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[Union[StreamedThoughts, StreamedTokens], None, None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> Generator[Union[StreamedTokens, ResearchModeResponse], None, None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> Generator[StreamedTokens, None, None]: ...
+
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: bool = True,
+        include_thoughts: bool = True,
+        include_final_state: bool = True,
+    ):
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
+        request_body = self._prepare_research_mode_request_body(
+            query=query,
+            collections=collections,
+            reasoning_prompt=reasoning_prompt,
+            include_progress=include_progress,
+            include_thoughts=include_thoughts,
+            include_final_state=include_final_state,
+        )
+        with httpx.Client() as client:
+            with connect_sse(
+                client=client,
+                method="POST",
+                url=self.query_url + "/stream_research",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                if events.response.is_error:
+                    events.response.read()
+                    raise Exception(events.response.text)
+
+                for sse in events.iter_sse():
+                    output = _parse_sse(sse, mode="research")
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, StreamedThoughts):
+                        if include_thoughts:
+                            yield output
+                    elif isinstance(output, ResearchModeResponse):
                         if include_final_state:
                             yield output
                     else:
@@ -769,6 +1147,160 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     else:
                         yield output
 
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse],
+        None,
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedThoughts, StreamedTokens], None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, ResearchModeResponse], None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[True] = True,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[
+        Union[StreamedThoughts, StreamedTokens, ResearchModeResponse], None
+    ]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[Union[StreamedThoughts, StreamedTokens], None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+    ) -> AsyncGenerator[Union[StreamedTokens, ResearchModeResponse], None]: ...
+
+    @overload
+    def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: Literal[False] = False,
+        include_thoughts: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+    ) -> AsyncGenerator[StreamedTokens, None]: ...
+
+    async def research_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        reasoning_prompt: Optional[str] = None,
+        include_progress: bool = True,
+        include_thoughts: bool = True,
+        include_final_state: bool = True,
+    ):
+        """Run the Query Agent research mode and stream the response.
+
+        Args:
+            query: The natural language query string or list of chat messages.
+            collections: The collections to query. Overrides any collections
+                provided in the constructor when set.
+            reasoning_prompt: Optional prompt to control the agent's behavior during the
+                research phase, guiding how it searches, retrieves, and reasons about data.
+                The constructor's system_prompt controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream.
+            include_thoughts: Whether to include streamed thoughts in the stream.
+            include_final_state: Whether to include the final state in the stream.
+        """
+        request_body = self._prepare_research_mode_request_body(
+            query=query,
+            collections=collections,
+            reasoning_prompt=reasoning_prompt,
+            include_progress=include_progress,
+            include_thoughts=include_thoughts,
+            include_final_state=include_final_state,
+        )
+        async with httpx.AsyncClient() as client:
+            async with aconnect_sse(
+                client=client,
+                method="POST",
+                url=self.query_url + "/stream_research",
+                json=request_body,
+                headers=self._headers,
+                timeout=self._timeout,
+            ) as events:
+                if events.response.is_error:
+                    await events.response.aread()
+                    raise Exception(events.response.text)
+
+                async for sse in events.aiter_sse():
+                    output = _parse_sse(sse, mode="research")
+                    if isinstance(output, ProgressMessage):
+                        if include_progress:
+                            yield output
+                    elif isinstance(output, StreamedThoughts):
+                        if include_thoughts:
+                            yield output
+                    elif isinstance(output, ResearchModeResponse):
+                        if include_final_state:
+                            yield output
+                    else:
+                        yield output
+
     async def search(
         self,
         query: Union[str, list[ChatMessage]],
@@ -820,9 +1352,22 @@ def _parse_sse(
 ) -> Union[ProgressMessage, StreamedTokens, AskModeResponse]: ...
 
 
+@overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["query", "ask"]
-) -> Union[ProgressMessage, StreamedTokens, QueryAgentResponse, AskModeResponse]:
+    sse: ServerSentEvent, mode: Literal["research"]
+) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse]: ...
+
+
+def _parse_sse(
+    sse: ServerSentEvent, mode: Literal["query", "ask", "research"]
+) -> Union[
+    ProgressMessage,
+    StreamedThoughts,
+    StreamedTokens,
+    QueryAgentResponse,
+    AskModeResponse,
+    ResearchModeResponse,
+]:
     try:
         data = sse.json()
     except JSONDecodeError:
@@ -834,11 +1379,15 @@ def _parse_sse(
         return ProgressMessage.model_validate(data)
     elif sse.event == "streamed_tokens":
         return StreamedTokens.model_validate(data)
+    elif sse.event == "streamed_thoughts":
+        return StreamedThoughts.model_validate(data)
     elif sse.event == "final_state":
         if mode == "query":
             return QueryAgentResponse.model_validate(data)
         elif mode == "ask":
             return AskModeResponse.model_validate(data)
+        elif mode == "research":
+            return ResearchModeResponse.model_validate(data)
     else:
         raise Exception(
             f"Unrecognised event type in response: {sse.event=}, {sse.data=}"

@@ -11,6 +11,8 @@ from weaviate_agents.classes.query import (
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
+    ResearchModeResponse,
+    StreamedThoughts,
     StreamedTokens,
 )
 from weaviate_agents.query import (
@@ -550,6 +552,19 @@ FAKE_ASK_SUCCESS_JSON = {
 }
 
 
+FAKE_RESEARCH_SUCCESS_JSON = {
+    "output_type": "final_state",
+    "final_answer": "final answer",
+    "usage": {
+        "model_units": 1,
+        "usage_in_plan": False,
+        "remaining_plan_requests": 100,
+    },
+    "queries": [FAKE_ASK_SUCCESS_JSON],
+    "total_time": 1.5,
+}
+
+
 FAKE_SEARCH_ONLY_SUCCESS_JSON = {
     "searches": [
         {
@@ -855,6 +870,58 @@ class MockIterSSESuccess:
             yield event
 
 
+class MockIterSSEResearchSuccess:
+    def __init__(self, data: dict):
+        self.data = data
+
+    response = FakeResponse(200, {})
+
+    def iter_sse(self):
+        yield ServerSentEvent(
+            event="progress_message",
+            data=json.dumps(
+                {
+                    "output_type": "progress_message",
+                    "stage": "query_analysis",
+                    "message": "Analyzing query...",
+                    "details": {},
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="streamed_thoughts",
+            data=json.dumps(
+                {
+                    "output_type": "streamed_thoughts",
+                    "delta": "thinking...",
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="streamed_tokens",
+            data=json.dumps(
+                {
+                    "output_type": "streamed_tokens",
+                    "delta": "final",
+                }
+            ),
+        )
+        yield ServerSentEvent(
+            event="streamed_tokens",
+            data=json.dumps(
+                {
+                    "output_type": "streamed_tokens",
+                    "delta": " answer",
+                }
+            ),
+        )
+        yield ServerSentEvent(event="final_state", data=json.dumps(self.data))
+
+    async def aiter_sse(self):
+        for event in self.iter_sse():
+            yield event
+
+
 @contextmanager
 def mock_connect_sse_success(*args, **kwargs):
     yield MockIterSSESuccess(FAKE_SUCCESS_JSON)
@@ -863,6 +930,11 @@ def mock_connect_sse_success(*args, **kwargs):
 @contextmanager
 def mock_connect_sse_success_ask(*args, **kwargs):
     yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
+
+
+@contextmanager
+def mock_connect_sse_success_research(*args, **kwargs):
+    yield MockIterSSEResearchSuccess(FAKE_RESEARCH_SUCCESS_JSON)
 
 
 def test_stream_success(monkeypatch):
@@ -904,6 +976,11 @@ async def mock_aconnect_sse_success(*args, **kwargs):
 @asynccontextmanager
 async def mock_aconnect_sse_success_ask(*args, **kwargs):
     yield MockIterSSESuccess(FAKE_ASK_SUCCESS_JSON)
+
+
+@asynccontextmanager
+async def mock_aconnect_sse_success_research(*args, **kwargs):
+    yield MockIterSSEResearchSuccess(FAKE_RESEARCH_SUCCESS_JSON)
 
 
 async def test_async_stream_success(monkeypatch):
@@ -1420,6 +1497,221 @@ async def test_async_ask_stream_failure(monkeypatch):
         async for result in agent.ask_stream("failure query"):
             all_results.append(result)
 
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+def test_research_stream_success(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse",
+        mock_connect_sse_success_research,
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    for result in agent.research_stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 5
+
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedThoughts(delta="thinking...")
+    assert all_results[2] == StreamedTokens(delta="final")
+    assert all_results[3] == StreamedTokens(delta=" answer")
+
+    assert isinstance(all_results[4], ResearchModeResponse)
+    assert all_results[4].final_answer == "final answer"
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_thoughts", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+def test_research_stream_with_include_flags(
+    monkeypatch, include_progress, include_thoughts, include_final_state
+):
+    captured = {}
+
+    @contextmanager
+    def mock_connect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSEResearchSuccess(FAKE_RESEARCH_SUCCESS_JSON)
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    for _ in agent.research_stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_thoughts=include_thoughts,
+        include_final_state=include_final_state,
+    ):
+        pass
+
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_thoughts"] == include_thoughts
+    assert captured["json"]["include_final_state"] == include_final_state
+
+
+def test_research_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        for result in agent.research_stream("failure query"):
+            all_results.append(result)
+
+    # Should have received the progress message before the exception
+    assert len(all_results) == 1
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+def test_research_stream_success_with_chat_messages(monkeypatch):
+    captured = {}
+
+    @contextmanager
+    def mock_connect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSEResearchSuccess(FAKE_RESEARCH_SUCCESS_JSON)
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "what's up?"},
+        {"role": "assistant", "content": "all good"},
+    ]
+
+    for _ in agent.research_stream(chat_messages):
+        pass
+
+    assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+async def test_async_research_stream_success(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse",
+        mock_aconnect_sse_success_research,
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    async for result in agent.research_stream("test query"):
+        all_results.append(result)
+
+    assert len(all_results) == 5
+
+    assert all_results[0] == ProgressMessage(
+        stage="query_analysis", message="Analyzing query..."
+    )
+    assert all_results[1] == StreamedThoughts(delta="thinking...")
+    assert all_results[2] == StreamedTokens(delta="final")
+    assert all_results[3] == StreamedTokens(delta=" answer")
+
+    assert isinstance(all_results[4], ResearchModeResponse)
+    assert all_results[4].final_answer == "final answer"
+
+
+@pytest.mark.parametrize("include_progress", [True, False])
+@pytest.mark.parametrize("include_thoughts", [True, False])
+@pytest.mark.parametrize("include_final_state", [True, False])
+async def test_async_research_stream_with_include_flags(
+    monkeypatch, include_progress, include_thoughts, include_final_state
+):
+    captured = {}
+
+    @asynccontextmanager
+    async def mock_aconnect_sse_capture(json, **kwargs):
+        captured["json"] = json
+        yield MockIterSSEResearchSuccess(FAKE_RESEARCH_SUCCESS_JSON)
+
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_capture
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    async for _ in agent.research_stream(
+        "test query",
+        collections=["test_collection"],
+        include_progress=include_progress,
+        include_thoughts=include_thoughts,
+        include_final_state=include_final_state,
+    ):
+        pass
+
+    assert captured["json"]["include_progress"] == include_progress
+    assert captured["json"]["include_thoughts"] == include_thoughts
+    assert captured["json"]["include_final_state"] == include_final_state
+
+
+async def test_async_research_stream_failure(monkeypatch):
+    monkeypatch.setattr(
+        "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure
+    )
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    all_results = []
+    with pytest.raises(Exception) as exc_info:
+        async for result in agent.research_stream("failure query"):
+            all_results.append(result)
+
+    # Should have received the progress message before the exception
     assert len(all_results) == 1
     assert all_results[0] == ProgressMessage(
         stage="query_analysis", message="Analyzing query..."

@@ -429,6 +429,15 @@ class AskModeResponse(BaseModel):
         return None
 
 
+class ResearchModeResponse(BaseModel):
+    output_type: Literal["final_state"] = "final_state"
+
+    final_answer: str
+    usage: ModelUnitUsage
+    queries: list[AskModeResponse]
+    total_time: float
+
+
 class QueryWithCollection(TypedDict):
     query: str
     collection: str
@@ -447,6 +456,11 @@ class ProgressMessage(BaseModel):
 
 class StreamedTokens(BaseModel):
     output_type: Literal["streamed_tokens"] = "streamed_tokens"
+    delta: str
+
+
+class StreamedThoughts(BaseModel):
+    output_type: Literal["streamed_thoughts"] = "streamed_thoughts"
     delta: str
 
 

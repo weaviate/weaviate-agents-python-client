@@ -82,8 +82,10 @@ def test_class_exports():
         QueryResultWithCollectionNormalized,
         QuerySort,
         QueryWithCollection,
+        ResearchModeResponse,
         SearchModeResponseBase,
         Source,
+        StreamedThoughts,
         StreamedTokens,
         TextArrayPropertyFilter,
         TextMetrics,
@@ -147,6 +149,7 @@ def test_class_exports():
         QueryWithCollection,
         SearchModeResponseBase,
         Source,
+        ResearchModeResponse,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -157,6 +160,7 @@ def test_class_exports():
         Usage,
         ProgressDetails,
         ProgressMessage,
+        StreamedThoughts,
         StreamedTokens,
         AskModeResponse,
         ModelUnitUsage,
@@ -225,6 +229,8 @@ def test_class_exports():
         "QueryResultWithCollectionNormalized",
         "AggregationResultWithCollectionNormalized",
         "QuerySort",
+        "StreamedThoughts",
+        "ResearchModeResponse",
     ]
 
     assert hasattr(
