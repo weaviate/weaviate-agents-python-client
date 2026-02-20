@@ -42,6 +42,8 @@ from .response import (
     TextPropertyFilter,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
+    UUIDPropertyFilter,
+    UUIDArrayPropertyFilter,
 )
 
 __all__ = [
@@ -88,4 +90,6 @@ __all__ = [
     "QueryResultWithCollectionNormalized",
     "AggregationResultWithCollectionNormalized",
     "QuerySort",
+    "UUIDPropertyFilter",
+    "UUIDArrayPropertyFilter",
 ]

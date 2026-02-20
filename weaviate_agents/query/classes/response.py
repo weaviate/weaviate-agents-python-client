@@ -36,6 +36,8 @@ class KnownFilterType(str, Enum):
     DATE_ARRAY = "date_array"
     GEO = "geo"
     IS_NULL = "is_null"
+    UUID = "uuid"
+    UUID_ARRAY = "uuid_array"
 
 
 class KnownPropertyFilterBase(BaseModel):
@@ -163,6 +165,27 @@ class GeoPropertyFilter(KnownPropertyFilterBase):
     longitude: float
     max_distance_meters: float
 
+class UUIDPropertyFilter(KnownPropertyFilterBase):
+    """Filter UUID properties."""
+
+    filter_type: Literal[KnownFilterType.UUID] = Field(
+        repr=False, default=KnownFilterType.UUID
+    )
+
+    property_name: str
+    operator: ComparisonOperator
+    value: str
+
+class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
+    """Filter UUID array properties."""
+
+    filter_type: Literal[KnownFilterType.UUID_ARRAY] = Field(
+        repr=False, default=KnownFilterType.UUID_ARRAY
+    )
+
+    property_name: str
+    operator: ComparisonOperator
+    value: list[str]
 
 class IsNullPropertyFilter(KnownPropertyFilterBase):
     """Filter by property null state."""
@@ -209,6 +232,8 @@ PropertyFilter = Union[
     DateArrayPropertyFilter,
     GeoPropertyFilter,
     IsNullPropertyFilter,
+    UUIDPropertyFilter,
+    UUIDArrayPropertyFilter,
     UnknownPropertyFilter,
 ]
 
@@ -402,6 +427,7 @@ class QueryResultWithCollectionNormalized(BaseModel):
     filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
     sort_property: Union[QuerySort, None] = None
+    uuid_value: Union[str, None] = None
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):
