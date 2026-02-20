@@ -165,6 +165,7 @@ class GeoPropertyFilter(KnownPropertyFilterBase):
     longitude: float
     max_distance_meters: float
 
+
 class UUIDPropertyFilter(KnownPropertyFilterBase):
     """Filter UUID properties."""
 
@@ -176,6 +177,7 @@ class UUIDPropertyFilter(KnownPropertyFilterBase):
     operator: ComparisonOperator
     value: str
 
+
 class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
     """Filter UUID array properties."""
 
@@ -186,6 +188,7 @@ class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
     property_name: str
     operator: ComparisonOperator
     value: list[str]
+
 
 class IsNullPropertyFilter(KnownPropertyFilterBase):
     """Filter by property null state."""

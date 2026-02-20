@@ -42,8 +42,8 @@ from weaviate_agents.query.classes import (
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
     Usage,
-    UUIDPropertyFilter,
     UUIDArrayPropertyFilter,
+    UUIDPropertyFilter,
 )
 
 __all__ = [

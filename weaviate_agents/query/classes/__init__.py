@@ -42,8 +42,8 @@ from .response import (
     TextPropertyFilter,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
-    UUIDPropertyFilter,
     UUIDArrayPropertyFilter,
+    UUIDPropertyFilter,
 )
 
 __all__ = [
