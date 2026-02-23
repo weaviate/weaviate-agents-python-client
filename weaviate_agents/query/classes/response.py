@@ -4,6 +4,7 @@ import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
@@ -175,7 +176,7 @@ class UUIDPropertyFilter(KnownPropertyFilterBase):
 
     property_name: str
     operator: ComparisonOperator
-    value: str
+    value: UUID
 
 
 class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
@@ -187,7 +188,7 @@ class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
 
     property_name: str
     operator: ComparisonOperator
-    value: list[str]
+    value: list[UUID]
 
 
 class IsNullPropertyFilter(KnownPropertyFilterBase):
@@ -430,7 +431,7 @@ class QueryResultWithCollectionNormalized(BaseModel):
     filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
     sort_property: Union[QuerySort, None] = None
-    uuid_value: Union[str, None] = None
+    uuid_value: Union[UUID, None] = None
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):
