@@ -50,6 +50,8 @@ from .query import (
     TextPropertyFilter,
     UnknownPropertyAggregation,
     UnknownPropertyFilter,
+    UUIDArrayPropertyFilter,
+    UUIDPropertyFilter,
 )
 from .transformation import (
     AppendPropertyOperation,
@@ -116,4 +118,6 @@ __all__ = [
     "QueryResultWithCollectionNormalized",
     "AggregationResultWithCollectionNormalized",
     "QuerySort",
+    "UUIDPropertyFilter",
+    "UUIDArrayPropertyFilter",
 ]

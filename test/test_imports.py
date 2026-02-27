@@ -95,6 +95,8 @@ def test_class_exports():
         UnknownPropertyFilter,
         UpdatePropertyOperation,
         Usage,
+        UUIDArrayPropertyFilter,
+        UUIDPropertyFilter,
     )
 
     # Verify all exports are classes
@@ -167,6 +169,8 @@ def test_class_exports():
         FilterAndOr,
         QueryResultWithCollectionNormalized,
         AggregationResultWithCollectionNormalized,
+        UUIDArrayPropertyFilter,
+        UUIDPropertyFilter,
     ]
 
     for cls in classes:
@@ -231,6 +235,8 @@ def test_class_exports():
         "QuerySort",
         "StreamedThoughts",
         "ResearchModeResponse",
+        "UUIDArrayPropertyFilter",
+        "UUIDPropertyFilter",
     ]
 
     assert hasattr(

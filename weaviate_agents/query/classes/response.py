@@ -4,6 +4,7 @@ import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Coroutine, Generic, Literal, Optional, TypeVar, Union
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import TypedDict
@@ -36,6 +37,8 @@ class KnownFilterType(str, Enum):
     DATE_ARRAY = "date_array"
     GEO = "geo"
     IS_NULL = "is_null"
+    UUID = "uuid"
+    UUID_ARRAY = "uuid_array"
 
 
 class KnownPropertyFilterBase(BaseModel):
@@ -164,6 +167,30 @@ class GeoPropertyFilter(KnownPropertyFilterBase):
     max_distance_meters: float
 
 
+class UUIDPropertyFilter(KnownPropertyFilterBase):
+    """Filter UUID properties."""
+
+    filter_type: Literal[KnownFilterType.UUID] = Field(
+        repr=False, default=KnownFilterType.UUID
+    )
+
+    property_name: str
+    operator: ComparisonOperator
+    value: UUID
+
+
+class UUIDArrayPropertyFilter(KnownPropertyFilterBase):
+    """Filter UUID array properties."""
+
+    filter_type: Literal[KnownFilterType.UUID_ARRAY] = Field(
+        repr=False, default=KnownFilterType.UUID_ARRAY
+    )
+
+    property_name: str
+    operator: ComparisonOperator
+    value: list[UUID]
+
+
 class IsNullPropertyFilter(KnownPropertyFilterBase):
     """Filter by property null state."""
 
@@ -209,6 +236,8 @@ PropertyFilter = Union[
     DateArrayPropertyFilter,
     GeoPropertyFilter,
     IsNullPropertyFilter,
+    UUIDPropertyFilter,
+    UUIDArrayPropertyFilter,
     UnknownPropertyFilter,
 ]
 
@@ -402,6 +431,7 @@ class QueryResultWithCollectionNormalized(BaseModel):
     filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
     sort_property: Union[QuerySort, None] = None
+    uuid_value: Union[UUID, None] = None
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):

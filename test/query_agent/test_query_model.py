@@ -577,6 +577,7 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
             },
             "collection": "test_collection",
             "sort_property": None,
+            "uuid_value": None,
         },
         {
             "query": None,
@@ -587,6 +588,7 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
                 "order": "ascending",
                 "tie_break": None,
             },
+            "uuid_value": None,
         },
     ],
     "usage": {
