@@ -17,6 +17,7 @@ class SearchModeRequestBase(BaseModel):
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
     offset: int
+    diversity_weight: Optional[float] = None
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):

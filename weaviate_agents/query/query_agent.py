@@ -512,6 +512,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        diversity_weight: Optional[float] = None,
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
@@ -893,6 +894,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        diversity_weight: Optional[float] = None,
     ) -> SearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -906,6 +908,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             limit: The maximum number of results to return for the first page.
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
+            diversity_weight: Optional float between 0.0 and 1.0 to control
+                result diversity via MMR. None disables diversity. Higher values
+                push for more topical variety at the cost of pure relevance.
 
         Returns:
             A `SearchModeResponse` for the first page of results. Use
@@ -922,6 +927,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             query=query,
             collections=collections,
             system_prompt=self._system_prompt,
+            diversity_weight=diversity_weight,
         )
         return searcher.run(limit=limit)
 
@@ -1306,6 +1312,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: Union[str, list[ChatMessage]],
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        diversity_weight: Optional[float] = None,
     ) -> AsyncSearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1320,6 +1327,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             limit: The maximum number of results to return for the first page.
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
+            diversity_weight: Optional float between 0.0 and 1.0 to control
+                result diversity via MMR. None disables diversity. Higher values
+                push for more topical variety at the cost of pure relevance.
 
         Returns:
             An `AsyncSearchModeResponse` for the first page of results. Use
@@ -1336,6 +1346,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             query=query,
             collections=collections,
             system_prompt=self._system_prompt,
+            diversity_weight=diversity_weight,
         )
         return await searcher.run(limit=limit)
 
