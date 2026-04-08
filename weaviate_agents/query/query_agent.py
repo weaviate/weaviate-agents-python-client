@@ -909,8 +909,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
             diversity_weight: Optional float between 0.0 and 1.0 to diversify
-                results with MMR reranking. Setting this to None disables diversity.
+                results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
+                Defaults to 0.0 (no diversity).
 
         Returns:
             A `SearchModeResponse` for the first page of results. Use
