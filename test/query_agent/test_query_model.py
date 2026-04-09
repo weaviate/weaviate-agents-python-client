@@ -747,6 +747,54 @@ def test_search_only_mode_success(monkeypatch):
     assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
 
 
+def test_search_only_mode_with_diversity_weight(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with diversity_weight set
+    results = agent.search("test query", limit=2, diversity_weight=0.5)
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["diversity_weight"] == 0.5
+
+    # Reset captured json, then paginate — diversity_weight should persist
+    captured = {}
+    results_2 = results.next(limit=2, offset=1)
+    assert isinstance(results_2, SearchModeResponse)
+    assert captured["json"]["diversity_weight"] == 0.5
+
+
+def test_search_only_mode_without_diversity_weight(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test without diversity_weight — should default to None
+    results = agent.search("test query", limit=2)
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["diversity_weight"] is None
+
+
 def test_search_only_mode_failure(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post_failure)
     dummy_client = DummyClient()
@@ -814,6 +862,33 @@ async def test_async_search_only_mode_success(monkeypatch):
     # This time, we expect the original searches to be sent to backend
     assert captured["json"]["searches"] == FAKE_SEARCH_ONLY_SUCCESS_JSON["searches"]
     assert results_2.model_dump(mode="json") == FAKE_SEARCH_ONLY_SUCCESS_JSON
+
+
+async def test_async_search_only_mode_with_diversity_weight(monkeypatch):
+    captured = {}
+
+    async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return await fake_async_post_search_only_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with diversity_weight set
+    results = await agent.search("test query", limit=2, diversity_weight=0.7)
+    assert isinstance(results, AsyncSearchModeResponse)
+    assert captured["json"]["diversity_weight"] == 0.7
+
+    # Reset captured json, then paginate — diversity_weight should persist
+    captured = {}
+    results_2 = await results.next(limit=2, offset=1)
+    assert isinstance(results_2, AsyncSearchModeResponse)
+    assert captured["json"]["diversity_weight"] == 0.7
 
 
 async def test_async_search_only_mode_failure(monkeypatch):
