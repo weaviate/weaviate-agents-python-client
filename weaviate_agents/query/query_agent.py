@@ -26,6 +26,7 @@ from weaviate_agents.query.classes import (
     ResearchModeResponse,
     StreamedThoughts,
     StreamedTokens,
+    SuggestQueryResponse,
 )
 from weaviate_agents.query.classes.request import ChatMessage, ConversationContext
 from weaviate_agents.query.search import (
@@ -932,6 +933,41 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         )
         return searcher.run(limit=limit)
 
+    def suggest_queries(
+        self,
+        collection: str,
+        num_queries: int = 3,
+    ) -> SuggestQueryResponse:
+        """Suggest queries for a collection.
+
+        Uses the agent to generate example queries that can be run against
+        the given collection, along with rationales explaining each query.
+
+        Args:
+            collection: The name of the collection to suggest queries for.
+            num_queries: The number of queries to suggest. Defaults to 3.
+
+        Returns:
+            A `SuggestQueryResponse` containing suggested queries with rationales.
+        """
+        request_body = {
+            "collection": collection,
+            "num_queries": num_queries,
+            "headers": self._connection.additional_headers,
+        }
+
+        response = httpx.post(
+            self.query_url + "/suggest-queries",
+            headers=self._headers,
+            json=request_body,
+            timeout=self._timeout,
+        )
+
+        if response.is_error:
+            raise Exception(response.text)
+
+        return SuggestQueryResponse(**response.json())
+
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     """An agent for executing agentic queries against Weaviate.
@@ -1351,6 +1387,42 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             diversity_weight=diversity_weight,
         )
         return await searcher.run(limit=limit)
+
+    async def suggest_queries(
+        self,
+        collection: str,
+        num_queries: int = 3,
+    ) -> SuggestQueryResponse:
+        """Suggest queries for a collection.
+
+        Uses the agent to generate example queries that can be run against
+        the given collection, along with rationales explaining each query.
+
+        Args:
+            collection: The name of the collection to suggest queries for.
+            num_queries: The number of queries to suggest. Defaults to 3.
+
+        Returns:
+            A `SuggestQueryResponse` containing suggested queries with rationales.
+        """
+        request_body = {
+            "collection": collection,
+            "num_queries": num_queries,
+            "headers": self._connection.additional_headers,
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.query_url + "/suggest-queries",
+                headers=self._headers,
+                json=request_body,
+                timeout=self._timeout,
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            return SuggestQueryResponse(**response.json())
 
 
 @overload

@@ -441,6 +441,17 @@ class AggregationResultWithCollectionNormalized(BaseModel):
     collection: str
 
 
+class SuggestedQuery(BaseModel):
+    query: str
+    rationale: str
+
+
+class SuggestQueryResponse(BaseModel):
+    queries: list[SuggestedQuery]
+    usage: ModelUnitUsage
+    total_time: float
+
+
 class AskModeResponse(BaseModel):
     output_type: Literal["final_state"] = "final_state"
 
