@@ -957,7 +957,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         }
 
         response = httpx.post(
-            self.query_url + "/suggest-queries",
+            self.query_url + "/suggest-query",
             headers=self._headers,
             json=request_body,
             timeout=self._timeout,
@@ -1413,7 +1413,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.query_url + "/suggest-queries",
+                self.query_url + "/suggest-query",
                 headers=self._headers,
                 json=request_body,
                 timeout=self._timeout,
