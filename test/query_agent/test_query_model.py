@@ -14,6 +14,8 @@ from weaviate_agents.classes.query import (
     ResearchModeResponse,
     StreamedThoughts,
     StreamedTokens,
+    SuggestedQuery,
+    SuggestQueryResponse,
 )
 from weaviate_agents.query import (
     AsyncQueryAgent,
@@ -1972,3 +1974,155 @@ async def test_async_stream_with_include_progress_and_final_state(
             pass
     assert captured["json"]["include_progress"] == include_progress
     assert captured["json"]["include_final_state"] == include_final_state
+
+
+# ---- Suggest Queries Tests ----
+
+FAKE_SUGGEST_QUERIES_SUCCESS_JSON = {
+    "queries": [
+        {"query": "What are the main topics?", "rationale": "Explores high-level themes"},
+        {"query": "How many entries exist?", "rationale": "Checks collection size"},
+        {"query": "What is the most recent entry?", "rationale": "Finds latest data"},
+    ],
+    "usage": {"model_units": 1, "usage_in_plan": True, "remaining_plan_requests": 99},
+    "total_time": 0.5,
+}
+
+
+def test_suggest_queries_success(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["url"] = url
+        captured["json"] = json
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    result = agent.suggest_queries("test_collection")
+
+    assert isinstance(result, SuggestQueryResponse)
+    assert len(result.queries) == 3
+    assert all(isinstance(q, SuggestedQuery) for q in result.queries)
+    assert result.queries[0].query == "What are the main topics?"
+    assert result.queries[0].rationale == "Explores high-level themes"
+    assert result.total_time == 0.5
+    assert result.usage.model_units == 1
+
+    # Verify request body
+    assert captured["json"]["collection"] == "test_collection"
+    assert captured["json"]["num_queries"] == 3
+    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
+
+
+def test_suggest_queries_custom_num_queries(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    agent.suggest_queries("test_collection", num_queries=5)
+
+    assert captured["json"]["num_queries"] == 5
+
+
+def test_suggest_queries_failure(monkeypatch):
+    monkeypatch.setattr(httpx, "post", fake_post_failure)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        agent.suggest_queries("test_collection")
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
+
+
+async def test_async_suggest_queries_success(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["url"] = args[1] if len(args) > 1 else kwargs.get("url")
+        captured["json"] = kwargs.get("json")
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    result = await agent.suggest_queries("test_collection")
+
+    assert isinstance(result, SuggestQueryResponse)
+    assert len(result.queries) == 3
+    assert all(isinstance(q, SuggestedQuery) for q in result.queries)
+    assert result.queries[1].query == "How many entries exist?"
+    assert result.queries[1].rationale == "Checks collection size"
+    assert result.total_time == 0.5
+
+    # Verify request body
+    assert captured["json"]["collection"] == "test_collection"
+    assert captured["json"]["num_queries"] == 3
+    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
+
+
+async def test_async_suggest_queries_custom_num_queries(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["json"] = kwargs.get("json")
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    await agent.suggest_queries("test_collection", num_queries=7)
+
+    assert captured["json"]["num_queries"] == 7
+
+
+async def test_async_suggest_queries_failure(monkeypatch):
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.raises(Exception) as exc_info:
+        await agent.suggest_queries("test_collection")
+
+    assert (
+        str(exc_info.value)
+        == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
+    )
