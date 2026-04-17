@@ -443,7 +443,6 @@ class AggregationResultWithCollectionNormalized(BaseModel):
 
 class SuggestedQuery(BaseModel):
     query: str
-    rationale: str
 
 
 class SuggestQueryResponse(BaseModel):

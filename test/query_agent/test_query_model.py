@@ -2018,7 +2018,7 @@ def test_suggest_queries_success(monkeypatch):
     # Verify request body
     assert captured["json"]["collection"] == "test_collection"
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
+    assert captured["url"] == "http://dummy-agent/query/suggest-query"
 
 
 def test_suggest_queries_custom_num_queries(monkeypatch):
@@ -2087,7 +2087,7 @@ async def test_async_suggest_queries_success(monkeypatch):
     # Verify request body
     assert captured["json"]["collection"] == "test_collection"
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
+    assert captured["url"] == "http://dummy-agent/query/suggest-query"
 
 
 async def test_async_suggest_queries_custom_num_queries(monkeypatch):
