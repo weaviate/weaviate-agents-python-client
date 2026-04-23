@@ -24,6 +24,7 @@ from weaviate_agents.query.classes import (
     QueryAgentCollectionConfig,
     QueryAgentResponse,
     ResearchModeResponse,
+    StreamedSuggestedQuery,
     StreamedThoughts,
     StreamedTokens,
     SuggestQueryResponse,
@@ -933,34 +934,34 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         )
         return searcher.run(limit=limit)
 
-    def suggest_query(
+    def suggest_queries(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
-        """Suggest queries for a collection.
+        """Suggest queries for the given collections.
 
         Uses the agent to generate example queries that can be run against
-        the given collection, along with rationales explaining each query.
+        the given collections.
 
         Args:
-            collection: The name of the collection to suggest queries for.
+            collections: The names of the collections to suggest queries for.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
 
         Returns:
-            A `SuggestQueryResponse` containing suggested queries with rationales.
+            A `SuggestQueryResponse` containing suggested queries.
         """
         request_body = {
-            "collection": collection,
+            "collections": collections,
             "num_queries": num_queries,
             "instructions": instructions,
             "headers": self._connection.additional_headers,
         }
 
         response = httpx.post(
-            self.query_url + "/suggest-query",
+            self.query_url + "/suggest-queries",
             headers=self._headers,
             json=request_body,
             timeout=self._timeout,
@@ -972,66 +973,56 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         return SuggestQueryResponse(**response.json())
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> Generator[
-        Union[ProgressMessage, StreamedTokens, SuggestQueryResponse], None, None
+        Union[ProgressMessage, StreamedSuggestedQuery, SuggestQueryResponse], None, None
     ]: ...
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
-    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+    ) -> Generator[Union[ProgressMessage, StreamedSuggestedQuery], None, None]: ...
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> Generator[Union[StreamedTokens, SuggestQueryResponse], None, None]: ...
+    ) -> Generator[Union[StreamedSuggestedQuery, SuggestQueryResponse], None, None]: ...
 
-    @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
-        num_queries: int = 3,
-        instructions: Optional[str] = None,
-        include_progress: Literal[False] = False,
-        include_final_state: Literal[False] = False,
-    ) -> Generator[StreamedTokens, None, None]: ...
-
-    def suggest_query_stream(
-        self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: bool = True,
         include_final_state: bool = True,
     ):
-        """Suggest queries for a collection and stream the response.
+        """Suggest queries for the given collections and stream the response.
 
         Args:
-            collection: The name of the collection to suggest queries for.
+            collections: The names of the collections to suggest queries for.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
             include_progress: Whether to include progress messages. Defaults to True.
             include_final_state: Whether to include the final state. Defaults to True.
         """
         request_body = {
-            "collection": collection,
+            "collections": collections,
             "num_queries": num_queries,
             "instructions": instructions,
             "headers": self._connection.additional_headers,
@@ -1042,7 +1033,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             with connect_sse(
                 client=client,
                 method="POST",
-                url=self.query_url + "/stream_suggest_query",
+                url=self.query_url + "/stream_suggest_queries",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
@@ -1052,15 +1043,15 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     raise Exception(events.response.text)
 
                 for sse in events.iter_sse():
-                    output = _parse_sse(sse, mode="suggest_query")
+                    output = _parse_sse(sse, mode="suggest_queries")
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
+                    elif isinstance(output, StreamedSuggestedQuery):
+                        yield output
                     elif isinstance(output, SuggestQueryResponse):
                         if include_final_state:
                             yield output
-                    else:
-                        yield output
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -1482,27 +1473,27 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         )
         return await searcher.run(limit=limit)
 
-    async def suggest_query(
+    async def suggest_queries(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
-        """Suggest queries for a collection.
+        """Suggest queries for the given collections.
 
         Uses the agent to generate example queries that can be run against
-        the given collection, along with rationales explaining each query.
+        the given collections.
 
         Args:
-            collection: The name of the collection to suggest queries for.
+            collections: The names of the collections to suggest queries for.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
 
         Returns:
-            A `SuggestQueryResponse` containing suggested queries with rationales.
+            A `SuggestQueryResponse` containing suggested queries.
         """
         request_body = {
-            "collection": collection,
+            "collections": collections,
             "num_queries": num_queries,
             "instructions": instructions,
             "headers": self._connection.additional_headers,
@@ -1510,7 +1501,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.query_url + "/suggest-query",
+                self.query_url + "/suggest-queries",
                 headers=self._headers,
                 json=request_body,
                 timeout=self._timeout,
@@ -1522,66 +1513,56 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             return SuggestQueryResponse(**response.json())
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
     ) -> AsyncGenerator[
-        Union[ProgressMessage, StreamedTokens, SuggestQueryResponse], None
+        Union[ProgressMessage, StreamedSuggestedQuery, SuggestQueryResponse], None
     ]: ...
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
-    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedSuggestedQuery], None]: ...
 
     @overload
-    def suggest_query_stream(
+    def suggest_queries_stream(
         self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
-    ) -> AsyncGenerator[Union[StreamedTokens, SuggestQueryResponse], None]: ...
+    ) -> AsyncGenerator[Union[StreamedSuggestedQuery, SuggestQueryResponse], None]: ...
 
-    @overload
-    def suggest_query_stream(
+    async def suggest_queries_stream(
         self,
-        collection: str,
-        num_queries: int = 3,
-        instructions: Optional[str] = None,
-        include_progress: Literal[False] = False,
-        include_final_state: Literal[False] = False,
-    ) -> AsyncGenerator[StreamedTokens, None]: ...
-
-    async def suggest_query_stream(
-        self,
-        collection: str,
+        collections: list[str],
         num_queries: int = 3,
         instructions: Optional[str] = None,
         include_progress: bool = True,
         include_final_state: bool = True,
     ):
-        """Suggest queries for a collection and stream the response.
+        """Suggest queries for the given collections and stream the response.
 
         Args:
-            collection: The name of the collection to suggest queries for.
+            collections: The names of the collections to suggest queries for.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
             include_progress: Whether to include progress messages. Defaults to True.
             include_final_state: Whether to include the final state. Defaults to True.
         """
         request_body = {
-            "collection": collection,
+            "collections": collections,
             "num_queries": num_queries,
             "instructions": instructions,
             "headers": self._connection.additional_headers,
@@ -1592,7 +1573,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             async with aconnect_sse(
                 client=client,
                 method="POST",
-                url=self.query_url + "/stream_suggest_query",
+                url=self.query_url + "/stream_suggest_queries",
                 json=request_body,
                 headers=self._headers,
                 timeout=self._timeout,
@@ -1602,15 +1583,15 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     raise Exception(events.response.text)
 
                 async for sse in events.aiter_sse():
-                    output = _parse_sse(sse, mode="suggest_query")
+                    output = _parse_sse(sse, mode="suggest_queries")
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
+                    elif isinstance(output, StreamedSuggestedQuery):
+                        yield output
                     elif isinstance(output, SuggestQueryResponse):
                         if include_final_state:
                             yield output
-                    else:
-                        yield output
 
 
 @overload
@@ -1633,14 +1614,15 @@ def _parse_sse(
 
 @overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["suggest_query"]
-) -> Union[ProgressMessage, StreamedTokens, SuggestQueryResponse]: ...
+    sse: ServerSentEvent, mode: Literal["suggest_queries"]
+) -> Union[ProgressMessage, StreamedSuggestedQuery, SuggestQueryResponse]: ...
 
 
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["query", "ask", "research", "suggest_query"]
+    sse: ServerSentEvent, mode: Literal["query", "ask", "research", "suggest_queries"]
 ) -> Union[
     ProgressMessage,
+    StreamedSuggestedQuery,
     StreamedThoughts,
     StreamedTokens,
     QueryAgentResponse,
@@ -1661,6 +1643,8 @@ def _parse_sse(
         return StreamedTokens.model_validate(data)
     elif sse.event == "streamed_thoughts":
         return StreamedThoughts.model_validate(data)
+    elif sse.event == "suggested_query":
+        return StreamedSuggestedQuery.model_validate(data)
     elif sse.event == "final_state":
         if mode == "query":
             return QueryAgentResponse.model_validate(data)
@@ -1668,7 +1652,7 @@ def _parse_sse(
             return AskModeResponse.model_validate(data)
         elif mode == "research":
             return ResearchModeResponse.model_validate(data)
-        elif mode == "suggest_query":
+        elif mode == "suggest_queries":
             return SuggestQueryResponse.model_validate(data)
     else:
         raise Exception(

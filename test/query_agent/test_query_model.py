@@ -1980,16 +1980,16 @@ async def test_async_stream_with_include_progress_and_final_state(
 
 FAKE_SUGGEST_QUERIES_SUCCESS_JSON = {
     "queries": [
-        {"query": "What are the main topics?", "rationale": "Explores high-level themes"},
-        {"query": "How many entries exist?", "rationale": "Checks collection size"},
-        {"query": "What is the most recent entry?", "rationale": "Finds latest data"},
+        {"query": "What are the main topics?"},
+        {"query": "How many entries exist?"},
+        {"query": "What is the most recent entry?"},
     ],
     "usage": {"model_units": 1, "usage_in_plan": True, "remaining_plan_requests": 99},
     "total_time": 0.5,
 }
 
 
-def test_suggest_query_success(monkeypatch):
+def test_suggest_queries_success(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
@@ -2005,23 +2005,22 @@ def test_suggest_query_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    result = agent.suggest_query("test_collection")
+    result = agent.suggest_queries(["test_collection"])
 
     assert isinstance(result, SuggestQueryResponse)
     assert len(result.queries) == 3
     assert all(isinstance(q, SuggestedQuery) for q in result.queries)
     assert result.queries[0].query == "What are the main topics?"
-    assert result.queries[0].rationale == "Explores high-level themes"
     assert result.total_time == 0.5
     assert result.usage.model_units == 1
 
     # Verify request body
-    assert captured["json"]["collection"] == "test_collection"
+    assert captured["json"]["collections"] == ["test_collection"]
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-query"
+    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
 
 
-def test_suggest_query_custom_num_queries(monkeypatch):
+def test_suggest_queries_custom_num_queries(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
@@ -2036,12 +2035,12 @@ def test_suggest_query_custom_num_queries(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    agent.suggest_query("test_collection", num_queries=5)
+    agent.suggest_queries(["test_collection"], num_queries=5)
 
     assert captured["json"]["num_queries"] == 5
 
 
-def test_suggest_query_failure(monkeypatch):
+def test_suggest_queries_failure(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post_failure)
     dummy_client = DummyClient()
     agent = QueryAgent(
@@ -2051,7 +2050,7 @@ def test_suggest_query_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     with pytest.raises(Exception) as exc_info:
-        agent.suggest_query("test_collection")
+        agent.suggest_queries(["test_collection"])
 
     assert (
         str(exc_info.value)
@@ -2059,7 +2058,7 @@ def test_suggest_query_failure(monkeypatch):
     )
 
 
-async def test_async_suggest_query_success(monkeypatch):
+async def test_async_suggest_queries_success(monkeypatch):
     captured = {}
 
     async def fake_async_post_with_capture(*args, **kwargs):
@@ -2075,22 +2074,21 @@ async def test_async_suggest_query_success(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    result = await agent.suggest_query("test_collection")
+    result = await agent.suggest_queries(["test_collection"])
 
     assert isinstance(result, SuggestQueryResponse)
     assert len(result.queries) == 3
     assert all(isinstance(q, SuggestedQuery) for q in result.queries)
     assert result.queries[1].query == "How many entries exist?"
-    assert result.queries[1].rationale == "Checks collection size"
     assert result.total_time == 0.5
 
     # Verify request body
-    assert captured["json"]["collection"] == "test_collection"
+    assert captured["json"]["collections"] == ["test_collection"]
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-query"
+    assert captured["url"] == "http://dummy-agent/query/suggest-queries"
 
 
-async def test_async_suggest_query_custom_num_queries(monkeypatch):
+async def test_async_suggest_queries_custom_num_queries(monkeypatch):
     captured = {}
 
     async def fake_async_post_with_capture(*args, **kwargs):
@@ -2105,12 +2103,12 @@ async def test_async_suggest_query_custom_num_queries(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    await agent.suggest_query("test_collection", num_queries=7)
+    await agent.suggest_queries(["test_collection"], num_queries=7)
 
     assert captured["json"]["num_queries"] == 7
 
 
-async def test_async_suggest_query_failure(monkeypatch):
+async def test_async_suggest_queries_failure(monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_failure)
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -2120,7 +2118,7 @@ async def test_async_suggest_query_failure(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     with pytest.raises(Exception) as exc_info:
-        await agent.suggest_query("test_collection")
+        await agent.suggest_queries(["test_collection"])
 
     assert (
         str(exc_info.value)
@@ -2149,21 +2147,6 @@ class MockIterSSESuggestQuerySuccess:
                 }
             ),
         )
-        yield ServerSentEvent(
-            event="streamed_tokens",
-            data=json.dumps(
-                {
-                    "output_type": "streamed_tokens",
-                    "delta": "What are",
-                }
-            ),
-        )
-        yield ServerSentEvent(
-            event="streamed_tokens",
-            data=json.dumps(
-                {"output_type": "streamed_tokens", "delta": " the main topics?"}
-            ),
-        )
         yield ServerSentEvent(event="final_state", data=json.dumps(self.data))
 
     async def aiter_sse(self):
@@ -2172,19 +2155,19 @@ class MockIterSSESuggestQuerySuccess:
 
 
 @contextmanager
-def mock_connect_sse_success_suggest_query(*args, **kwargs):
+def mock_connect_sse_success_suggest_queries(*args, **kwargs):
     yield MockIterSSESuggestQuerySuccess(FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
 
 
 @asynccontextmanager
-async def mock_aconnect_sse_success_suggest_query(*args, **kwargs):
+async def mock_aconnect_sse_success_suggest_queries(*args, **kwargs):
     yield MockIterSSESuggestQuerySuccess(FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
 
 
-def test_suggest_query_stream_success(monkeypatch):
+def test_suggest_queries_stream_success(monkeypatch):
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.connect_sse",
-        mock_connect_sse_success_suggest_query,
+        mock_connect_sse_success_suggest_queries,
     )
     dummy_client = DummyClient()
     agent = QueryAgent(
@@ -2194,22 +2177,20 @@ def test_suggest_query_stream_success(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    for result in agent.suggest_query_stream("test_collection"):
+    for result in agent.suggest_queries_stream(["test_collection"]):
         all_results.append(result)
 
-    assert len(all_results) == 4
+    assert len(all_results) == 2
     assert all_results[0] == ProgressMessage(
         stage="generating_queries", message="Generating queries..."
     )
-    assert all_results[1] == StreamedTokens(delta="What are")
-    assert all_results[2] == StreamedTokens(delta=" the main topics?")
-    assert isinstance(all_results[3], SuggestQueryResponse)
-    assert len(all_results[3].queries) == 3
+    assert isinstance(all_results[1], SuggestQueryResponse)
+    assert len(all_results[1].queries) == 3
 
 
 @pytest.mark.parametrize("include_progress", [True, False])
 @pytest.mark.parametrize("include_final_state", [True, False])
-def test_suggest_query_stream_with_include_flags(
+def test_suggest_queries_stream_with_include_flags(
     monkeypatch, include_progress, include_final_state
 ):
     captured = {}
@@ -2230,7 +2211,7 @@ def test_suggest_query_stream_with_include_flags(
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    for result in agent.suggest_query_stream(
+    for result in agent.suggest_queries_stream(
         "test_collection",
         include_progress=include_progress,
         include_final_state=include_final_state,
@@ -2245,7 +2226,7 @@ def test_suggest_query_stream_with_include_flags(
     assert captured["json"]["include_final_state"] == include_final_state
 
 
-def test_suggest_query_stream_failure(monkeypatch):
+def test_suggest_queries_stream_failure(monkeypatch):
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.connect_sse", mock_connect_sse_failure
     )
@@ -2258,7 +2239,7 @@ def test_suggest_query_stream_failure(monkeypatch):
 
     all_results = []
     with pytest.raises(Exception) as exc_info:
-        for result in agent.suggest_query_stream("test_collection"):
+        for result in agent.suggest_queries_stream(["test_collection"]):
             all_results.append(result)
 
     assert len(all_results) == 1
@@ -2271,10 +2252,10 @@ def test_suggest_query_stream_failure(monkeypatch):
     )
 
 
-async def test_async_suggest_query_stream_success(monkeypatch):
+async def test_async_suggest_queries_stream_success(monkeypatch):
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.aconnect_sse",
-        mock_aconnect_sse_success_suggest_query,
+        mock_aconnect_sse_success_suggest_queries,
     )
     dummy_client = DummyClient()
     agent = AsyncQueryAgent(
@@ -2284,22 +2265,20 @@ async def test_async_suggest_query_stream_success(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    async for result in agent.suggest_query_stream("test_collection"):
+    async for result in agent.suggest_queries_stream(["test_collection"]):
         all_results.append(result)
 
-    assert len(all_results) == 4
+    assert len(all_results) == 2
     assert all_results[0] == ProgressMessage(
         stage="generating_queries", message="Generating queries..."
     )
-    assert all_results[1] == StreamedTokens(delta="What are")
-    assert all_results[2] == StreamedTokens(delta=" the main topics?")
-    assert isinstance(all_results[3], SuggestQueryResponse)
-    assert len(all_results[3].queries) == 3
+    assert isinstance(all_results[1], SuggestQueryResponse)
+    assert len(all_results[1].queries) == 3
 
 
 @pytest.mark.parametrize("include_progress", [True, False])
 @pytest.mark.parametrize("include_final_state", [True, False])
-async def test_async_suggest_query_stream_with_include_flags(
+async def test_async_suggest_queries_stream_with_include_flags(
     monkeypatch, include_progress, include_final_state
 ):
     captured = {}
@@ -2320,7 +2299,7 @@ async def test_async_suggest_query_stream_with_include_flags(
     agent._headers = dummy_client.additional_headers
 
     all_results = []
-    async for result in agent.suggest_query_stream(
+    async for result in agent.suggest_queries_stream(
         "test_collection",
         include_progress=include_progress,
         include_final_state=include_final_state,
@@ -2335,7 +2314,7 @@ async def test_async_suggest_query_stream_with_include_flags(
     assert captured["json"]["include_final_state"] == include_final_state
 
 
-async def test_async_suggest_query_stream_failure(monkeypatch):
+async def test_async_suggest_queries_stream_failure(monkeypatch):
     monkeypatch.setattr(
         "weaviate_agents.query.query_agent.aconnect_sse", mock_aconnect_sse_failure
     )
@@ -2348,7 +2327,7 @@ async def test_async_suggest_query_stream_failure(monkeypatch):
 
     all_results = []
     with pytest.raises(Exception) as exc_info:
-        async for result in agent.suggest_query_stream("test_collection"):
+        async for result in agent.suggest_queries_stream(["test_collection"]):
             all_results.append(result)
 
     assert len(all_results) == 1
