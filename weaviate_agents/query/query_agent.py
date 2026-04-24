@@ -183,6 +183,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]:
         """Run the Query Agent ask mode."""
         pass
@@ -281,6 +282,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
@@ -293,6 +295,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
@@ -305,6 +308,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[
         Generator[Union[StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[StreamedTokens, AskModeResponse], None],
@@ -317,6 +321,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[
         Generator[StreamedTokens, None, None],
         AsyncGenerator[StreamedTokens, None],
@@ -329,6 +334,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: bool = True,
         include_final_state: bool = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
@@ -540,7 +546,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             context: Optional previous response from the agent.
         """
         request_body = self._prepare_request_body(
-            query=query, collections=collections, context=context
+            query=query,
+            collections=collections,
+            context=context,
+            result_evaluation="llm",
         )
 
         response = httpx.post(
@@ -559,8 +568,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AskModeResponse:
-        request_body = self._prepare_request_body(query=query, collections=collections)
+        request_body = self._prepare_request_body(
+            query=query, collections=collections, result_evaluation=result_evaluation
+        )
 
         response = httpx.post(
             self.query_url + "/ask",
@@ -633,6 +645,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
+            result_evaluation="llm",
         )
         with httpx.Client() as client:
             with connect_sse(
@@ -665,6 +678,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Generator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
     ]: ...
@@ -676,6 +690,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
 
     @overload
@@ -685,6 +700,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Generator[Union[StreamedTokens, AskModeResponse], None, None]: ...
 
     @overload
@@ -694,6 +710,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> Generator[StreamedTokens, None, None]: ...
 
     def ask_stream(
@@ -702,6 +719,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: bool = True,
         include_final_state: bool = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ):
         """Run the Query Agent ask mode and stream the response."""
         request_body = self._prepare_request_body(
@@ -709,6 +727,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections=collections,
             include_progress=include_progress,
             include_final_state=include_final_state,
+            result_evaluation=result_evaluation,
         )
         with httpx.Client() as client:
             with connect_sse(
@@ -957,7 +976,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             context: Optional previous response from the agent.
         """
         request_body = self._prepare_request_body(
-            query=query, collections=collections, context=context
+            query=query,
+            collections=collections,
+            context=context,
+            result_evaluation="llm",
         )
 
         async with httpx.AsyncClient() as client:
@@ -977,8 +999,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AskModeResponse:
-        request_body = self._prepare_request_body(query=query, collections=collections)
+        request_body = self._prepare_request_body(
+            query=query, collections=collections, result_evaluation=result_evaluation
+        )
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -1053,6 +1078,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
+            result_evaluation="llm",
         )
         async with httpx.AsyncClient() as client:
             async with aconnect_sse(
@@ -1085,6 +1111,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AsyncGenerator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None
     ]: ...
@@ -1096,6 +1123,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
 
     @overload
@@ -1105,6 +1133,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AsyncGenerator[Union[StreamedTokens, AskModeResponse], None]: ...
 
     @overload
@@ -1114,6 +1143,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
     async def ask_stream(
@@ -1122,6 +1152,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         include_progress: bool = True,
         include_final_state: bool = True,
+        result_evaluation: Literal["llm", "none"] = "none",
     ):
         """Run the Query Agent ask mode and stream the response."""
         request_body = self._prepare_request_body(
@@ -1129,6 +1160,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections=collections,
             include_progress=include_progress,
             include_final_state=include_final_state,
+            result_evaluation=result_evaluation,
         )
         async with httpx.AsyncClient() as client:
             async with aconnect_sse(
