@@ -935,7 +935,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
     def suggest_queries(
         self,
-        collections: list[str],
+        collections: Optional[list[str]] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
@@ -946,18 +946,24 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
         Args:
             collections: The names of the collections to suggest queries for.
+                Overrides any collections provided in the constructor when set.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
 
         Returns:
             A `SuggestQueryResponse` containing suggested queries.
         """
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+
         request_body = {
             "collections": collections,
             "num_queries": num_queries,
-            "instructions": instructions,
             "headers": self._connection.additional_headers,
         }
+        if instructions is not None:
+            request_body["instructions"] = instructions
 
         response = httpx.post(
             self.query_url + "/suggest-query",
@@ -1393,7 +1399,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
     async def suggest_queries(
         self,
-        collections: list[str],
+        collections: Optional[list[str]] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
@@ -1404,18 +1410,24 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         Args:
             collections: The names of the collections to suggest queries for.
+                Overrides any collections provided in the constructor when set.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
 
         Returns:
             A `SuggestQueryResponse` containing suggested queries.
         """
+        collections = collections or self._collections
+        if not collections:
+            raise ValueError("No collections provided to the query agent.")
+
         request_body = {
             "collections": collections,
             "num_queries": num_queries,
-            "instructions": instructions,
             "headers": self._connection.additional_headers,
         }
+        if instructions is not None:
+            request_body["instructions"] = instructions
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
