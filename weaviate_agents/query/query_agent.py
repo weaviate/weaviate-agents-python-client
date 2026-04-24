@@ -953,12 +953,12 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         Returns:
             A `SuggestQueryResponse` containing suggested queries.
         """
-        collections = collections or self._collections
-        if not collections:
+        resolved_collections = collections or self._collections
+        if not resolved_collections:
             raise ValueError("No collections provided to the query agent.")
 
-        request_body = {
-            "collections": collections,
+        request_body: dict[str, Any] = {
+            "collections": resolved_collections,
             "num_queries": num_queries,
             "headers": self._connection.additional_headers,
         }
@@ -1417,12 +1417,12 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         Returns:
             A `SuggestQueryResponse` containing suggested queries.
         """
-        collections = collections or self._collections
-        if not collections:
+        resolved_collections = collections or self._collections
+        if not resolved_collections:
             raise ValueError("No collections provided to the query agent.")
 
-        request_body = {
-            "collections": collections,
+        request_body: dict[str, Any] = {
+            "collections": resolved_collections,
             "num_queries": num_queries,
             "headers": self._connection.additional_headers,
         }
