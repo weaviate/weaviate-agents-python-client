@@ -506,12 +506,6 @@ class StreamedThoughts(BaseModel):
     delta: str
 
 
-class StreamedSuggestedQuery(BaseModel):
-    output_type: Literal["suggested_query"] = "suggested_query"
-    query: str
-    index: int
-
-
 # This is used as a workaround for not being able to use Self to
 # type hint the next() abstract method (so that types on subclasses
 # are properly represented) due to supporting Python version < 3.11.
