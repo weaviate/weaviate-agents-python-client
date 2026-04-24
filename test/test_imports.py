@@ -87,6 +87,8 @@ def test_class_exports():
         Source,
         StreamedThoughts,
         StreamedTokens,
+        SuggestQueryResponse,
+        SuggestedQuery,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -171,6 +173,8 @@ def test_class_exports():
         AggregationResultWithCollectionNormalized,
         UUIDArrayPropertyFilter,
         UUIDPropertyFilter,
+        SuggestQueryResponse,
+        SuggestedQuery,
     ]
 
     for cls in classes:
@@ -237,6 +241,8 @@ def test_class_exports():
         "ResearchModeResponse",
         "UUIDArrayPropertyFilter",
         "UUIDPropertyFilter",
+        "SuggestQueryResponse",
+        "SuggestedQuery",
     ]
 
     assert hasattr(
