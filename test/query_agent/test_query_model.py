@@ -1984,6 +1984,7 @@ FAKE_SUGGEST_QUERIES_SUCCESS_JSON = {
         {"query": "How many entries exist?"},
         {"query": "What is the most recent entry?"},
     ],
+    "collection_count": 1,
     "usage": {"model_units": 1, "usage_in_plan": True, "remaining_plan_requests": 99},
     "total_time": 0.5,
 }

@@ -446,9 +446,8 @@ class SuggestedQuery(BaseModel):
 
 
 class SuggestQueryResponse(BaseModel):
-    output_type: Literal["final_state"] = "final_state"
-
     queries: list[SuggestedQuery]
+    collection_count: int
     usage: ModelUnitUsage
     total_time: float
 

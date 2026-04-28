@@ -87,8 +87,6 @@ def test_class_exports():
         Source,
         StreamedThoughts,
         StreamedTokens,
-        SuggestedQuery,
-        SuggestQueryResponse,
         TextArrayPropertyFilter,
         TextMetrics,
         TextPropertyAggregation,
@@ -173,8 +171,6 @@ def test_class_exports():
         AggregationResultWithCollectionNormalized,
         UUIDArrayPropertyFilter,
         UUIDPropertyFilter,
-        SuggestQueryResponse,
-        SuggestedQuery,
     ]
 
     for cls in classes:
