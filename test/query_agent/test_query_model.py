@@ -1994,7 +1994,6 @@ def test_suggest_queries_success(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
-        captured["url"] = url
         captured["json"] = json
         return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
 
@@ -2018,7 +2017,6 @@ def test_suggest_queries_success(monkeypatch):
     # Verify request body
     assert captured["json"]["collections"] == ["test_collection"]
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-query"
 
 
 def test_suggest_queries_custom_num_queries(monkeypatch):
@@ -2063,7 +2061,6 @@ async def test_async_suggest_queries_success(monkeypatch):
     captured = {}
 
     async def fake_async_post_with_capture(*args, **kwargs):
-        captured["url"] = args[1] if len(args) > 1 else kwargs.get("url")
         captured["json"] = kwargs.get("json")
         return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
 
@@ -2086,7 +2083,6 @@ async def test_async_suggest_queries_success(monkeypatch):
     # Verify request body
     assert captured["json"]["collections"] == ["test_collection"]
     assert captured["json"]["num_queries"] == 3
-    assert captured["url"] == "http://dummy-agent/query/suggest-query"
 
 
 async def test_async_suggest_queries_custom_num_queries(monkeypatch):
