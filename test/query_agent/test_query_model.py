@@ -1976,8 +1976,6 @@ async def test_async_stream_with_include_progress_and_final_state(
     assert captured["json"]["include_final_state"] == include_final_state
 
 
-# ---- Suggest Queries Tests ----
-
 FAKE_SUGGEST_QUERIES_SUCCESS_JSON = {
     "queries": [
         {"query": "What are the main topics?"},
