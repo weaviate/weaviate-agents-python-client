@@ -517,6 +517,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
+    @abstractmethod
+    def suggest_queries(
+        self,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        num_queries: int = 3,
+        instructions: Optional[str] = None,
+    ) -> Union[SuggestQueryResponse, Coroutine[Any, Any, SuggestQueryResponse]]:
+        pass
+
 
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
