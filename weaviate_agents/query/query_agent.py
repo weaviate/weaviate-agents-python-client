@@ -935,7 +935,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
     def suggest_queries(
         self,
-        collections: Optional[list[str]] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
@@ -945,7 +945,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         the given collections.
 
         Args:
-            collections: The names of the collections to suggest queries for.
+            collections: The collections to suggest queries for.
                 Overrides any collections provided in the constructor when set.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
@@ -958,7 +958,14 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             raise ValueError("No collections provided to the query agent.")
 
         request_body: dict[str, Any] = {
-            "collections": resolved_collections,
+            "collections": [
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
+                for collection in resolved_collections
+            ],
             "num_queries": num_queries,
             "headers": self._connection.additional_headers,
         }
@@ -1399,7 +1406,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
     async def suggest_queries(
         self,
-        collections: Optional[list[str]] = None,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
@@ -1409,7 +1416,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         the given collections.
 
         Args:
-            collections: The names of the collections to suggest queries for.
+            collections: The collections to suggest queries for.
                 Overrides any collections provided in the constructor when set.
             num_queries: The number of queries to suggest. Defaults to 3.
             instructions: Optional instructions to guide query generation.
@@ -1422,7 +1429,14 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             raise ValueError("No collections provided to the query agent.")
 
         request_body: dict[str, Any] = {
-            "collections": resolved_collections,
+            "collections": [
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
+                for collection in resolved_collections
+            ],
             "num_queries": num_queries,
             "headers": self._connection.additional_headers,
         }
