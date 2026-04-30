@@ -549,7 +549,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             query=query,
             collections=collections,
             context=context,
-            result_evaluation="llm",
+            result_evaluation="none",
         )
 
         response = httpx.post(
@@ -645,7 +645,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
-            result_evaluation="llm",
+            result_evaluation="none",
         )
         with httpx.Client() as client:
             with connect_sse(
@@ -979,7 +979,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             query=query,
             collections=collections,
             context=context,
-            result_evaluation="llm",
+            result_evaluation="none",
         )
 
         async with httpx.AsyncClient() as client:
@@ -1078,7 +1078,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             context=context,
             include_progress=include_progress,
             include_final_state=include_final_state,
-            result_evaluation="llm",
+            result_evaluation="none",
         )
         async with httpx.AsyncClient() as client:
             async with aconnect_sse(
