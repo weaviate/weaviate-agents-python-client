@@ -26,6 +26,7 @@ from weaviate_agents.query.classes import (
     ResearchModeResponse,
     StreamedThoughts,
     StreamedTokens,
+    SuggestQueryResponse,
 )
 from weaviate_agents.query.classes.request import ChatMessage, ConversationContext
 from weaviate_agents.query.search import (
@@ -522,6 +523,15 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
+    @abstractmethod
+    def suggest_queries(
+        self,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        num_queries: int = 3,
+        instructions: Optional[str] = None,
+    ) -> Union[SuggestQueryResponse, Coroutine[Any, Any, SuggestQueryResponse]]:
+        pass
+
 
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
@@ -950,6 +960,57 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             diversity_weight=diversity_weight,
         )
         return searcher.run(limit=limit)
+
+    def suggest_queries(
+        self,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        num_queries: int = 3,
+        instructions: Optional[str] = None,
+    ) -> SuggestQueryResponse:
+        """Suggest queries for the given collections.
+
+        Uses the agent to generate example queries that can be run against
+        the given collections.
+
+        Args:
+            collections: The collections to suggest queries for.
+                Overrides any collections provided in the constructor when set.
+            num_queries: The number of queries to suggest. Defaults to 3.
+            instructions: Optional instructions to guide query generation.
+
+        Returns:
+            A `SuggestQueryResponse` containing suggested queries.
+        """
+        resolved_collections = collections or self._collections
+        if not resolved_collections:
+            raise ValueError("No collections provided to the query agent.")
+
+        request_body: dict[str, Any] = {
+            "collections": [
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
+                for collection in resolved_collections
+            ],
+            "num_queries": num_queries,
+            "headers": self._connection.additional_headers,
+        }
+        if instructions is not None:
+            request_body["instructions"] = instructions
+
+        response = httpx.post(
+            self.query_url + "/suggest_queries",
+            headers=self._headers,
+            json=request_body,
+            timeout=self._timeout,
+        )
+
+        if response.is_error:
+            raise Exception(response.text)
+
+        return SuggestQueryResponse(**response.json())
 
 
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
@@ -1383,6 +1444,58 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             diversity_weight=diversity_weight,
         )
         return await searcher.run(limit=limit)
+
+    async def suggest_queries(
+        self,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        num_queries: int = 3,
+        instructions: Optional[str] = None,
+    ) -> SuggestQueryResponse:
+        """Suggest queries for the given collections.
+
+        Uses the agent to generate example queries that can be run against
+        the given collections.
+
+        Args:
+            collections: The collections to suggest queries for.
+                Overrides any collections provided in the constructor when set.
+            num_queries: The number of queries to suggest. Defaults to 3.
+            instructions: Optional instructions to guide query generation.
+
+        Returns:
+            A `SuggestQueryResponse` containing suggested queries.
+        """
+        resolved_collections = collections or self._collections
+        if not resolved_collections:
+            raise ValueError("No collections provided to the query agent.")
+
+        request_body: dict[str, Any] = {
+            "collections": [
+                (
+                    collection
+                    if isinstance(collection, str)
+                    else collection.model_dump(mode="json")
+                )
+                for collection in resolved_collections
+            ],
+            "num_queries": num_queries,
+            "headers": self._connection.additional_headers,
+        }
+        if instructions is not None:
+            request_body["instructions"] = instructions
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.query_url + "/suggest_queries",
+                headers=self._headers,
+                json=request_body,
+                timeout=self._timeout,
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            return SuggestQueryResponse(**response.json())
 
 
 @overload

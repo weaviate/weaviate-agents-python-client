@@ -36,6 +36,8 @@ from .response import (
     Source,
     StreamedThoughts,
     StreamedTokens,
+    SuggestedQuery,
+    SuggestQueryResponse,
     TextArrayPropertyFilter,
     TextMetrics,
     TextPropertyAggregation,
@@ -92,4 +94,6 @@ __all__ = [
     "QuerySort",
     "UUIDPropertyFilter",
     "UUIDArrayPropertyFilter",
+    "SuggestedQuery",
+    "SuggestQueryResponse",
 ]
