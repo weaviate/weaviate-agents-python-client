@@ -13,9 +13,7 @@ Subpackages
    :maxdepth: 2
 
    weaviate_agents.classes
-   weaviate_agents.personalization
    weaviate_agents.query
-   weaviate_agents.transformation
 
 weaviate\_agents.base
 ----------------------

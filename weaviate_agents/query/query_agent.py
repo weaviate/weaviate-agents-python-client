@@ -38,11 +38,6 @@ from weaviate_agents.query.search import (
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
-    """An agent for executing agentic queries against Weaviate.
-
-    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
-    """
-
     def __init__(
         self,
         client: ClientType,
@@ -51,17 +46,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         system_prompt: Union[str, None] = None,
         timeout: Union[int, None] = None,
     ):
-        """Initialize the Query Agent.
-
-        Args:
-            client: The Weaviate client connected to a Weaviate Cloud cluster.
-            collections: The collections to query. Will be overriden if passed in the `run` method.
-            agents_host: Optional host of the agents service.
-            system_prompt: Optional prompt to control the tone, format, and style of the agent's
-                final response. This prompt is applied when generating the answer after all
-                research and data retrieval is complete.
-            timeout: The timeout for the request. Defaults to 60 seconds.
-        """
         super().__init__(client, agents_host)
 
         self._collections = collections
@@ -172,10 +156,14 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> Union[QueryAgentResponse, Coroutine[Any, Any, QueryAgentResponse]]:
-        """Run the query agent.
+        """*Deprecated: the `run` method is deprecated; use `ask` instead*.
 
-        Deprecated:
-            The `run` method is deprecated; use `ask()` instead.
+        Run the query agent.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+            context: Optional previous response from the agent.
         """
         pass
 
@@ -186,7 +174,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
     ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]:
-        """Run the Query Agent ask mode."""
         pass
 
     @overload
@@ -269,10 +256,16 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             Union[ProgressMessage, StreamedTokens, QueryAgentResponse], None
         ],
     ]:
-        """Stream from the query agent.
+        """*Deprecated: the `stream` method is deprecated; use `ask_stream` instead*.
 
-        Deprecated:
-            The `stream` method is deprecated; use `ask_stream()` instead.
+        Stream from the query agent.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+            context: Optional previous response from the agent.
+            include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
+            include_final_state: Whether to include the final state in the stream. This is the final response class, ``QueryAgentResponse``, that will be the last item in the stream.
         """
         pass
 
@@ -340,7 +333,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
     ]:
-        """Run the Query Agent ask mode and stream the response."""
         pass
 
     @overload
@@ -498,19 +490,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             None,
         ],
     ]:
-        """Run the Query Agent research mode and stream the response.
-
-        Args:
-            query: The natural language query string or list of chat messages.
-            collections: The collections to query. Overrides any collections
-                provided in the constructor when set.
-            reasoning_prompt: Optional prompt to control the agent's behavior during the
-                research phase, guiding how it searches, retrieves, and reasons about data.
-                The constructor's system_prompt controls the final response formatting.
-            include_progress: Whether to include progress messages in the stream.
-            include_thoughts: Whether to include streamed thoughts in the stream.
-            include_final_state: Whether to include the final state in the stream.
-        """
         pass
 
     @abstractmethod
@@ -536,8 +515,38 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 class QueryAgent(_BaseQueryAgent[WeaviateClient]):
     """An agent for executing agentic queries against Weaviate.
 
-    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents)
     """
+
+    def __init__(
+        self,
+        client: WeaviateClient,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        agents_host: Union[str, None] = None,
+        system_prompt: Union[str, None] = None,
+        timeout: Union[int, None] = None,
+    ):
+        """Initialize the synchronous Query Agent.
+
+        Args:
+            client: The *synchronous* Weaviate client connected to a Weaviate Cloud cluster (i.e.
+                from ``weaviate.connect_to_weaviate_cloud``).
+            collections: The collections to query. Either a list of strings, or a
+                list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Will be overridden if passed in any of the agent's methods that support it.
+            agents_host: Optional host of the agents service.
+            system_prompt: Optional prompt to control the tone, format, and style of the agent's
+                final response. This prompt is both passed to the query writer agent, and
+                applied when generating the answer after all research and data retrieval is complete.
+            timeout: The timeout for the request. Defaults to 60 seconds.
+        """
+        super().__init__(
+            client=client,
+            collections=collections,
+            agents_host=agents_host,
+            system_prompt=system_prompt,
+            timeout=timeout,
+        )
 
     @deprecated(
         "QueryAgent.run() is deprecated and will be removed in a future release. Use QueryAgent.ask() instead."
@@ -548,13 +557,6 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> QueryAgentResponse:
-        """Run the query agent.
-
-        Args:
-            query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
-            context: Optional previous response from the agent.
-        """
         request_body = self._prepare_request_body(
             query=query,
             collections=collections,
@@ -580,6 +582,32 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
     ) -> AskModeResponse:
+        """Run the Query Agent ask mode.
+
+        Perform an agentic search on the collections and return a natural language answer to the query.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Will override any collections if passed in the constructor.
+            result_evaluation: One of ``"llm"`` or ``"none"``.
+                If ``"llm"``, the final answer will be cross-compared to the sources, and those sources will be filtered to only those in the answer.
+                Also populates the fields `missing_information` and `is_partial_answer` of the response.
+                If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
+                Defaults to ``"none"``.
+
+        Returns:
+            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` which contains the final answer, sources,
+            and other metadata such as the searches performed, usage and total time.
+
+        Examples:
+            >>> from weaviate_agents import QueryAgent
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> agent.ask("What are the terms of the contract signed by John Smith in May 2025?")
+        """
         request_body = self._prepare_request_body(
             query=query, collections=collections, result_evaluation=result_evaluation
         )
@@ -731,7 +759,43 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_final_state: bool = True,
         result_evaluation: Literal["llm", "none"] = "none",
     ):
-        """Run the Query Agent ask mode and stream the response."""
+        """Run the Query Agent ask mode and stream the response.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Will override any collections if passed in the constructor.
+            include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
+            include_final_state: Whether to include the final state in the stream. This is the final response class that will be the last item in the stream.
+            result_evaluation: One of ``"llm"`` or ``"none"``.
+                If ``"llm"``, the final answer will be cross-compared to the sources, and those sources will be filtered to only those in the answer.
+                Also populates the fields `missing_information` and `is_partial_answer` of the response.
+                If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
+                Defaults to ``"none"``.
+
+        Returns:
+            A generator of the response stream.
+            The generator will yield the following types:
+
+            - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
+
+        Examples:
+            >>> from weaviate_agents import QueryAgent
+            >>> from weaviate_agents.classes import AskModeResponse, StreamedTokens, ProgressMessage
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> for result in agent.ask_stream("What are the terms of the contract signed by John Smith in May 2025?"):
+            ...     if isinstance(result, AskModeResponse):
+            ...         result.display()
+            ...     elif isinstance(result, StreamedTokens):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, ProgressMessage):
+            ...         print(result.message)
+        """
         request_body = self._prepare_request_body(
             query=query,
             collections=collections,
@@ -879,9 +943,35 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             reasoning_prompt: Optional prompt to control the agent's behavior during the
                 research phase, guiding how it searches, retrieves, and reasons about data.
                 The constructor's system_prompt controls the final response formatting.
-            include_progress: Whether to include progress messages in the stream.
-            include_thoughts: Whether to include streamed thoughts in the stream.
-            include_final_state: Whether to include the final state in the stream.
+            include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
+            include_thoughts: Whether to include streamed thoughts in the stream. These are token deltas of the agent's reasoning process as it performs the research.
+            include_final_state: Whether to include the final state in the stream. This is the final response class, ``ResearchModeResponse``, that will be the last item in the stream.
+
+        Returns:
+            A generator of the response stream.
+            The generator will yield the following types:
+
+            - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedThoughts`]: Token deltas of the agent's reasoning process as it performs the research (if ``include_thoughts`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.ResearchModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
+
+        Examples:
+            >>> from weaviate_agents import QueryAgent
+            >>> from weaviate_agents.classes import StreamedThoughts, StreamedTokens, ProgressMessage, ResearchModeResponse
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> for result in agent.research_stream("What are the terms of the contract signed by John Smith in May 2025?"):
+            ...     if isinstance(result, ResearchModeResponse):
+            ...         result.display()
+            ...     elif isinstance(result, StreamedThoughts):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, StreamedTokens):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, ProgressMessage):
+            ...         print(result.message)
         """
         request_body = self._prepare_research_mode_request_body(
             query=query,
@@ -928,23 +1018,41 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         """Run the Query Agent search-only mode.
 
         This method sends the initial search request and returns a
-        `SearchModeResponse` containing the first page of results. To paginate,
-        use the `SearchModeResponse.next()` method. This reuses the same
+        :class:`~weaviate_agents.query.classes.response.SearchModeResponse` containing the first page of results. To paginate,
+        use the ``SearchModeResponse.next()`` method. This reuses the same
         underlying searches to ensure a consistent result set across pages.
 
         Args:
             query: The natural language query string for the agent.
             limit: The maximum number of results to return for the first page.
-            collections: The collections to query. Overrides any collections
-                provided in the constructor when set.
+            collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Overrides any collections provided in the constructor when set.
             diversity_weight: Optional float between 0.0 and 1.0 to diversify
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
 
         Returns:
-            A `SearchModeResponse` for the first page of results. Use
-            `response.next(limit=..., offset=...)` to paginate.
+            An instance of :class:`~weaviate_agents.query.classes.response.SearchModeResponse` for the first page of results. Use
+            the ``response.next(limit=..., offset=...)`` method to paginate.
+
+        Examples:
+            >>> from weaviate_agents import QueryAgent
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> agent.search("Find all NDAs signed by Jane Doe in 2024.")
+
+            >>> from weaviate_agents import QueryAgent
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> # With pagination
+            >>> page_1 = agent.search("Find all NDAs signed by Jane Doe in 2024.", limit = 5)
+            >>> page_2 = page_1.next(limit = 5, offset = 5)
+            >>> page_3 = page_2.next(limit = 5, offset = 10)
         """
         collections = collections or self._collections
         if not collections:
@@ -967,19 +1075,48 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
-        """Suggest queries for the given collections.
+        """Suggest queries for the data in your collections.
 
-        Uses the agent to generate example queries that can be run against
-        the given collections.
+        Uses the agent to generate example queries that can be run against the given collections.
+
+        This can help users discover what kinds of questions they can ask or generate example prompts for a dataset.
 
         Args:
-            collections: The collections to suggest queries for.
-                Overrides any collections provided in the constructor when set.
-            num_queries: The number of queries to suggest. Defaults to 3.
-            instructions: Optional instructions to guide query generation.
+            collections:
+                Optional override for the collections configured at instantiation.
+                Can be a list of collection names (str) or QueryAgentCollectionConfig objects.
+            num_queries:
+                The number of queries to suggest (default: 3).
+            instructions:
+                Optional natural language guidance for the style, topic, or language of the suggested queries.
+                This is supplied in addition to the agent's system instructions.
 
         Returns:
-            A `SuggestQueryResponse` containing suggested queries.
+            An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
+            contains a list of suggested queries, with additional metadata if present.
+
+        Examples:
+            >>> from weaviate_agents import QueryAgent
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> agent.suggest_queries(
+            ...     collections=["Products"],
+            ...     num_queries=5,
+            ...     instructions="Focus on questions about eco-friendly features.",
+            ... )
+
+            >>> from weaviate_agents import QueryAgent
+            >>> agent = QueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> agent.suggest_queries(
+            ...     collections=["FinancialContracts"],
+            ...     num_queries=1,
+            ...     instructions="Write your question in Spanish.",
+            ... )
         """
         resolved_collections = collections or self._collections
         if not resolved_collections:
@@ -1016,8 +1153,37 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
     """An agent for executing agentic queries against Weaviate.
 
-    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query)
+    For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents)
     """
+
+    def __init__(
+        self,
+        client: WeaviateAsyncClient,
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        agents_host: Union[str, None] = None,
+        system_prompt: Union[str, None] = None,
+        timeout: Union[int, None] = None,
+    ):
+        """Initialize the asynchronous Query Agent.
+
+        Args:
+            client: The *asynchronous* Weaviate client connected to a Weaviate Cloud cluster (i.e.
+                from ``weaviate.use_async_with_weaviate_cloud``).
+            collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Will be overridden if passed in any of the agent's methods that support it.
+            agents_host: Optional host of the agents service.
+            system_prompt: Optional prompt to control the tone, format, and style of the agent's
+                final response. This prompt is both passed to the query writer agent, and
+                applied when generating the answer after all research and data retrieval is complete.
+            timeout: The timeout for the request. Defaults to 60 seconds.
+        """
+        super().__init__(
+            client=client,
+            collections=collections,
+            agents_host=agents_host,
+            system_prompt=system_prompt,
+            timeout=timeout,
+        )
 
     @deprecated(
         "AsyncQueryAgent.run() is deprecated and will be removed in a future release. "
@@ -1029,13 +1195,6 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
     ) -> QueryAgentResponse:
-        """Run the query agent.
-
-        Args:
-            query: The natural language query string for the agent.
-            collections: The collections to query. Will override any collections if passed in the constructor.
-            context: Optional previous response from the agent.
-        """
         request_body = self._prepare_request_body(
             query=query,
             collections=collections,
@@ -1062,6 +1221,31 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
     ) -> AskModeResponse:
+        """Run the Query Agent ask mode.
+
+        Perform an agentic search on the collections and return a natural language answer to the query.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Will override any collections if passed in the constructor.
+            result_evaluation: One of ``"llm"`` or ``"none"``.
+                If ``"llm"``, the final answer will be cross-compared to the sources, and those sources will be filtered to only those in the answer.
+                Also populates the fields `missing_information` and `is_partial_answer` of the response.
+                If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
+                Defaults to ``"none"``.
+
+        Returns:
+            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` which contains the final answer, sources,
+            and other metadata such as the searches performed, usage and total time.
+
+        Examples:
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> await agent.ask("What are the terms of the contract signed by John Smith in May 2025?")
+        """
         request_body = self._prepare_request_body(
             query=query, collections=collections, result_evaluation=result_evaluation
         )
@@ -1215,7 +1399,43 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_final_state: bool = True,
         result_evaluation: Literal["llm", "none"] = "none",
     ):
-        """Run the Query Agent ask mode and stream the response."""
+        """Run the Query Agent ask mode and stream the response.
+
+        Args:
+            query: The natural language query string for the agent.
+            collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
+                Will override any collections if passed in the constructor.
+            include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
+            include_final_state: Whether to include the final state in the stream. This is the final response class that will be the last item in the stream.
+            result_evaluation: One of ``"llm"`` or ``"none"``.
+                If ``"llm"``, the final answer will be cross-compared to the sources, and those sources will be filtered to only those in the answer.
+                Also populates the fields `missing_information` and `is_partial_answer` of the response.
+                If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
+                Defaults to ``"none"``.
+
+        Returns:
+            A generator of the response stream.
+            The generator will yield the following types:
+
+            - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
+
+        Examples:
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> from weaviate_agents.classes import AskModeResponse, StreamedTokens, ProgressMessage
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> async for result in agent.ask_stream("What are the terms of the contract signed by John Smith in May 2025?"):
+            ...     if isinstance(result, AskModeResponse):
+            ...         result.display()
+            ...     elif isinstance(result, StreamedTokens):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, ProgressMessage):
+            ...         print(result.message)
+        """
         request_body = self._prepare_request_body(
             query=query,
             collections=collections,
@@ -1361,10 +1581,36 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 provided in the constructor when set.
             reasoning_prompt: Optional prompt to control the agent's behavior during the
                 research phase, guiding how it searches, retrieves, and reasons about data.
-                The constructor's system_prompt controls the final response formatting.
-            include_progress: Whether to include progress messages in the stream.
-            include_thoughts: Whether to include streamed thoughts in the stream.
-            include_final_state: Whether to include the final state in the stream.
+                The constructor's ``system_prompt`` controls the final response formatting.
+            include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
+            include_thoughts: Whether to include streamed thoughts in the stream. These are token deltas of the agent's reasoning process as it performs the research.
+            include_final_state: Whether to include the final state in the stream. This is the final response class, ``ResearchModeResponse``, that will be the last item in the stream.
+
+        Returns:
+            A generator of the response stream.
+            The generator will yield the following types:
+
+            - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedThoughts`]: Token deltas of the agent's reasoning process as it performs the research (if ``include_thoughts`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.ResearchModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
+
+        Examples:
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> from weaviate_agents.classes import StreamedThoughts, StreamedTokens, ProgressMessage, ResearchModeResponse
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> async for result in agent.research_stream("What are the terms of the contract signed by John Smith in May 2025?"):
+            ...     if isinstance(result, ResearchModeResponse):
+            ...         result.display()
+            ...     elif isinstance(result, StreamedThoughts):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, StreamedTokens):
+            ...         print(result.delta, end='', flush=True)
+            ...     elif isinstance(result, ProgressMessage):
+            ...         print(result.message)
         """
         request_body = self._prepare_research_mode_request_body(
             query=query,
@@ -1427,8 +1673,26 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Defaults to None (no diversity).
 
         Returns:
-            An `AsyncSearchModeResponse` for the first page of results. Use
-            `await response.next(limit=..., offset=...)` to paginate.
+            An instance of :class:`~weaviate_agents.query.classes.response.AsyncSearchModeResponse` for the first page of results. Use
+            the ``await response.next(limit=..., offset=...)`` method to paginate.
+
+        Examples:
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> await agent.search("Find all NDAs signed by Jane Doe in 2024.")
+
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> # With pagination
+            >>> page_1 = await agent.search("Find all NDAs signed by Jane Doe in 2024.", limit = 5)
+            >>> page_2 = await page_1.next(limit = 5, offset = 5)
+            >>> page_3 = await page_2.next(limit = 5, offset = 10)
         """
         collections = collections or self._collections
         if not collections:
@@ -1451,19 +1715,48 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         num_queries: int = 3,
         instructions: Optional[str] = None,
     ) -> SuggestQueryResponse:
-        """Suggest queries for the given collections.
+        """Suggest queries for the data in your collections.
 
-        Uses the agent to generate example queries that can be run against
-        the given collections.
+        Uses the agent to generate example queries that can be run against the given collections.
+
+        This can help users discover what kinds of questions they can ask or generate example prompts for a dataset.
 
         Args:
-            collections: The collections to suggest queries for.
-                Overrides any collections provided in the constructor when set.
-            num_queries: The number of queries to suggest. Defaults to 3.
-            instructions: Optional instructions to guide query generation.
+            collections:
+                Optional override for the collections configured at instantiation.
+                Can be a list of collection names (str) or QueryAgentCollectionConfig objects.
+            num_queries:
+                The number of queries to suggest (default: 3).
+            instructions:
+                Optional natural language guidance for the style, topic, or language of the suggested queries.
+                This is supplied in addition to the agent's system instructions.
 
         Returns:
-            A `SuggestQueryResponse` containing suggested queries.
+            An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
+            contains a list of suggested queries, with additional metadata if present.
+
+        Examples:
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> await agent.suggest_queries(
+            ...     collections=["Products"],
+            ...     num_queries=5,
+            ...     instructions="Focus on questions about eco-friendly features.",
+            ... )
+
+            >>> from weaviate_agents import AsyncQueryAgent
+            >>> agent = AsyncQueryAgent(
+            ...     client=client,
+            ...     collections=["FinancialContracts"],
+            ... )
+            >>> await agent.suggest_queries(
+            ...     collections=["FinancialContracts"],
+            ...     num_queries=1,
+            ...     instructions="Write your question in Spanish.",
+            ... )
         """
         resolved_collections = collections or self._collections
         if not resolved_collections:
