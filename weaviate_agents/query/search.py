@@ -12,9 +12,17 @@ from weaviate_agents.query.classes.request import (
     SearchModeGenerationRequest,
 )
 from weaviate_agents.query.classes.response import (
+    AsyncSearchModeResponse,
     QueryResultWithCollectionNormalized,
-    SearchModeResponseBase,
+    SearchModeResponse,
 )
+
+__all__ = [
+    "AsyncQueryAgentSearcher",
+    "AsyncSearchModeResponse",
+    "QueryAgentSearcher",
+    "SearchModeResponse",
+]
 
 
 class _BaseQueryAgentSearcher:
@@ -158,49 +166,3 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
                 timeout=self.timeout,
             )
         return self._handle_response(response)
-
-
-class SearchModeResponse(SearchModeResponseBase[QueryAgentSearcher]):
-    """Reponse for the Query Agent search-only mode.
-
-    This contains the results of the search, the usage, and the underlying
-    searches performed. You can paginate through the results set by calling
-    the `next` method on this reponse with different `limit` / `offset` values.
-    This will result in the same underlying searches being performed each time,
-    resulting in a consistent results set across pages.
-    """
-
-    def next(self, limit: int = 20, offset: int = 0) -> SearchModeResponse:
-        """Paginate the search-only results with the given `limit` and `offset` values.
-
-        Args:
-            limit: The maximum number of results to return. If not specified, this defaults to 20.
-            offset: The offset to start from. If not specified, the retrieval begins from the first object in the results set.
-
-        Returns:
-            The next `SearchModeResponse` page.
-        """
-        return self._searcher.run(limit=limit, offset=offset)
-
-
-class AsyncSearchModeResponse(SearchModeResponseBase[AsyncQueryAgentSearcher]):
-    """Reponse for the Query Agent search-only mode.
-
-    This contains the results of the search, the usage, and the underlying
-    searches performed. You can paginate through the results set by calling
-    the `next` method on this reponse with different `limit` / `offset` values.
-    This will result in the same underlying searches being performed each time,
-    resulting in a consistent results set across pages.
-    """
-
-    async def next(self, limit: int = 20, offset: int = 0) -> AsyncSearchModeResponse:
-        """Paginate the search-only results with the given `limit` and `offset` values.
-
-        Args:
-            limit: The maximum number of results to return. If not specified, this defaults to 20.
-            offset: The offset to start from. If not specified, the retrieval begins from the first object in the results set.
-
-        Returns:
-            The next `SearchModeResponse` page.
-        """
-        return await self._searcher.run(limit=limit, offset=offset)

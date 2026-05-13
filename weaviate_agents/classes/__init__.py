@@ -12,6 +12,7 @@ from .query import (
     AggregationResultWithCollection,
     AggregationResultWithCollectionNormalized,
     AskModeResponse,
+    AsyncSearchModeResponse,
     BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
@@ -40,6 +41,7 @@ from .query import (
     QuerySort,
     QueryWithCollection,
     ResearchModeResponse,
+    SearchModeResponse,
     SearchModeResponseBase,
     Source,
     StreamedThoughts,
@@ -124,4 +126,6 @@ __all__ = [
     "UUIDArrayPropertyFilter",
     "SuggestedQuery",
     "SuggestQueryResponse",
+    "SearchModeResponse",
+    "AsyncSearchModeResponse",
 ]

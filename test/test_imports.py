@@ -45,6 +45,7 @@ def test_class_exports():
         AggregationResultWithCollectionNormalized,
         AppendPropertyOperation,
         AskModeResponse,
+        AsyncSearchModeResponse,
         BooleanArrayPropertyFilter,
         BooleanMetrics,
         BooleanPropertyAggregation,
@@ -83,6 +84,7 @@ def test_class_exports():
         QuerySort,
         QueryWithCollection,
         ResearchModeResponse,
+        SearchModeResponse,
         SearchModeResponseBase,
         Source,
         StreamedThoughts,
@@ -151,6 +153,8 @@ def test_class_exports():
         QueryResultWithCollection,
         QuerySort,
         QueryWithCollection,
+        SearchModeResponse,
+        AsyncSearchModeResponse,
         SearchModeResponseBase,
         Source,
         ResearchModeResponse,
@@ -243,6 +247,8 @@ def test_class_exports():
         "UUIDPropertyFilter",
         "SuggestQueryResponse",
         "SuggestedQuery",
+        "SearchModeResponse",
+        "AsyncSearchModeResponse",
     ]
 
     assert hasattr(

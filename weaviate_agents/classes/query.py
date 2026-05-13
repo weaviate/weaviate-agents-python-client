@@ -3,6 +3,7 @@ from weaviate_agents.query.classes import (
     AggregationResultWithCollection,
     AggregationResultWithCollectionNormalized,
     AskModeResponse,
+    AsyncSearchModeResponse,
     BooleanArrayPropertyFilter,
     BooleanMetrics,
     BooleanPropertyAggregation,
@@ -31,6 +32,7 @@ from weaviate_agents.query.classes import (
     QuerySort,
     QueryWithCollection,
     ResearchModeResponse,
+    SearchModeResponse,
     SearchModeResponseBase,
     Source,
     StreamedThoughts,
@@ -96,4 +98,6 @@ __all__ = [
     "StreamedThoughts",
     "SuggestedQuery",
     "SuggestQueryResponse",
+    "SearchModeResponse",
+    "AsyncSearchModeResponse",
 ]
