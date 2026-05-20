@@ -824,7 +824,7 @@ def test_search_only_mode_with_search_strategy(monkeypatch):
     assert captured["json"]["search_strategy"] == "recall"
 
 
-def test_search_only_mode_without_search_strategy(monkeypatch):
+def test_search_only_mode_default_search_strategy(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
@@ -839,10 +839,10 @@ def test_search_only_mode_without_search_strategy(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test without search_strategy — should default to None
+    # Test without search_strategy — should default to "recall"
     results = agent.search("test query", limit=2)
     assert isinstance(results, SearchModeResponse)
-    assert captured["json"]["search_strategy"] is None
+    assert captured["json"]["search_strategy"] == "recall"
 
 
 def test_search_only_mode_failure(monkeypatch):

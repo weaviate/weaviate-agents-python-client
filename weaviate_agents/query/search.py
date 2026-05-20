@@ -36,7 +36,7 @@ class _BaseQueryAgentSearcher:
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
         diversity_weight: Optional[float] = None,
-        search_strategy: Optional[Literal["recall", "precision"]] = None,
+        search_strategy: Literal["recall", "precision"] = "recall",
     ):
         self.headers = headers
         self.connection_headers = connection_headers
