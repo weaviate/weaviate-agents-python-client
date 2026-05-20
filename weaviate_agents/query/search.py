@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import httpx
 
@@ -36,6 +36,7 @@ class _BaseQueryAgentSearcher:
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
         diversity_weight: Optional[float] = None,
+        search_strategy: Optional[Literal["recall", "precision"]] = None,
     ):
         self.headers = headers
         self.connection_headers = connection_headers
@@ -45,6 +46,7 @@ class _BaseQueryAgentSearcher:
         self.collections = collections
         self.system_prompt = system_prompt
         self.diversity_weight = diversity_weight
+        self.search_strategy = search_strategy
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
             None
         )
@@ -64,6 +66,7 @@ class _BaseQueryAgentSearcher:
                 offset=offset,
                 system_prompt=self.system_prompt,
                 diversity_weight=self.diversity_weight,
+                search_strategy=self.search_strategy,
             ).model_dump(mode="json")
         else:
             return SearchModeExecutionRequest(
@@ -74,6 +77,7 @@ class _BaseQueryAgentSearcher:
                 offset=offset,
                 searches=self._cached_searches,
                 diversity_weight=self.diversity_weight,
+                search_strategy=self.search_strategy,
             ).model_dump(mode="json")
 
 

@@ -18,6 +18,7 @@ class SearchModeRequestBase(BaseModel):
     limit: int
     offset: int
     diversity_weight: Optional[float] = None
+    search_strategy: Optional[Literal["recall", "precision"]] = None
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):
