@@ -97,7 +97,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
             raise Exception(response.text)
 
         parsed_response = SearchModeResponse(**response.json())
-        if parsed_response.searches:
+        if parsed_response.searches is not None:
             self._cached_searches = parsed_response.searches
         parsed_response._searcher = self
         return parsed_response
@@ -142,7 +142,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
             raise Exception(response.text)
 
         parsed_response = AsyncSearchModeResponse(**response.json())
-        if parsed_response.searches:
+        if parsed_response.searches is not None:
             self._cached_searches = parsed_response.searches
         parsed_response._searcher = self
         return parsed_response
