@@ -2119,3 +2119,97 @@ async def test_async_suggest_queries_failure(monkeypatch):
         str(exc_info.value)
         == "{'error': {'message': 'Test error message', 'code': 'test_error_code', 'details': {'info': 'test detail'}}}"
     )
+
+
+def test_suggest_queries_with_conversation(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "What topics are covered?"},
+        {"role": "assistant", "content": "The collection covers ML and economics."},
+    ]
+
+    result = agent.suggest_queries(["test_collection"], conversation=chat_messages)
+
+    assert isinstance(result, SuggestQueryResponse)
+    assert captured["json"]["conversation"] == {"messages": chat_messages}
+
+
+def test_suggest_queries_without_conversation(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    agent.suggest_queries(["test_collection"])
+
+    assert "conversation" not in captured["json"]
+
+
+async def test_async_suggest_queries_with_conversation(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["json"] = kwargs.get("json")
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    chat_messages: list[ChatMessage] = [
+        {"role": "user", "content": "What topics are covered?"},
+        {"role": "assistant", "content": "The collection covers ML and economics."},
+    ]
+
+    result = await agent.suggest_queries(
+        ["test_collection"], conversation=chat_messages
+    )
+
+    assert isinstance(result, SuggestQueryResponse)
+    assert captured["json"]["conversation"] == {"messages": chat_messages}
+
+
+async def test_async_suggest_queries_without_conversation(monkeypatch):
+    captured = {}
+
+    async def fake_async_post_with_capture(*args, **kwargs):
+        captured["json"] = kwargs.get("json")
+        return FakeResponse(200, FAKE_SUGGEST_QUERIES_SUCCESS_JSON)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_async_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    await agent.suggest_queries(["test_collection"])
+
+    assert "conversation" not in captured["json"]
