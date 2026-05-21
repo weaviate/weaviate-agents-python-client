@@ -797,7 +797,7 @@ def test_search_only_mode_without_diversity_weight(monkeypatch):
     assert captured["json"]["diversity_weight"] is None
 
 
-def test_search_only_mode_with_search_strategy(monkeypatch):
+def test_search_only_mode_with_retrieval_strategy(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
@@ -812,19 +812,19 @@ def test_search_only_mode_with_search_strategy(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test with search_strategy set
-    results = agent.search("test query", limit=2, search_strategy="recall")
+    # Test with retrieval_strategy set
+    results = agent.search("test query", limit=2, retrieval_strategy="recall")
     assert isinstance(results, SearchModeResponse)
-    assert captured["json"]["search_strategy"] == "recall"
+    assert captured["json"]["retrieval_strategy"] == "recall"
 
-    # Reset captured json, then paginate — search_strategy should persist
+    # Reset captured json, then paginate — retrieval_strategy should persist
     captured = {}
     results_2 = results.next(limit=2, offset=1)
     assert isinstance(results_2, SearchModeResponse)
-    assert captured["json"]["search_strategy"] == "recall"
+    assert captured["json"]["retrieval_strategy"] == "recall"
 
 
-def test_search_only_mode_default_search_strategy(monkeypatch):
+def test_search_only_mode_default_retrieval_strategy(monkeypatch):
     captured = {}
 
     def fake_post_with_capture(url, headers=None, json=None, timeout=None):
@@ -839,10 +839,10 @@ def test_search_only_mode_default_search_strategy(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test without search_strategy — should default to "recall"
+    # Test without retrieval_strategy — should default to "recall"
     results = agent.search("test query", limit=2)
     assert isinstance(results, SearchModeResponse)
-    assert captured["json"]["search_strategy"] == "recall"
+    assert captured["json"]["retrieval_strategy"] == "recall"
 
 
 def test_search_only_mode_failure(monkeypatch):
@@ -941,7 +941,7 @@ async def test_async_search_only_mode_with_diversity_weight(monkeypatch):
     assert captured["json"]["diversity_weight"] == 0.7
 
 
-async def test_async_search_only_mode_with_search_strategy(monkeypatch):
+async def test_async_search_only_mode_with_retrieval_strategy(monkeypatch):
     captured = {}
 
     async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
@@ -956,16 +956,16 @@ async def test_async_search_only_mode_with_search_strategy(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test with search_strategy set
-    results = await agent.search("test query", limit=2, search_strategy="precision")
+    # Test with retrieval_strategy set
+    results = await agent.search("test query", limit=2, retrieval_strategy="precision")
     assert isinstance(results, AsyncSearchModeResponse)
-    assert captured["json"]["search_strategy"] == "precision"
+    assert captured["json"]["retrieval_strategy"] == "precision"
 
-    # Reset captured json, then paginate — search_strategy should persist
+    # Reset captured json, then paginate — retrieval_strategy should persist
     captured = {}
     results_2 = await results.next(limit=2, offset=1)
     assert isinstance(results_2, AsyncSearchModeResponse)
-    assert captured["json"]["search_strategy"] == "precision"
+    assert captured["json"]["retrieval_strategy"] == "precision"
 
 
 async def test_async_search_only_mode_failure(monkeypatch):

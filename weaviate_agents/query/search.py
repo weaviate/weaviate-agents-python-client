@@ -35,7 +35,7 @@ class _BaseQueryAgentSearcher:
         query: Union[str, list[ChatMessage]],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
-        search_strategy: Literal["recall", "precision"] = "recall",
+        retrieval_strategy: Literal["recall", "precision"] = "recall",
         diversity_weight: Optional[float] = None,
     ):
         self.headers = headers
@@ -45,7 +45,7 @@ class _BaseQueryAgentSearcher:
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
-        self.search_strategy = search_strategy
+        self.retrieval_strategy = retrieval_strategy
         self.diversity_weight = diversity_weight
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
             None
@@ -65,7 +65,7 @@ class _BaseQueryAgentSearcher:
                 limit=limit,
                 offset=offset,
                 system_prompt=self.system_prompt,
-                search_strategy=self.search_strategy,
+                retrieval_strategy=self.retrieval_strategy,
                 diversity_weight=self.diversity_weight,
             ).model_dump(mode="json")
         else:
@@ -76,7 +76,7 @@ class _BaseQueryAgentSearcher:
                 limit=limit,
                 offset=offset,
                 searches=self._cached_searches,
-                search_strategy=self.search_strategy,
+                retrieval_strategy=self.retrieval_strategy,
                 diversity_weight=self.diversity_weight,
             ).model_dump(mode="json")
 

@@ -17,7 +17,7 @@ class SearchModeRequestBase(BaseModel):
     collections: list[Union[str, QueryAgentCollectionConfig]]
     limit: int
     offset: int
-    search_strategy: Literal["recall", "precision"] = "recall"
+    retrieval_strategy: Literal["recall", "precision"] = "recall"
     diversity_weight: Optional[float] = None
 
 
