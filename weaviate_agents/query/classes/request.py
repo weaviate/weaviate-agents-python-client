@@ -18,6 +18,7 @@ class SearchModeRequestBase(BaseModel):
     limit: int
     offset: int
     diversity_weight: Optional[float] = None
+    explain_score: bool = False
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):
