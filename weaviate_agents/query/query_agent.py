@@ -1143,7 +1143,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         if instructions is not None:
             request_body["instructions"] = instructions
         if conversation is not None:
-            request_body["conversation"] = ConversationContext(
+            request_body["conversation_context"] = ConversationContext(
                 messages=conversation
             ).model_dump(mode="json")
 
@@ -1792,7 +1792,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         if instructions is not None:
             request_body["instructions"] = instructions
         if conversation is not None:
-            request_body["conversation"] = ConversationContext(
+            request_body["conversation_context"] = ConversationContext(
                 messages=conversation
             ).model_dump(mode="json")
 

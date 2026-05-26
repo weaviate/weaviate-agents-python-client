@@ -2144,7 +2144,7 @@ def test_suggest_queries_with_conversation(monkeypatch):
     result = agent.suggest_queries(["test_collection"], conversation=chat_messages)
 
     assert isinstance(result, SuggestQueryResponse)
-    assert captured["json"]["conversation"] == {"messages": chat_messages}
+    assert captured["json"]["conversation_context"] == {"messages": chat_messages}
 
 
 def test_suggest_queries_without_conversation(monkeypatch):
@@ -2164,7 +2164,7 @@ def test_suggest_queries_without_conversation(monkeypatch):
 
     agent.suggest_queries(["test_collection"])
 
-    assert "conversation" not in captured["json"]
+    assert "conversation_context" not in captured["json"]
 
 
 async def test_async_suggest_queries_with_conversation(monkeypatch):
@@ -2192,7 +2192,7 @@ async def test_async_suggest_queries_with_conversation(monkeypatch):
     )
 
     assert isinstance(result, SuggestQueryResponse)
-    assert captured["json"]["conversation"] == {"messages": chat_messages}
+    assert captured["json"]["conversation_context"] == {"messages": chat_messages}
 
 
 async def test_async_suggest_queries_without_conversation(monkeypatch):
@@ -2212,4 +2212,4 @@ async def test_async_suggest_queries_without_conversation(monkeypatch):
 
     await agent.suggest_queries(["test_collection"])
 
-    assert "conversation" not in captured["json"]
+    assert "conversation_context" not in captured["json"]
