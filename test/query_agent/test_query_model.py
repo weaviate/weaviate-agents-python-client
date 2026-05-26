@@ -797,6 +797,54 @@ def test_search_only_mode_without_diversity_weight(monkeypatch):
     assert captured["json"]["diversity_weight"] is None
 
 
+def test_search_only_mode_with_explain_score(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with explain_score set
+    results = agent.search("test query", limit=2, explain_score=True)
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["explain_score"] is True
+
+    # Reset captured json, then paginate — explain_score should persist
+    captured = {}
+    results_2 = results.next(limit=2, offset=1)
+    assert isinstance(results_2, SearchModeResponse)
+    assert captured["json"]["explain_score"] is True
+
+
+def test_search_only_mode_without_explain_score(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test without explain_score — should default to False
+    results = agent.search("test query", limit=2)
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["explain_score"] is False
+
+
 def test_search_only_mode_failure(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post_failure)
     dummy_client = DummyClient()
@@ -891,6 +939,33 @@ async def test_async_search_only_mode_with_diversity_weight(monkeypatch):
     results_2 = await results.next(limit=2, offset=1)
     assert isinstance(results_2, AsyncSearchModeResponse)
     assert captured["json"]["diversity_weight"] == 0.7
+
+
+async def test_async_search_only_mode_with_explain_score(monkeypatch):
+    captured = {}
+
+    async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return await fake_async_post_search_only_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with explain_score set
+    results = await agent.search("test query", limit=2, explain_score=True)
+    assert isinstance(results, AsyncSearchModeResponse)
+    assert captured["json"]["explain_score"] is True
+
+    # Reset captured json, then paginate — explain_score should persist
+    captured = {}
+    results_2 = await results.next(limit=2, offset=1)
+    assert isinstance(results_2, AsyncSearchModeResponse)
+    assert captured["json"]["explain_score"] is True
 
 
 async def test_async_search_only_mode_failure(monkeypatch):

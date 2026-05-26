@@ -36,6 +36,7 @@ class _BaseQueryAgentSearcher:
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
         diversity_weight: Optional[float] = None,
+        explain_score: bool = False,
     ):
         self.headers = headers
         self.connection_headers = connection_headers
@@ -45,6 +46,7 @@ class _BaseQueryAgentSearcher:
         self.collections = collections
         self.system_prompt = system_prompt
         self.diversity_weight = diversity_weight
+        self.explain_score = explain_score
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
             None
         )
@@ -64,6 +66,7 @@ class _BaseQueryAgentSearcher:
                 offset=offset,
                 system_prompt=self.system_prompt,
                 diversity_weight=self.diversity_weight,
+                explain_score=self.explain_score,
             ).model_dump(mode="json")
         else:
             return SearchModeExecutionRequest(
@@ -74,6 +77,7 @@ class _BaseQueryAgentSearcher:
                 offset=offset,
                 searches=self._cached_searches,
                 diversity_weight=self.diversity_weight,
+                explain_score=self.explain_score,
             ).model_dump(mode="json")
 
 

@@ -1014,6 +1014,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         diversity_weight: Optional[float] = None,
+        explain_score: bool = False,
     ) -> SearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1031,6 +1032,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            explain_score: If True, each result will include a short natural-language
+                explanation of why it is or isn't relevant to the query.
+                Defaults to False.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SearchModeResponse` for the first page of results. Use
@@ -1066,6 +1070,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             collections=collections,
             system_prompt=self._system_prompt,
             diversity_weight=diversity_weight,
+            explain_score=explain_score,
         )
         return searcher.run(limit=limit)
 
@@ -1653,6 +1658,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         limit: int = 20,
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         diversity_weight: Optional[float] = None,
+        explain_score: bool = False,
     ) -> AsyncSearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1671,6 +1677,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            explain_score: If True, each result will include a short natural-language
+                explanation of why it is or isn't relevant to the query.
+                Defaults to False.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.AsyncSearchModeResponse` for the first page of results. Use
@@ -1706,6 +1715,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             collections=collections,
             system_prompt=self._system_prompt,
             diversity_weight=diversity_weight,
+            explain_score=explain_score,
         )
         return await searcher.run(limit=limit)
 
