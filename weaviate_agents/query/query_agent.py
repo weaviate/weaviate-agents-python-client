@@ -1032,6 +1032,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             filtering: The filtering strategy to use for this search.
                 Use "recall" to optimize for finding all relevant results,
                 or "precision" to optimize for the accuracy of returned results.
+                Defaults to "recall".
             diversity_weight: Optional float between 0.0 and 1.0 to diversify
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
@@ -1677,6 +1678,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             filtering: The filtering strategy to use for this search.
                 Use "recall" to optimize for finding all relevant results,
                 or "precision" to optimize for the accuracy of returned results.
+                Defaults to "recall".
             diversity_weight: Optional float between 0.0 and 1.0 to diversify
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
