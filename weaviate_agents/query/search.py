@@ -35,7 +35,7 @@ class _BaseQueryAgentSearcher:
         query: Union[str, list[ChatMessage]],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
-        filtering: Literal["recall", "precision"] = "recall",
+        filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
     ):
         self.headers = headers

@@ -839,10 +839,10 @@ def test_search_only_mode_default_filtering(monkeypatch):
     agent._connection = dummy_client
     agent._headers = dummy_client.additional_headers
 
-    # Test without filtering — should default to "recall"
+    # Test without filtering — should default to None
     results = agent.search("test query", limit=2)
     assert isinstance(results, SearchModeResponse)
-    assert captured["json"]["filtering"] == "recall"
+    assert captured["json"]["filtering"] is None
 
 
 def test_search_only_mode_failure(monkeypatch):
