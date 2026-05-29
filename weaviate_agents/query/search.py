@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import httpx
 
@@ -35,6 +35,7 @@ class _BaseQueryAgentSearcher:
         query: Union[str, list[ChatMessage]],
         collections: list[Union[str, QueryAgentCollectionConfig]],
         system_prompt: Optional[str],
+        filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
     ):
         self.headers = headers
@@ -44,6 +45,7 @@ class _BaseQueryAgentSearcher:
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
+        self.filtering = filtering
         self.diversity_weight = diversity_weight
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
             None
@@ -63,6 +65,7 @@ class _BaseQueryAgentSearcher:
                 limit=limit,
                 offset=offset,
                 system_prompt=self.system_prompt,
+                filtering=self.filtering,
                 diversity_weight=self.diversity_weight,
             ).model_dump(mode="json")
         else:
@@ -73,6 +76,7 @@ class _BaseQueryAgentSearcher:
                 limit=limit,
                 offset=offset,
                 searches=self._cached_searches,
+                filtering=self.filtering,
                 diversity_weight=self.diversity_weight,
             ).model_dump(mode="json")
 
@@ -93,7 +97,7 @@ class QueryAgentSearcher(_BaseQueryAgentSearcher):
             raise Exception(response.text)
 
         parsed_response = SearchModeResponse(**response.json())
-        if parsed_response.searches:
+        if parsed_response.searches is not None:
             self._cached_searches = parsed_response.searches
         parsed_response._searcher = self
         return parsed_response
@@ -138,7 +142,7 @@ class AsyncQueryAgentSearcher(_BaseQueryAgentSearcher):
             raise Exception(response.text)
 
         parsed_response = AsyncSearchModeResponse(**response.json())
-        if parsed_response.searches:
+        if parsed_response.searches is not None:
             self._cached_searches = parsed_response.searches
         parsed_response._searcher = self
         return parsed_response
