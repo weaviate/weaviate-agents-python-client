@@ -470,7 +470,7 @@ class AskModeResponse(BaseModel):
     total_time: float
     is_partial_answer: Union[bool, None]
     missing_information: Union[list[str], None]
-    final_answer: str
+    final_answer: Union[str, BaseModel]
     sources: Union[list[Source], None]
 
     def display(self) -> None:
