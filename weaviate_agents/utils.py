@@ -90,7 +90,9 @@ def print_query_agent_response(response: "QueryAgentResponse"):
 
 def print_ask_mode_response(response: "AskModeResponse"):
     """Prints a formatted response from the Ask Mode using rich."""
-    if isinstance(response.final_answer, BaseModel):
+    if isinstance(response.final_answer, BaseModel) or isinstance(
+        response.final_answer, dict
+    ):
         console.print(
             Panel(
                 Pretty(response.final_answer),
