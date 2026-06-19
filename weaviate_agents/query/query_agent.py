@@ -68,7 +68,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         context: Optional[QueryAgentResponse] = None,
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[None, dict[str, Any], type[BaseModel]] = None,
         **kwargs,
     ) -> dict:
         """Prepare the request body for the query.
@@ -77,7 +77,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             query: The natural language query string for the agent.
             collections: The collections to query. Will override any collections if passed in the constructor.
             context: Optional previous response from the agent.
-            output_format: The format of the output to return. Either a `str` (default), a `BaseModel` subclass, or a `dict` (a Draft 2020-12 JSON Schema).
+            output_format: The format of the output to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a `dict` (a Draft 2020-12 JSON Schema).
             **kwargs: Additional keyword arguments to pass to the request body.
         """
         collections = collections or self._collections
@@ -89,6 +89,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             if isinstance(query, str)
             else ConversationContext(messages=query).model_dump(mode="json")
         )
+
         if isinstance(output_format, type) and issubclass(output_format, BaseModel):
             output_format_json = output_format.model_json_schema()
         elif isinstance(output_format, dict):
@@ -166,7 +167,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     def _parse_ask_result(
         self,
         response: dict[str, Any],
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]],
+        output_format: Union[dict[str, Any], type[BaseModel], None],
     ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
         # Not overloaded: callers pass the broad union, and the precise return
         # type (ParsedAskModeResponse[M]) is conveyed by the public ask overloads.
@@ -240,7 +241,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]: ...
 
     @abstractmethod
@@ -249,7 +250,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ) -> Union[
         AskModeResponse,
         ParsedAskModeResponse[Any],
@@ -398,7 +399,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
@@ -442,7 +443,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
@@ -486,7 +487,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Union[
         Generator[Union[StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[StreamedTokens, AskModeResponse], None],
@@ -530,7 +531,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Union[
         Generator[StreamedTokens, None, None],
         AsyncGenerator[StreamedTokens, None],
@@ -544,7 +545,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: bool = True,
         include_final_state: bool = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
@@ -819,7 +820,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AskModeResponse: ...
 
     def ask(
@@ -827,7 +828,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
         """Run the Query Agent ask mode.
 
@@ -842,7 +843,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 Also populates the fields `missing_information` and `is_partial_answer` of the response.
                 If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
                 Defaults to ``"none"``.
-            output_format: The structured output format to return. Either a `str` (default), a `BaseModel` subclass, or a dictionary.
+            output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
                 The `final_answer` output field in the response will also be of the type specified.
@@ -1021,7 +1022,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Generator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
     ]: ...
@@ -1058,7 +1059,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
 
     @overload
@@ -1093,7 +1094,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Generator[Union[StreamedTokens, AskModeResponse], None, None]: ...
 
     @overload
@@ -1128,7 +1129,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> Generator[StreamedTokens, None, None]: ...
 
     def ask_stream(
@@ -1138,7 +1139,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: bool = True,
         include_final_state: bool = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ):
         """Run the Query Agent ask mode and stream the response.
 
@@ -1153,7 +1154,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 Also populates the fields `missing_information` and `is_partial_answer` of the response.
                 If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
                 Defaults to ``"none"``.
-            output_format: The structured output format to return. Either a `str` (default), a `BaseModel` subclass, or a dictionary.
+            output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
                 The `final_answer` output field in the response will also be of the type specified.
@@ -1667,7 +1668,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AskModeResponse: ...
 
     async def ask(
@@ -1675,7 +1676,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
         """Run the Query Agent ask mode.
 
@@ -1689,7 +1690,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Also populates the fields `missing_information` and `is_partial_answer` of the response.
                 If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
                 Defaults to ``"none"``.
-            output_format: The structured output format to return. Either a `str` (default), a `BaseModel` subclass, or a dictionary.
+            output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
                 The `final_answer` output field in the response will also be of the type specified.
@@ -1870,7 +1871,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AsyncGenerator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None
     ]: ...
@@ -1907,7 +1908,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
 
     @overload
@@ -1942,7 +1943,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AsyncGenerator[Union[StreamedTokens, AskModeResponse], None]: ...
 
     @overload
@@ -1977,7 +1978,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: type[str] = str,
+        output_format: None = None,
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
     async def ask_stream(
@@ -1987,7 +1988,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: bool = True,
         include_final_state: bool = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        output_format: Union[dict[str, Any], type[BaseModel], None] = None,
     ):
         """Run the Query Agent ask mode and stream the response.
 
@@ -2002,7 +2003,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Also populates the fields `missing_information` and `is_partial_answer` of the response.
                 If ``"none"``, the result will not be evaluated, and the sources will not be filtered.
                 Defaults to ``"none"``.
-            output_format: The structured output format to return. Either a `str` (default), a `BaseModel` subclass, or a dictionary.
+            output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
                 The `final_answer` output field in the response will also be of the type specified.
