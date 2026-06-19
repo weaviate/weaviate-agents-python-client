@@ -9,6 +9,7 @@ from typing import (
     Generic,
     Literal,
     Optional,
+    TypeVar,
     Union,
     overload,
 )
@@ -22,6 +23,7 @@ from weaviate.client import WeaviateAsyncClient, WeaviateClient
 from weaviate_agents.base import ClientType, _BaseAgent
 from weaviate_agents.query.classes import (
     AskModeResponse,
+    ParsedAskModeResponse,
     ProgressMessage,
     QueryAgentCollectionConfig,
     QueryAgentResponse,
@@ -37,6 +39,10 @@ from weaviate_agents.query.search import (
     QueryAgentSearcher,
     SearchModeResponse,
 )
+
+# Bound to BaseModel so a `output_format=MyModel` call flows the concrete model
+# type through to `ParsedAskModeResponse[MyModel].final_answer_parsed`.
+M = TypeVar("M", bound=BaseModel)
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
@@ -161,18 +167,25 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self,
         response: dict[str, Any],
         output_format: Union[type[str], dict[str, Any], type[BaseModel]],
-    ) -> AskModeResponse:
+    ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
+        # Not overloaded: callers pass the broad union, and the precise return
+        # type (ParsedAskModeResponse[M]) is conveyed by the public ask overloads.
         if isinstance(output_format, type) and issubclass(output_format, BaseModel):
-            response["final_answer"] = output_format.model_validate_json(
+            response["final_answer_parsed"] = output_format.model_validate_json(
                 response["final_answer"]
             )
+            return ParsedAskModeResponse[BaseModel](**response)
+
         elif isinstance(output_format, dict):
             try:
-                response["final_answer"] = loads(response["final_answer"])
+                response["final_answer_parsed"] = loads(response["final_answer"])
             except JSONDecodeError:
                 warnings.warn(
                     "Unable to decode final answer as dictionary, returning as string"
                 )
+                response["final_answer_parsed"] = response["final_answer"]
+            return ParsedAskModeResponse[dict](**response)
+
         return AskModeResponse(**response)
 
     @deprecated(
@@ -197,6 +210,39 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         """
         pass
 
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: type[M],
+    ) -> Union[
+        ParsedAskModeResponse[M], Coroutine[Any, Any, ParsedAskModeResponse[M]]
+    ]: ...
+
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Union[
+        ParsedAskModeResponse[dict], Coroutine[Any, Any, ParsedAskModeResponse[dict]]
+    ]: ...
+
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
+    ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]: ...
+
     @abstractmethod
     def ask(
         self,
@@ -204,7 +250,11 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
         output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
-    ) -> Union[AskModeResponse, Coroutine[Any, Any, AskModeResponse]]:
+    ) -> Union[
+        AskModeResponse,
+        ParsedAskModeResponse[Any],
+        Coroutine[Any, Any, Union[AskModeResponse, ParsedAskModeResponse[Any]]],
+    ]:
         pass
 
     @overload
@@ -308,7 +358,47 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[M]], None, None
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[M]], None
+        ],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Union[
+        Generator[
+            Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[dict]],
+            None,
+            None,
+        ],
+        AsyncGenerator[
+            Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[dict]], None
+        ],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens, AskModeResponse], None],
@@ -322,7 +412,37 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Union[
+        Generator[Union[ProgressMessage, StreamedTokens], None, None],
+        AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Union[
         Generator[Union[ProgressMessage, StreamedTokens], None, None],
         AsyncGenerator[Union[ProgressMessage, StreamedTokens], None],
@@ -336,7 +456,37 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Union[
+        Generator[Union[StreamedTokens, ParsedAskModeResponse[M]], None, None],
+        AsyncGenerator[Union[StreamedTokens, ParsedAskModeResponse[M]], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Union[
+        Generator[Union[StreamedTokens, ParsedAskModeResponse[dict]], None, None],
+        AsyncGenerator[Union[StreamedTokens, ParsedAskModeResponse[dict]], None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Union[
         Generator[Union[StreamedTokens, AskModeResponse], None, None],
         AsyncGenerator[Union[StreamedTokens, AskModeResponse], None],
@@ -350,7 +500,37 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Union[
+        Generator[StreamedTokens, None, None],
+        AsyncGenerator[StreamedTokens, None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Union[
+        Generator[StreamedTokens, None, None],
+        AsyncGenerator[StreamedTokens, None],
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Union[
         Generator[StreamedTokens, None, None],
         AsyncGenerator[StreamedTokens, None],
@@ -613,13 +793,42 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
         return QueryAgentResponse(**response.json())
 
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: type[M],
+    ) -> ParsedAskModeResponse[M]: ...
+
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> ParsedAskModeResponse[dict]: ...
+
+    @overload
+    def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
+    ) -> AskModeResponse: ...
+
     def ask(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
         output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
-    ) -> AskModeResponse:
+    ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
         """Run the Query Agent ask mode.
 
         Perform an agentic search on the collections and return a natural language answer to the query.
@@ -784,7 +993,35 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[M]], None, None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Generator[
+        Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[dict]], None, None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Generator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None, None
     ]: ...
@@ -797,7 +1034,31 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Generator[Union[ProgressMessage, StreamedTokens], None, None]: ...
 
     @overload
@@ -808,7 +1069,31 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Generator[Union[StreamedTokens, ParsedAskModeResponse[M]], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Generator[Union[StreamedTokens, ParsedAskModeResponse[dict]], None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Generator[Union[StreamedTokens, AskModeResponse], None, None]: ...
 
     @overload
@@ -819,7 +1104,31 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> Generator[StreamedTokens, None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> Generator[StreamedTokens, None, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> Generator[StreamedTokens, None, None]: ...
 
     def ask_stream(
@@ -1332,13 +1641,42 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
             return QueryAgentResponse(**response.json())
 
+    @overload
+    async def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: type[M],
+    ) -> ParsedAskModeResponse[M]: ...
+
+    @overload
+    async def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> ParsedAskModeResponse[dict]: ...
+
+    @overload
+    async def ask(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
+    ) -> AskModeResponse: ...
+
     async def ask(
         self,
         query: Union[str, list[ChatMessage]],
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         result_evaluation: Literal["llm", "none"] = "none",
         output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
-    ) -> AskModeResponse:
+    ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
         """Run the Query Agent ask mode.
 
         Perform an agentic search on the collections and return a natural language answer to the query.
@@ -1504,7 +1842,35 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[M]], None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> AsyncGenerator[
+        Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[dict]], None
+    ]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> AsyncGenerator[
         Union[ProgressMessage, StreamedTokens, AskModeResponse], None
     ]: ...
@@ -1517,7 +1883,31 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[True] = True,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[True] = True,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> AsyncGenerator[Union[ProgressMessage, StreamedTokens], None]: ...
 
     @overload
@@ -1528,7 +1918,31 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[True] = True,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> AsyncGenerator[Union[StreamedTokens, ParsedAskModeResponse[M]], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> AsyncGenerator[Union[StreamedTokens, ParsedAskModeResponse[dict]], None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[True] = True,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> AsyncGenerator[Union[StreamedTokens, AskModeResponse], None]: ...
 
     @overload
@@ -1539,7 +1953,31 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         include_progress: Literal[False] = False,
         include_final_state: Literal[False] = False,
         result_evaluation: Literal["llm", "none"] = "none",
-        output_format: Union[type[str], dict[str, Any], type[BaseModel]] = str,
+        *,
+        output_format: type[M],
+    ) -> AsyncGenerator[StreamedTokens, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        *,
+        output_format: dict[str, Any],
+    ) -> AsyncGenerator[StreamedTokens, None]: ...
+
+    @overload
+    def ask_stream(
+        self,
+        query: Union[str, list[ChatMessage]],
+        collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
+        include_progress: Literal[False] = False,
+        include_final_state: Literal[False] = False,
+        result_evaluation: Literal["llm", "none"] = "none",
+        output_format: type[str] = str,
     ) -> AsyncGenerator[StreamedTokens, None]: ...
 
     async def ask_stream(

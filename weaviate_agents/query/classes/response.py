@@ -15,7 +15,7 @@ from typing import (
 )
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, SerializeAsAny, field_validator
 from typing_extensions import TypedDict
 from weaviate.outputs.query import QueryReturn
 
@@ -470,13 +470,20 @@ class AskModeResponse(BaseModel):
     total_time: float
     is_partial_answer: Union[bool, None]
     missing_information: Union[list[str], None]
-    final_answer: Union[str, dict, BaseModel]
+    final_answer: str
     sources: Union[list[Source], None]
 
     def display(self) -> None:
         """Display a pretty-printed summary of the AskModeResponse object."""
         print_ask_mode_response(self)
         return None
+
+
+T = TypeVar("T", bound=Union[dict, BaseModel])
+
+
+class ParsedAskModeResponse(AskModeResponse, Generic[T]):
+    final_answer_parsed: SerializeAsAny[T]
 
 
 class ResearchModeResponse(BaseModel):

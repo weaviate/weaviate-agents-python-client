@@ -1,13 +1,16 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
-from pydantic import BaseModel
 from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table
 
 if TYPE_CHECKING:
-    from weaviate_agents.query.classes import AskModeResponse, QueryAgentResponse
+    from weaviate_agents.query.classes import (
+        AskModeResponse,
+        ParsedAskModeResponse,
+        QueryAgentResponse,
+    )
 
 console = Console()
 
@@ -88,14 +91,14 @@ def print_query_agent_response(response: "QueryAgentResponse"):
     )
 
 
-def print_ask_mode_response(response: "AskModeResponse"):
+def print_ask_mode_response(
+    response: Union["AskModeResponse", "ParsedAskModeResponse"],
+):
     """Prints a formatted response from the Ask Mode using rich."""
-    if isinstance(response.final_answer, BaseModel) or isinstance(
-        response.final_answer, dict
-    ):
+    if hasattr(response, "final_answer_parsed"):
         console.print(
             Panel(
-                Pretty(response.final_answer),
+                Pretty(response.final_answer_parsed),
                 title="💬 Ask Mode Response",
                 style="cyan",
                 padding=1,
