@@ -164,31 +164,6 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 
         return output
 
-    def _parse_ask_result(
-        self,
-        response: dict[str, Any],
-        output_format: Union[dict[str, Any], type[BaseModel], None],
-    ) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
-        # Not overloaded: callers pass the broad union, and the precise return
-        # type (ParsedAskModeResponse[M]) is conveyed by the public ask overloads.
-        if isinstance(output_format, type) and issubclass(output_format, BaseModel):
-            response["final_answer_parsed"] = output_format.model_validate_json(
-                response["final_answer"]
-            )
-            return ParsedAskModeResponse[BaseModel](**response)
-
-        elif isinstance(output_format, dict):
-            try:
-                response["final_answer_parsed"] = loads(response["final_answer"])
-            except JSONDecodeError:
-                warnings.warn(
-                    "Unable to decode final answer as dictionary, returning as string"
-                )
-                response["final_answer_parsed"] = response["final_answer"]
-            return ParsedAskModeResponse[dict](**response)
-
-        return AskModeResponse(**response)
-
     @deprecated(
         "QueryAgent.run() is deprecated and will be removed in a future release. "
         "Use QueryAgent.ask() instead."
@@ -897,9 +872,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         if response.is_error:
             raise Exception(response.text)
 
-        return self._parse_ask_result(
-            response=response.json(), output_format=output_format
-        )
+        return _parse_ask_result(response=response.json(), output_format=output_format)
 
     @overload
     def stream(
@@ -1235,16 +1208,13 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                     raise Exception(events.response.text)
 
                 for sse in events.iter_sse():
-                    output = _parse_sse(sse, mode="ask")
+                    output = _parse_sse(sse, mode="ask", output_format=output_format)
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
                     elif isinstance(output, AskModeResponse):
                         if include_final_state:
-                            yield self._parse_ask_result(
-                                response=output.model_dump(mode="json"),
-                                output_format=output_format,
-                            )
+                            yield output
                     else:
                         yield output
 
@@ -1745,7 +1715,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             if response.is_error:
                 raise Exception(response.text)
 
-            return self._parse_ask_result(
+            return _parse_ask_result(
                 response=response.json(), output_format=output_format
             )
 
@@ -2084,16 +2054,13 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                     raise Exception(events.response.text)
 
                 async for sse in events.aiter_sse():
-                    output = _parse_sse(sse, mode="ask")
+                    output = _parse_sse(sse, mode="ask", output_format=output_format)
                     if isinstance(output, ProgressMessage):
                         if include_progress:
                             yield output
                     elif isinstance(output, AskModeResponse):
                         if include_final_state:
-                            yield self._parse_ask_result(
-                                response=output.model_dump(mode="json"),
-                                output_format=output_format,
-                            )
+                            yield output
                     else:
                         yield output
 
@@ -2429,30 +2396,49 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
 @overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["query"]
+    sse: ServerSentEvent,
+    mode: Literal["query"],
+    output_format: Union[dict[str, Any], type[BaseModel], None] = None,
 ) -> Union[ProgressMessage, StreamedTokens, QueryAgentResponse]: ...
 
 
 @overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["ask"]
-) -> Union[ProgressMessage, StreamedTokens, AskModeResponse]: ...
+    sse: ServerSentEvent,
+    mode: Literal["research"],
+    output_format: Union[dict[str, Any], type[BaseModel], None] = None,
+) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse]: ...
 
 
 @overload
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["research"]
-) -> Union[ProgressMessage, StreamedThoughts, StreamedTokens, ResearchModeResponse]: ...
+    sse: ServerSentEvent, mode: Literal["ask"], output_format: dict[str, Any]
+) -> Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[dict]]: ...
+
+
+@overload
+def _parse_sse(
+    sse: ServerSentEvent, mode: Literal["ask"], output_format: type[M]
+) -> Union[ProgressMessage, StreamedTokens, ParsedAskModeResponse[M]]: ...
+
+
+@overload
+def _parse_sse(
+    sse: ServerSentEvent, mode: Literal["ask"], output_format: None
+) -> Union[ProgressMessage, StreamedTokens, AskModeResponse]: ...
 
 
 def _parse_sse(
-    sse: ServerSentEvent, mode: Literal["query", "ask", "research"]
+    sse: ServerSentEvent,
+    mode: Literal["query", "ask", "research"],
+    output_format: Union[dict[str, Any], type[BaseModel], None] = None,
 ) -> Union[
     ProgressMessage,
     StreamedThoughts,
     StreamedTokens,
     QueryAgentResponse,
     AskModeResponse,
+    ParsedAskModeResponse[Any],
     ResearchModeResponse,
 ]:
     try:
@@ -2472,10 +2458,38 @@ def _parse_sse(
         if mode == "query":
             return QueryAgentResponse.model_validate(data)
         elif mode == "ask":
-            return AskModeResponse.model_validate(data)
+            return _parse_ask_result(
+                response=data,
+                output_format=output_format,
+            )
         elif mode == "research":
             return ResearchModeResponse.model_validate(data)
     else:
         raise Exception(
             f"Unrecognised event type in response: {sse.event=}, {sse.data=}"
         )
+
+
+def _parse_ask_result(
+    response: dict[str, Any],
+    output_format: Union[dict[str, Any], type[BaseModel], None],
+) -> Union[AskModeResponse, ParsedAskModeResponse[Any]]:
+    # Not overloaded: callers pass the broad union, and the precise return
+    # type (ParsedAskModeResponse[M]) is conveyed by the public ask overloads.
+    if isinstance(output_format, type) and issubclass(output_format, BaseModel):
+        response["final_answer_parsed"] = output_format.model_validate_json(
+            response["final_answer"]
+        )
+        return ParsedAskModeResponse[BaseModel](**response)
+
+    elif isinstance(output_format, dict):
+        try:
+            response["final_answer_parsed"] = loads(response["final_answer"])
+        except JSONDecodeError:
+            warnings.warn(
+                "Unable to decode final answer as dictionary, returning as string"
+            )
+            response["final_answer_parsed"] = response["final_answer"]
+        return ParsedAskModeResponse[dict](**response)
+
+    return AskModeResponse(**response)
