@@ -845,6 +845,54 @@ def test_search_only_mode_default_filtering(monkeypatch):
     assert captured["json"]["filtering"] is None
 
 
+def test_search_only_mode_with_effort(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with effort set
+    results = agent.search("test query", limit=2, effort="high")
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["effort"] == "high"
+
+    # Reset captured json, then paginate — effort should persist
+    captured = {}
+    results_2 = results.next(limit=2, offset=1)
+    assert isinstance(results_2, SearchModeResponse)
+    assert captured["json"]["effort"] == "high"
+
+
+def test_search_only_mode_default_effort(monkeypatch):
+    captured = {}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return fake_post_search_only_success()
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test without effort — should default to "low"
+    results = agent.search("test query", limit=2)
+    assert isinstance(results, SearchModeResponse)
+    assert captured["json"]["effort"] == "low"
+
+
 def test_search_only_mode_failure(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post_failure)
     dummy_client = DummyClient()
@@ -966,6 +1014,54 @@ async def test_async_search_only_mode_with_filtering(monkeypatch):
     results_2 = await results.next(limit=2, offset=1)
     assert isinstance(results_2, AsyncSearchModeResponse)
     assert captured["json"]["filtering"] == "precision"
+
+
+async def test_async_search_only_mode_with_effort(monkeypatch):
+    captured = {}
+
+    async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return await fake_async_post_search_only_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test with effort set
+    results = await agent.search("test query", limit=2, effort="medium")
+    assert isinstance(results, AsyncSearchModeResponse)
+    assert captured["json"]["effort"] == "medium"
+
+    # Reset captured json, then paginate — effort should persist
+    captured = {}
+    results_2 = await results.next(limit=2, offset=1)
+    assert isinstance(results_2, AsyncSearchModeResponse)
+    assert captured["json"]["effort"] == "medium"
+
+
+async def test_async_search_only_mode_default_effort(monkeypatch):
+    captured = {}
+
+    async def fake_post_with_capture(self, url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return await fake_async_post_search_only_success()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = AsyncQueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    # Test without effort — should default to "low"
+    results = await agent.search("test query", limit=2)
+    assert isinstance(results, AsyncSearchModeResponse)
+    assert captured["json"]["effort"] == "low"
 
 
 async def test_async_search_only_mode_failure(monkeypatch):
