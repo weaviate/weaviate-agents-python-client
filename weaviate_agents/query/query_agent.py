@@ -500,6 +500,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        ranking_instructions: Optional[str] = None,
     ) -> Union[SearchModeResponse, Coroutine[Any, Any, AsyncSearchModeResponse]]:
         pass
 
@@ -1016,6 +1017,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        ranking_instructions: Optional[str] = None,
     ) -> SearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1037,6 +1039,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            ranking_instructions: Optional natural language instructions to guide the
+                instruction-following reranker on how to prioritize relevance
+                (e.g. "Prioritize recent documents over older ones").
+                Only affects the ordering of results, not which results are retrieved.
+                Limited to ~500 tokens, enforced server-side.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SearchModeResponse` for the first page of results. Use
@@ -1073,6 +1080,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             system_prompt=self._system_prompt,
             filtering=filtering,
             diversity_weight=diversity_weight,
+            ranking_instructions=ranking_instructions,
         )
         return searcher.run(limit=limit)
 
@@ -1661,6 +1669,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        ranking_instructions: Optional[str] = None,
     ) -> AsyncSearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1683,6 +1692,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            ranking_instructions: Optional natural language instructions to guide the
+                instruction-following reranker on how to prioritize relevance
+                (e.g. "Prioritize recent documents over older ones").
+                Only affects the ordering of results, not which results are retrieved.
+                Limited to ~500 tokens, enforced server-side.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.AsyncSearchModeResponse` for the first page of results. Use
@@ -1719,6 +1733,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             system_prompt=self._system_prompt,
             filtering=filtering,
             diversity_weight=diversity_weight,
+            ranking_instructions=ranking_instructions,
         )
         return await searcher.run(limit=limit)
 

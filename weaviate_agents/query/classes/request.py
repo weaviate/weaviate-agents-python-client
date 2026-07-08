@@ -19,6 +19,7 @@ class SearchModeRequestBase(BaseModel):
     offset: int
     filtering: Optional[Literal["recall", "precision"]] = None
     diversity_weight: Optional[float] = None
+    ranking_instructions: Optional[str] = None
 
 
 class SearchModeExecutionRequest(SearchModeRequestBase):
