@@ -701,6 +701,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
+        conversation: Optional[list[ChatMessage]] = None,
     ) -> Union[SuggestQueryResponse, Coroutine[Any, Any, SuggestQueryResponse]]:
         pass
 
@@ -1471,6 +1472,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
+        conversation: Optional[list[ChatMessage]] = None,
     ) -> SuggestQueryResponse:
         """Suggest queries for the data in your collections.
 
@@ -1487,6 +1489,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             instructions:
                 Optional natural language guidance for the style, topic, or language of the suggested queries.
                 This is supplied in addition to the agent's system instructions.
+            conversation:
+                Optional list of chat messages representing a prior conversation.
+                When provided, the suggested queries will be contextualised as
+                follow-up questions to the conversation.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
@@ -1533,6 +1539,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         }
         if instructions is not None:
             request_body["instructions"] = instructions
+        if conversation is not None:
+            request_body["conversation_context"] = ConversationContext(
+                messages=conversation
+            ).model_dump(mode="json")
 
         response = httpx.post(
             self.query_url + "/suggest_queries",
@@ -2317,6 +2327,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         num_queries: int = 3,
         instructions: Optional[str] = None,
+        conversation: Optional[list[ChatMessage]] = None,
     ) -> SuggestQueryResponse:
         """Suggest queries for the data in your collections.
 
@@ -2333,6 +2344,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             instructions:
                 Optional natural language guidance for the style, topic, or language of the suggested queries.
                 This is supplied in addition to the agent's system instructions.
+            conversation:
+                Optional list of chat messages representing a prior conversation.
+                When provided, the suggested queries will be contextualised as
+                follow-up questions to the conversation.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
@@ -2379,6 +2394,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         }
         if instructions is not None:
             request_body["instructions"] = instructions
+        if conversation is not None:
+            request_body["conversation_context"] = ConversationContext(
+                messages=conversation
+            ).model_dump(mode="json")
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
