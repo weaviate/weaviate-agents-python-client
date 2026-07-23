@@ -46,7 +46,7 @@ class _BaseQueryAgentSearcher:
         self.query = query
         self.collections = collections
         self.system_prompt = system_prompt
-        self.filtering: Optional[Literal["recall", "precision"]] = filtering
+        self.filtering = filtering
         self.diversity_weight = diversity_weight
         self.ranking_instructions = ranking_instructions
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
