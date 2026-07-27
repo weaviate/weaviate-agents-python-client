@@ -822,13 +822,13 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
-                The `final_answer` output field in the response will also be of the type specified.
+                The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
                 Defaults to `str`.
 
         Returns:
-            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` which contains the final answer, sources,
-            and other metadata such as the searches performed, usage and total time.
+            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` (or [:class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse`]
+            if ``output_format`` is not ``None``) which contains the final answer, sources, and other metadata such as the searches performed, usage and total time.
 
         Examples:
             >>> from weaviate_agents import QueryAgent
@@ -853,7 +853,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             ...     collections=["FinancialContracts"],
             ... )
             >>> result = agent.ask("What contracts were signed by Jane Doe in 2024? What were they about?", output_format=AnswerWithSources)
-            >>> print(type(result.final_answer))
+            >>> print(type(result.final_answer_parsed))
             <class 'AnswerWithSources'>
         """
         request_body = self._prepare_request_body(
@@ -1131,20 +1131,18 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
-                The `final_answer` output field in the response will also be of the type specified.
+                The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
                 Whilst streaming, the :class:`~weaviate_agents.query.classes.response.StreamedTokens` will return delta text
                 tokens on the final answer as it is being constructed as raw string tokens, not a JSON object.
-                When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.AskModeResponse` will be parsed
-                and the `final_answer` field will be of the type specified.
-                Defaults to `str`.
+                When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse` will be returned if ``include_final_state`` is ``True``.
 
         Returns:
             A generator of the response stream.
             The generator will yield the following types:
 
             - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
-            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`] (or [:class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse`] if ``output_format`` is not ``None``): The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
             - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
 
         Examples:
@@ -1180,7 +1178,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             ...     "What contracts were signed by Jane Doe in 2024? What were they about?",
             ...     output_format=AnswerWithSources
             ... ):
-            ...     if isinstance(result, AskModeResponse):
+            ...     if isinstance(result, AskModeResponse): # this will also find ParsedAskModeResponse
             ...         result.display()
             ...     elif isinstance(result, StreamedTokens):
             ...         print(result.delta, end='', flush=True)
@@ -1673,12 +1671,12 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
-                The `final_answer` output field in the response will also be of the type specified.
+                The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
                 Defaults to `str`.
 
         Returns:
-            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` which contains the final answer, sources,
+            An instance of :class:`~weaviate_agents.query.classes.response.AskModeResponse` (or [:class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse`] if ``output_format`` is not ``None``) which contains the final answer, sources,
             and other metadata such as the searches performed, usage and total time.
 
         Examples:
@@ -1704,7 +1702,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             ...     collections=["FinancialContracts"],
             ... )
             >>> result = await agent.ask("What contracts were signed by Jane Doe in 2024? What were they about?", output_format=AnswerWithSources)
-            >>> print(type(result.final_answer))
+            >>> print(type(result.final_answer_parsed))
             <class 'AnswerWithSources'>
         """
         request_body = self._prepare_request_body(
@@ -1986,20 +1984,18 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             output_format: The structured output format to return. Either `None` (default, no structured output), a `BaseModel` subclass, or a dictionary.
                 This enforces the output format of the final answer to be of this schema.
                 The LLM will conform to the output format specified.
-                The `final_answer` output field in the response will also be of the type specified.
+                The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
                 Whilst streaming, the :class:`~weaviate_agents.query.classes.response.StreamedTokens` will return delta text
                 tokens on the final answer as it is being constructed as raw string tokens, not a JSON object.
-                When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.AskModeResponse` will be parsed
-                and the `final_answer` field will be of the type specified.
-                Defaults to `str`.
+                When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse` will be returned if ``include_final_state`` is ``True``.
 
         Returns:
             A generator of the response stream.
             The generator will yield the following types:
 
             - [:class:`~weaviate_agents.query.classes.response.ProgressMessage`]: Informational messages about the progress of the agent's search (if ``include_progress`` is ``True``).
-            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`]: The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
+            - [:class:`~weaviate_agents.query.classes.response.AskModeResponse`] (or [:class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse`] if ``output_format`` is not ``None``): The final response class that will be the last item in the stream (if ``include_final_state`` is ``True``).
             - [:class:`~weaviate_agents.query.classes.response.StreamedTokens`]: Token deltas from the agent's response.
 
         Examples:
@@ -2035,7 +2031,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             ...     "What contracts were signed by Jane Doe in 2024? What were they about?",
             ...     output_format=AnswerWithSources
             ... ):
-            ...     if isinstance(result, AskModeResponse):
+            ...     if isinstance(result, AskModeResponse): # this will also find ParsedAskModeResponse
             ...         result.display()
             ...     elif isinstance(result, StreamedTokens):
             ...         print(result.delta, end='', flush=True)
