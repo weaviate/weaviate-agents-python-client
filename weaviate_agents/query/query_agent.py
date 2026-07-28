@@ -1405,6 +1405,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        effort: Optional[Literal["low", "medium", "high"]] = None,
     ) -> SearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1426,6 +1427,9 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            effort: The amount of effort the agent should put into the search.
+                One of "low", "medium", or "high". Higher effort may improve
+                result quality at the expense of increased latency and cost.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SearchModeResponse` for the first page of results. Use
@@ -1462,6 +1466,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             system_prompt=self._system_prompt,
             filtering=filtering,
             diversity_weight=diversity_weight,
+            effort=effort,
         )
         return searcher.run(limit=limit)
 
@@ -2257,6 +2262,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        effort: Optional[Literal["low", "medium", "high"]] = None,
     ) -> AsyncSearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -2279,6 +2285,9 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 results with MMR reranking.
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
+            effort: The amount of effort the agent should put into the search.
+                One of "low", "medium", or "high". Higher effort may improve
+                result quality at the expense of increased latency and cost.
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.AsyncSearchModeResponse` for the first page of results. Use
@@ -2315,6 +2324,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             system_prompt=self._system_prompt,
             filtering=filtering,
             diversity_weight=diversity_weight,
+            effort=effort,
         )
         return await searcher.run(limit=limit)
 
