@@ -37,6 +37,7 @@ class _BaseQueryAgentSearcher:
         system_prompt: Optional[str],
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
+        effort: Optional[Literal["low", "medium", "high"]] = None,
     ):
         self.headers = headers
         self.connection_headers = connection_headers
@@ -47,6 +48,7 @@ class _BaseQueryAgentSearcher:
         self.system_prompt = system_prompt
         self.filtering = filtering
         self.diversity_weight = diversity_weight
+        self.effort = effort
         self._cached_searches: Optional[list[QueryResultWithCollectionNormalized]] = (
             None
         )
@@ -67,6 +69,7 @@ class _BaseQueryAgentSearcher:
                 system_prompt=self.system_prompt,
                 filtering=self.filtering,
                 diversity_weight=self.diversity_weight,
+                effort=self.effort,
             ).model_dump(mode="json")
         else:
             return SearchModeExecutionRequest(
@@ -78,6 +81,7 @@ class _BaseQueryAgentSearcher:
                 searches=self._cached_searches,
                 filtering=self.filtering,
                 diversity_weight=self.diversity_weight,
+                effort=self.effort,
             ).model_dump(mode="json")
 
 
