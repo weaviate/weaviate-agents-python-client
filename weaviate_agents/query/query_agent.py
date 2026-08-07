@@ -1405,7 +1405,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
-        effort: Optional[Literal["low", "medium", "high"]] = None,
+        effort: Optional[Literal["medium", "high", "ultrahigh"]] = None,
     ) -> SearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -1428,7 +1428,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
             effort: The amount of effort the agent should put into the search.
-                One of "low", "medium", or "high". Higher effort may improve
+                One of "medium", "high", or "ultrahigh". Higher effort may improve
                 result quality at the expense of increased latency and cost.
 
         Returns:
@@ -2262,7 +2262,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         collections: Union[list[Union[str, QueryAgentCollectionConfig]], None] = None,
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
-        effort: Optional[Literal["low", "medium", "high"]] = None,
+        effort: Optional[Literal["medium", "high", "ultrahigh"]] = None,
     ) -> AsyncSearchModeResponse:
         """Run the Query Agent search-only mode.
 
@@ -2286,7 +2286,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Higher values push for more topical variety at the cost of relevance.
                 Defaults to None (no diversity).
             effort: The amount of effort the agent should put into the search.
-                One of "low", "medium", or "high". Higher effort may improve
+                One of "medium", "high", or "ultrahigh". Higher effort may improve
                 result quality at the expense of increased latency and cost.
 
         Returns:

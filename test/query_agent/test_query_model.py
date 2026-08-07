@@ -1032,15 +1032,15 @@ async def test_async_search_only_mode_with_effort(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     # Test with effort set
-    results = await agent.search("test query", limit=2, effort="low")
+    results = await agent.search("test query", limit=2, effort="medium")
     assert isinstance(results, AsyncSearchModeResponse)
-    assert captured["json"]["effort"] == "low"
+    assert captured["json"]["effort"] == "medium"
 
     # Reset captured json, then paginate — effort should persist
     captured = {}
     results_2 = await results.next(limit=2, offset=1)
     assert isinstance(results_2, AsyncSearchModeResponse)
-    assert captured["json"]["effort"] == "low"
+    assert captured["json"]["effort"] == "medium"
 
 
 async def test_async_search_only_mode_failure(monkeypatch):

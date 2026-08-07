@@ -37,7 +37,7 @@ class _BaseQueryAgentSearcher:
         system_prompt: Optional[str],
         filtering: Optional[Literal["recall", "precision"]] = None,
         diversity_weight: Optional[float] = None,
-        effort: Optional[Literal["low", "medium", "high"]] = None,
+        effort: Optional[Literal["medium", "high", "ultrahigh"]] = None,
     ):
         self.headers = headers
         self.connection_headers = connection_headers
