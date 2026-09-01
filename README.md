@@ -2,20 +2,16 @@
   <img src="./banner.png" alt="Weaviate Agents">
 </p>
 
-<table width="100%">
-  <tr>
-    <td align="left" valign="middle">
-      <a href="https://github.com/weaviate/weaviate-agents-python-client/actions"><img src="https://github.com/weaviate/weaviate-agents-python-client/actions/workflows/main.yaml/badge.svg?branch=main" alt="Main Branch"></a>
-      <a href="https://badge.fury.io/py/weaviate-agents"><img src="https://badge.fury.io/py/weaviate-agents.svg" alt="PyPI version"></a>
-    </td>
-    <td align="right" valign="middle" style="font-size: 1.5em;">
-      <a href="https://docs.weaviate.io/query-agent">Docs</a> •
-      <a href="https://weaviate-python-client.readthedocs.io/en/latest/weaviate-agents-python-client/docs/modules.html">Reference Guide</a> •
-      <a href="https://weaviate.io">Weaviate</a>
-    </td>
-  </tr>
-</table>
+<p align="center" style="font-size: 1.5em;">
+  <a href="https://docs.weaviate.io/query-agent">Docs</a> •
+  <a href="https://weaviate-python-client.readthedocs.io/en/latest/weaviate-agents-python-client/docs/modules.html">Reference Guide</a> •
+  <a href="https://weaviate.io">Weaviate</a>
+</p>
 
+<p align="center">
+  <a href="https://github.com/weaviate/weaviate-agents-python-client/actions"><img src="https://github.com/weaviate/weaviate-agents-python-client/actions/workflows/main.yaml/badge.svg?branch=main" alt="Main Branch"></a>
+  <a href="https://badge.fury.io/py/weaviate-agents"><img src="https://badge.fury.io/py/weaviate-agents.svg" alt="PyPI version"></a>
+</p>
 
 
 Weaviate Agents allow you to automatically interface with your Weaviate collections without writing any complex code.
@@ -32,7 +28,7 @@ If you are having trouble, try to explicitly install/upgrade the agents package 
 
 # Query Agent
 
-The Query Agent turns natural-language questions into precise database operations, making full use:
+The Query Agent turns natural-language questions into precise database operations, making full use of:
 
 * dynamic filters
 * cross-collection routing
