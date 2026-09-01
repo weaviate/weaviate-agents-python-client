@@ -1,38 +1,74 @@
-# Weaviate Agents Python Client
+<p align="center">
+  <img src="./banner.png" alt="Weaviate Agents">
+</p>
 
-[![Main Branch](https://github.com/weaviate/weaviate-agents-python-client/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/weaviate/weaviate-agents-python-client/actions)
-[![PyPI version](https://badge.fury.io/py/weaviate-agents.svg)](https://badge.fury.io/py/weaviate-agents)
+<table width="100%">
+  <tr>
+    <td align="left" valign="middle">
+      <a href="https://github.com/weaviate/weaviate-agents-python-client/actions"><img src="https://github.com/weaviate/weaviate-agents-python-client/actions/workflows/main.yaml/badge.svg?branch=main" alt="Main Branch"></a>
+      <a href="https://badge.fury.io/py/weaviate-agents"><img src="https://badge.fury.io/py/weaviate-agents.svg" alt="PyPI version"></a>
+    </td>
+    <td align="right" valign="middle" style="font-size: 1.5em;">
+      <a href="https://docs.weaviate.io/query-agent">Docs</a> •
+      <a href="https://weaviate-python-client.readthedocs.io/en/latest/weaviate-agents-python-client/docs/modules.html">Reference Guide</a> •
+      <a href="https://weaviate.io">Weaviate</a>
+    </td>
+  </tr>
+</table>
+
+
+
+Weaviate Agents allow you to automatically interface with your Weaviate collections without writing any complex code.
+
+## Installation
 
 This package is a sub-package to be used in conjunction with the [Weaviate Python Client](https://github.com/weaviate/weaviate-python-client). Rather than installing this package directly, you should install it as an optional extra when installing the Weaviate Python Client.
 
 ```bash
-pip install weaviate-client[agents]
+pip install -U "weaviate-client[agents]"
 ```
+
+If you are having trouble, try to explicitly install/upgrade the agents package via `pip install -U weaviate-agents`.
 
 # Query Agent
 
-Query Agent is a Weaviate-native agent that turns natural-language questions into precise database operations, making full use of dynamic filters, cross-collection routing, query optimization, and aggregations. It returns accurate and relevant results with source citations. It replaces manual query construction and ad-hoc logic with runtime, context-aware planning that optimizes and executes queries across user collections.
+The Query Agent turns natural-language questions into precise database operations, making full use:
 
-Query Agent supports two modes:
-- Ask mode: for building agentic applications that require conversational interactions and answers backed by data stored in Weaviate. This can be accessed using the `ask()` and `ask_stream()` methods, depending on whether your application needs streaming tokens and progress messages.
-- Search mode: for building agentic applications that require high quality information retrieval with strong recall and controlled precision, without the final-answer generation. This can be accessed using the `search()` method.
+* dynamic filters
+* cross-collection routing
+* query optimization
+* aggregations
 
-The `QueryAgent` and `AsyncQueryAgent` clients provide sync and async versions of the same methods.
+It returns accurate and relevant results with source citations. It replaces manual query construction and ad-hoc logic with runtime, context-aware planning that optimizes and executes queries across user collections.
 
-The Weviate Query Agent is Generally Available. For more information, see the [Weaviate Agents - Query Agent Docs](https://weaviate.io/developers/agents/query).
+## Ask Mode
 
-# Transformation Agent
+**Ask mode** is natural-language in and natural-language out. It searches or aggregates your data, depending on the user's query, and then answers the question with respect to the retrieved data. This can be accessed using the `ask()` and `ask_stream()` methods, depending on whether your application needs streaming tokens and progress messages.
 
-The Weaviate Transformation Agent is an agentic service designed to augment and transform data using generative models. Use the Transformation Agent to append new properties and/or update existing properties of data on existing objects in Weaviate.
+```python
+from weaviate.agents.query import QueryAgent
 
-> ⚠️ **Alpha Release**: Weaviate Transformation Agent is currently in alpha and is subject to change. Features may be modified or removed without notice. Please check that you are using the latest version of the package.
+qa = QueryAgent(
+    client=client, # your Weaviate cloud client
+    collections=["FinancialContracts"]
+)
 
-For more information, see the [Weaviate Agents - Transformation Agent Docs](https://docs.weaviate.io/agents/transformation).
+res = qa.ask("Find all contracts signed in 2025")
+```
 
-# Personalization Agent
+## Search Mode
 
-The Weaviate Personalization Agent is an agentic service designed to return personalized recommendations tailored to each user. The developer would simply provide a user profile with a history of interactions, and the Personalization Agent takes care of all intervening steps to provide a set of personalized recommendations from Weaviate.
+**Search mode** is designed for high quality information retrieval with strong recall and controlled precision, without the final-answer generation. This can be accessed using the `search()` method.
 
-> ⚠️ **Alpha Release**: Weaviate Personalization Agent is currently in alpha and is subject to change. Features may be modified or removed without notice. Please check that you are using the latest version of the package.
+```python
+from weaviate.agents.query import QueryAgent
 
-For more information, see the [Weaviate Agents - Personalization Agent Docs](https://docs.weaviate.io/agents/personalization).
+qa = QueryAgent(
+    client=client,
+    collections=["ECommerce"],
+)
+search_response = qa.search(
+    query="Find me some vintage shoes under $70",
+    limit=10,
+)
+```
