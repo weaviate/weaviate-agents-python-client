@@ -28,6 +28,8 @@ pip install -U "weaviate-client[agents]"
 
 If you are having trouble, try to explicitly install/upgrade the agents package via `pip install -U weaviate-agents`.
 
+Requires Python 3.9+ and a [Weaviate Cloud](https://console.weaviate.cloud) cluster.
+
 # Query Agent
 
 The Query Agent turns natural-language questions into precise database operations, making full use of:
@@ -44,10 +46,13 @@ It returns accurate and relevant results with source citations. It replaces manu
 **Ask mode** is natural-language in and natural-language out. It searches or aggregates your data, depending on the user's query, and then answers the question with respect to the retrieved data. This can be accessed using the `ask()` or `ask_stream()` methods, depending on whether your application needs streaming tokens and progress messages.
 
 ```python
+import weaviate
 from weaviate.agents.query import QueryAgent
 
+client = weaviate.connect_to_weaviate_cloud(cluster_url=..., auth_credentials=...)
+
 qa = QueryAgent(
-    client=client,  # your Weaviate cloud client
+    client=client,
     collections=["FinancialContracts"],
 )
 
@@ -89,11 +94,16 @@ Search mode can be optionally customized with:
 
 # Documentation
 
-[Full documentation](https://docs.weaviate.io/query-agent)
+* [Full documentation](https://docs.weaviate.io/query-agent) for quickstarts, walkthroughs and overviews of how to use the Query Agent
 
-[Tutorials & Guides](https://docs.weaviate.io/query-agent/recipes)
+* [Tutorials & Guides](https://docs.weaviate.io/query-agent/recipes) for getting started quickly with the Query Agent
 
-[API reference manual](https://weaviate-python-client.readthedocs.io/en/latest/weaviate-agents-python-client/docs/modules.html)
+* [API reference manual](https://weaviate-python-client.readthedocs.io/en/latest/weaviate-agents-python-client/docs/modules.html) for specific documentation on this client as well as examples
+
+# Support
+
+- [GitHub issues](https://github.com/weaviate/weaviate-agents-python-client/issues) for bug reports and feature requests
+- [Community forum](https://forum.weaviate.io) for questions and discussion
 
 # Citation
 
@@ -107,3 +117,7 @@ If you use the Query Agent in your research, please consider citing our paper:
   year={2025}
 }
 ```
+
+# License
+
+[BSD 3-Clause](./LICENSE)
