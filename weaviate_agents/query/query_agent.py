@@ -2,6 +2,7 @@ import warnings
 from abc import ABC, abstractmethod
 from json import JSONDecodeError, loads
 from typing import (
+    Annotated,
     Any,
     AsyncGenerator,
     Coroutine,
@@ -11,17 +12,19 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    get_args,
+    get_origin,
     overload,
 )
 
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse, connect_sse
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from typing_extensions import deprecated
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
-from weaviate_agents.classes.media import IMAGE_KEYWORD
+from weaviate_agents.classes.media import IMAGE_KEYWORD, QAImage
 from weaviate_agents.query.classes import (
     AskModeResponse,
     ParsedAskModeResponse,
@@ -107,10 +110,18 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
 
         if isinstance(output_format, type) and issubclass(output_format, BaseModel):
             output_format_json = output_format.model_json_schema()
+        elif _is_annotated_image(output_format):
+            # the schema comes from the Annotated form so it keeps the ImageOptions
+            output_format_json = TypeAdapter(output_format).json_schema()
         elif isinstance(output_format, dict):
             output_format_json = output_format
-        else:
+        elif output_format is None:
             output_format_json = None
+        else:
+            raise TypeError(
+                "output_format must be a BaseModel subclass, a dict JSON schema, "
+                f"QAImage, or Annotated[QAImage, ImageOptions(...)], got {output_format!r}"
+            )
 
         output = {
             "query": query_request,
@@ -2598,6 +2609,12 @@ def _parse_ask_result(
         )
         return ParsedAskModeResponse[BaseModel](**response)
 
+    elif _is_annotated_image(output_format):
+        response["final_answer_parsed"] = TypeAdapter(output_format).validate_json(
+            response["final_answer"]
+        )
+        return ParsedAskModeResponse[BaseModel](**response)
+
     elif isinstance(output_format, dict):
         try:
             response["final_answer_parsed"] = loads(response["final_answer"])
@@ -2609,6 +2626,14 @@ def _parse_ask_result(
         return ParsedAskModeResponse[dict](**response)
 
     return AskModeResponse(**response)
+
+
+def _is_annotated_image(output_format: Any) -> bool:
+    """Whether output_format is an Annotated[QAImage, ...] root, e.g. carrying ImageOptions."""
+    if get_origin(output_format) is not Annotated:
+        return False
+    base = get_args(output_format)[0]
+    return isinstance(base, type) and issubclass(base, QAImage)
 
 
 def _schema_contains_media(

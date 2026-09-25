@@ -1,11 +1,13 @@
 import json
 from contextlib import asynccontextmanager, contextmanager
+from typing import Annotated, List
 
 import httpx
 import pytest
 from httpx_sse import ServerSentEvent
 from pydantic import ValidationError
 
+from weaviate_agents.classes.media import ImageOptions, QAImage
 from weaviate_agents.classes.query import (
     AskModeResponse,
     ProgressMessage,
@@ -1353,6 +1355,46 @@ def test_ask_success_with_chat_messages(monkeypatch):
 
     assert isinstance(result, AskModeResponse)
     assert captured["json"]["query"] == {"messages": chat_messages}
+
+
+def test_ask_with_annotated_image_output_format(monkeypatch):
+    captured = {}
+    image = {"image_prompt": "a red shoe", "base64": "QUJD"}
+    response = {**FAKE_ASK_SUCCESS_JSON, "final_answer": json.dumps(image)}
+
+    def fake_post_with_capture(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return FakeResponse(200, response)
+
+    monkeypatch.setattr(httpx, "post", fake_post_with_capture)
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.warns(UserWarning):
+        result = agent.ask(
+            "draw a shoe",
+            output_format=Annotated[QAImage, ImageOptions(shape="square")],
+        )
+
+    # the schema is sent with its shape, and the answer parses back into a QAImage
+    assert captured["json"]["output_format"]["X-image-shape"] == "square"
+    assert result.final_answer_parsed == QAImage(**image)
+
+
+def test_ask_rejects_unsupported_output_format():
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+
+    # a list root used to be dropped silently, returning a plain-text answer
+    with pytest.raises(TypeError):
+        agent.ask("draw shoes", output_format=List[QAImage])
 
 
 def test_ask_failure(monkeypatch):
