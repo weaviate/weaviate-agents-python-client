@@ -1,4 +1,5 @@
 from .core import Usage
+from .media import ImageOptions, QAImage
 from .personalization import (
     Persona,
     PersonaInteraction,
@@ -115,6 +116,8 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "QAImage",
+    "ImageOptions",
     "AskModeResponse",
     "ResearchModeResponse",
     "ModelUnitUsage",
