@@ -48,7 +48,7 @@ from weaviate_agents.query.search import (
 # type through to `ParsedAskModeResponse[MyModel].final_answer_parsed`.
 M = TypeVar("M", bound=BaseModel)
 
-_MEDIA_REQUEST_TIMEOUT = 180  # seconds
+_MEDIA_REQUEST_TIMEOUT = 60  # seconds
 
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
