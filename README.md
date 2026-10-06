@@ -59,10 +59,11 @@ qa = QueryAgent(
 res = qa.ask("Find all contracts signed in 2025")
 ```
 
-Ask mode can be optionally customized with:
+Ask mode can be additionally be customized with:
 * Output formats for structured outputs
 * LLM-based evaluation of retrieved sources
-* Async operations
+
+An async version of ask mode is also available with the async client.
 
 [Learn more about ask mode in the official documentation.](https://docs.weaviate.io/query-agent/guides/ask_mode)
 
@@ -88,7 +89,9 @@ Search mode can be optionally customized with:
 * Different filtering strategies for recall or precision based search priorities
 * Effort level to control search quality versus latency
 * Diversity weights to improve diversity amongst results
-* Async operations
+* Pagination of the results set
+
+An async version of search mode is also available with the async client.
 
 [Learn more about search mode in the official documentation.](https://docs.weaviate.io/query-agent/guides/search_mode)
 
