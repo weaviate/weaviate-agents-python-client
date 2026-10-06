@@ -48,8 +48,6 @@ from weaviate_agents.query.search import (
 # type through to `ParsedAskModeResponse[MyModel].final_answer_parsed`.
 M = TypeVar("M", bound=BaseModel)
 
-_MEDIA_REQUEST_TIMEOUT = 60  # seconds
-
 
 class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
     def __init__(
@@ -66,20 +64,8 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         self._system_prompt = system_prompt
 
         self._timeout = 60 if timeout is None else timeout
-        self._timeout_explicit = timeout is not None
         self.agent_url = f"{self._agents_host}/agent"
         self.query_url = f"{self._agents_host}/query"
-
-    def _request_timeout(
-        self, output_format: Union[None, dict[str, Any], type[BaseModel]] = None
-    ) -> int:
-        if (
-            not self._timeout_explicit
-            and output_format is not None
-            and _schema_contains_media(output_format)
-        ):
-            return _MEDIA_REQUEST_TIMEOUT
-        return self._timeout
 
     def _prepare_request_body(
         self,
@@ -909,7 +895,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             self.query_url + "/ask",
             headers=self._headers,
             json=request_body,
-            timeout=self._request_timeout(output_format=request_body["output_format"]),
+            timeout=self._timeout,
         )
 
         if response.is_error:
@@ -1266,9 +1252,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 url=self.query_url + "/stream_ask",
                 json=request_body,
                 headers=self._headers,
-                timeout=self._request_timeout(
-                    output_format=request_body["output_format"]
-                ),
+                timeout=self._timeout,
             ) as events:
                 if events.response.is_error:
                     events.response.read()
@@ -1806,9 +1790,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 self.query_url + "/ask",
                 headers=self._headers,
                 json=request_body,
-                timeout=self._request_timeout(
-                    output_format=request_body["output_format"]
-                ),
+                timeout=self._timeout,
             )
 
             if response.is_error:
@@ -2168,9 +2150,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 url=self.query_url + "/stream_ask",
                 json=request_body,
                 headers=self._headers,
-                timeout=self._request_timeout(
-                    output_format=request_body["output_format"]
-                ),
+                timeout=self._timeout,
             ) as events:
                 if events.response.is_error:
                     await events.response.aread()
