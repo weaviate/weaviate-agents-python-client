@@ -111,7 +111,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         if isinstance(output_format, type) and issubclass(output_format, BaseModel):
             output_format_json = output_format.model_json_schema()
         elif _is_annotated_image(output_format):
-            # the schema comes from the Annotated form so it keeps the ImageOptions
+            # the schema comes from the Annotated form so it keeps the GeneratedImageOptions
             output_format_json = TypeAdapter(output_format).json_schema()
         elif isinstance(output_format, dict):
             output_format_json = output_format
@@ -120,7 +120,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         else:
             raise TypeError(
                 "output_format must be a BaseModel subclass, a dict JSON schema, "
-                f"GeneratedImage, or Annotated[GeneratedImage, ImageOptions(...)], got {output_format!r}"
+                f"GeneratedImage, or Annotated[GeneratedImage, GeneratedImageOptions(...)], got {output_format!r}"
             )
 
         output = {
@@ -2639,7 +2639,7 @@ def _parse_ask_result(
 
 
 def _is_annotated_image(output_format: Any) -> bool:
-    """Whether output_format is an Annotated[GeneratedImage, ...] root, e.g. carrying ImageOptions."""
+    """Whether output_format is an Annotated[GeneratedImage, ...] root, e.g. carrying GeneratedImageOptions."""
     if get_origin(output_format) is not Annotated:
         return False
     base = get_args(output_format)[0]

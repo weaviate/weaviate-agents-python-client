@@ -1,5 +1,5 @@
 from .core import Usage
-from .media import GeneratedImage, ImageOptions
+from .media import GeneratedImage, GeneratedImageOptions
 from .personalization import (
     Persona,
     PersonaInteraction,
@@ -117,7 +117,7 @@ __all__ = [
     "SearchModeResponseBase",
     "ChatMessage",
     "GeneratedImage",
-    "ImageOptions",
+    "GeneratedImageOptions",
     "AskModeResponse",
     "ResearchModeResponse",
     "ModelUnitUsage",

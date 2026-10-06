@@ -19,7 +19,7 @@ class GeneratedImage(BaseModel):
 
 
 @dataclass(frozen=True)
-class ImageOptions:
+class GeneratedImageOptions:
     shape: Optional[ImageShape] = None  # unset falls back to the backend default
 
     def __get_pydantic_json_schema__(

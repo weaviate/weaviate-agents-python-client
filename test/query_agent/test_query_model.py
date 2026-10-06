@@ -7,7 +7,7 @@ import pytest
 from httpx_sse import ServerSentEvent
 from pydantic import ValidationError
 
-from weaviate_agents.classes.media import GeneratedImage, ImageOptions
+from weaviate_agents.classes.media import GeneratedImage, GeneratedImageOptions
 from weaviate_agents.classes.query import (
     AskModeResponse,
     ProgressMessage,
@@ -1452,7 +1452,9 @@ def test_ask_with_annotated_image_output_format(monkeypatch):
     with pytest.warns(UserWarning):
         result = agent.ask(
             "draw a shoe",
-            output_format=Annotated[GeneratedImage, ImageOptions(shape="square")],
+            output_format=Annotated[
+                GeneratedImage, GeneratedImageOptions(shape="square")
+            ],
         )
 
     # the schema is sent with its shape, and the answer parses back into a GeneratedImage
