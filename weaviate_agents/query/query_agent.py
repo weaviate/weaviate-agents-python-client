@@ -24,7 +24,7 @@ from typing_extensions import deprecated
 from weaviate.client import WeaviateAsyncClient, WeaviateClient
 
 from weaviate_agents.base import ClientType, _BaseAgent
-from weaviate_agents.classes.media import IMAGE_KEYWORD, QAImage
+from weaviate_agents.classes.media import IMAGE_KEYWORD, GeneratedImage
 from weaviate_agents.query.classes import (
     AskModeResponse,
     ParsedAskModeResponse,
@@ -120,7 +120,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
         else:
             raise TypeError(
                 "output_format must be a BaseModel subclass, a dict JSON schema, "
-                f"QAImage, or Annotated[QAImage, ImageOptions(...)], got {output_format!r}"
+                f"GeneratedImage, or Annotated[GeneratedImage, ImageOptions(...)], got {output_format!r}"
             )
 
         output = {
@@ -850,7 +850,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 The LLM will conform to the output format specified.
                 The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
-                To generate an image, include a :class:`~weaviate_agents.classes.media.QAImage` field within a Pydantic model (as `output_format`).
+                To generate an image, include a :class:`~weaviate_agents.classes.media.GeneratedImage` field within a Pydantic model (as `output_format`).
                 The base64 of the image will be returned in the corresponding field of `final_answer_parsed` as string.
 
         Returns:
@@ -883,11 +883,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             >>> print(type(result.final_answer_parsed))
             <class 'AnswerWithSources'>
 
-            >>> from weaviate_agents.classes.media import QAImage
+            >>> from weaviate_agents.classes.media import GeneratedImage
             >>> from base64 import b64decode
             >>> class AnswerWithImage(BaseModel):
             ...     answer: str
-            ...     image: QAImage = Field(
+            ...     image: GeneratedImage = Field(
             ...         description="An advertisement for the product.",
             ... )
             >>>
@@ -1178,7 +1178,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 Whilst streaming, the :class:`~weaviate_agents.query.classes.response.StreamedTokens` will return delta text
                 tokens on the final answer as it is being constructed as raw string tokens, not a JSON object.
                 When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse` will be returned if ``include_final_state`` is ``True``.
-                To generate an image, include a :class:`~weaviate_agents.classes.media.QAImage` field within a Pydantic model (as `output_format`).
+                To generate an image, include a :class:`~weaviate_agents.classes.media.GeneratedImage` field within a Pydantic model (as `output_format`).
                 The base64 of the image will be returned in the corresponding field of `final_answer_parsed` as string.
                 If a image is being generated, the streamed tokens of the final answer will not include the `"base64"` key, it is added afterwards
                 and will be present in the final result.
@@ -1231,11 +1231,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             ...     elif isinstance(result, ProgressMessage):
             ...         print(result.message)
 
-            >>> from weaviate_agents.classes.media import QAImage
+            >>> from weaviate_agents.classes.media import GeneratedImage
             >>> from base64 import b64decode
             >>> class AnswerWithImage(BaseModel):
             ...     answer: str
-            ...     image: QAImage = Field(
+            ...     image: GeneratedImage = Field(
             ...         description="An advertisement for the product.",
             ... )
             >>>
@@ -1746,7 +1746,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 The LLM will conform to the output format specified.
                 The `final_answer_parsed` output field in the response will also be of the type specified.
                 When passing a `dict`, the dictionary must conform to the Draft 2020-12 JSON Schema specification.
-                To generate an image, include a :class:`~weaviate_agents.classes.media.QAImage` field within a Pydantic model (as `output_format`).
+                To generate an image, include a :class:`~weaviate_agents.classes.media.GeneratedImage` field within a Pydantic model (as `output_format`).
                 The base64 of the image will be returned in the corresponding field of `final_answer_parsed` as string.
 
         Returns:
@@ -1779,11 +1779,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             >>> print(type(result.final_answer_parsed))
             <class 'AnswerWithSources'>
 
-            >>> from weaviate_agents.classes.media import QAImage
+            >>> from weaviate_agents.classes.media import GeneratedImage
             >>> from base64 import b64decode
             >>> class AnswerWithImage(BaseModel):
             ...     answer: str
-            ...     image: QAImage = Field(
+            ...     image: GeneratedImage = Field(
             ...         description="An advertisement for the product.",
             ... )
             >>>
@@ -2080,7 +2080,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Whilst streaming, the :class:`~weaviate_agents.query.classes.response.StreamedTokens` will return delta text
                 tokens on the final answer as it is being constructed as raw string tokens, not a JSON object.
                 When the final answer is complete, the :class:`~weaviate_agents.query.classes.response.ParsedAskModeResponse` will be returned if ``include_final_state`` is ``True``.
-                To generate an image, include a :class:`~weaviate_agents.classes.media.QAImage` field within a Pydantic model (as `output_format`).
+                To generate an image, include a :class:`~weaviate_agents.classes.media.GeneratedImage` field within a Pydantic model (as `output_format`).
                 The base64 of the image will be returned in the corresponding field of `final_answer_parsed` as string.
                 If a image is being generated, the streamed tokens of the final answer will not include the `"base64"` key, it is added afterwards
                 and will be present in the final result.
@@ -2133,11 +2133,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             ...     elif isinstance(result, ProgressMessage):
             ...         print(result.message)
 
-            >>> from weaviate_agents.classes.media import QAImage
+            >>> from weaviate_agents.classes.media import GeneratedImage
             >>> from base64 import b64decode
             >>> class AnswerWithImage(BaseModel):
             ...     answer: str
-            ...     image: QAImage = Field(
+            ...     image: GeneratedImage = Field(
             ...         description="An advertisement for the product.",
             ... )
             >>>
@@ -2639,11 +2639,11 @@ def _parse_ask_result(
 
 
 def _is_annotated_image(output_format: Any) -> bool:
-    """Whether output_format is an Annotated[QAImage, ...] root, e.g. carrying ImageOptions."""
+    """Whether output_format is an Annotated[GeneratedImage, ...] root, e.g. carrying ImageOptions."""
     if get_origin(output_format) is not Annotated:
         return False
     base = get_args(output_format)[0]
-    return isinstance(base, type) and issubclass(base, QAImage)
+    return isinstance(base, type) and issubclass(base, GeneratedImage)
 
 
 def _schema_contains_media(

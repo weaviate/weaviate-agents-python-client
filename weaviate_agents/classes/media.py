@@ -11,7 +11,7 @@ IMAGE_KEYWORD = "X-query-agent-image"
 ImageShape = Literal["square", "landscape", "portrait"]
 
 
-class QAImage(BaseModel):
+class GeneratedImage(BaseModel):
     model_config = ConfigDict(json_schema_extra={IMAGE_KEYWORD: True})
 
     image_prompt: str

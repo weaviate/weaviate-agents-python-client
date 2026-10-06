@@ -7,7 +7,7 @@ import pytest
 from httpx_sse import ServerSentEvent
 from pydantic import ValidationError
 
-from weaviate_agents.classes.media import ImageOptions, QAImage
+from weaviate_agents.classes.media import GeneratedImage, ImageOptions
 from weaviate_agents.classes.query import (
     AskModeResponse,
     ProgressMessage,
@@ -1452,12 +1452,12 @@ def test_ask_with_annotated_image_output_format(monkeypatch):
     with pytest.warns(UserWarning):
         result = agent.ask(
             "draw a shoe",
-            output_format=Annotated[QAImage, ImageOptions(shape="square")],
+            output_format=Annotated[GeneratedImage, ImageOptions(shape="square")],
         )
 
-    # the schema is sent with its shape, and the answer parses back into a QAImage
+    # the schema is sent with its shape, and the answer parses back into a GeneratedImage
     assert captured["json"]["output_format"]["X-image-shape"] == "square"
-    assert result.final_answer_parsed == QAImage(**image)
+    assert result.final_answer_parsed == GeneratedImage(**image)
 
 
 def test_ask_rejects_unsupported_output_format():
@@ -1467,9 +1467,8 @@ def test_ask_rejects_unsupported_output_format():
     )
     agent._connection = dummy_client
 
-    # a list root used to be dropped silently, returning a plain-text answer
     with pytest.raises(TypeError):
-        agent.ask("draw shoes", output_format=List[QAImage])
+        agent.ask("draw shoes", output_format=List[GeneratedImage])
 
 
 def test_ask_failure(monkeypatch):
