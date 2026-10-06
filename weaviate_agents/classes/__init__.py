@@ -1,4 +1,5 @@
 from .core import Usage
+from .media import GeneratedImage, GeneratedImageOptions
 from .personalization import (
     Persona,
     PersonaInteraction,
@@ -115,6 +116,8 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "GeneratedImage",
+    "GeneratedImageOptions",
     "AskModeResponse",
     "ResearchModeResponse",
     "ModelUnitUsage",
