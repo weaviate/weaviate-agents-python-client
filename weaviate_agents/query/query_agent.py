@@ -105,8 +105,7 @@ class _BaseQueryAgent(Generic[ClientType], _BaseAgent[ClientType], ABC):
             output_format_json = None
         else:
             raise TypeError(
-                "output_format must be a BaseModel subclass, a dict JSON schema, "
-                f"GeneratedImage, or Annotated[GeneratedImage, GeneratedImageOptions(...)], got {output_format!r}"
+                f"output_format must be a BaseModel subclass or a dict JSON schema, got {output_format!r}"
             )
 
         output = {
