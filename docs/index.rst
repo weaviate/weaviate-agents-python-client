@@ -2,21 +2,21 @@
 Weaviate Agents
 ===============
 
-Weaviate Agents are pre-built agentic services designed to simplify common tasks when working with Large Language Models (LLMs) and your Weaviate instance. They are experts in performing Weaviate-specific data operations, streamlining AI development and data engineering workflows.
+The Query Agent is a pre-built agentic service designed to intelligently and easily query your Weaviate collections in natural language, using Large Language Models (LLMs) to dynamically determine filters, searches and aggregations.
 
 .. warning::
    Weaviate Agents are currently only available for users of `Weaviate Cloud (WCD) <https://weaviate.io/developers/wcs/>`_. They require a connection to a WCD instance and are not available for self-hosted Weaviate clusters at this time.
 
-Available agents
+Available modes
 ----------------
 
 The Weaviate Agents framework currently includes the following:
 
-* `Query Agent <https://weaviate.io/developers/agents/query>`_: Designed to answer natural language questions by intelligently querying the data stored within your Weaviate database.
+* `Ask mode <https://docs.weaviate.io/query-agent/guides/ask_mode>`_: Ask Mode transforms your query into actionable searches or aggregations, and then provides a final answer to the question.
 
-* `Transformation Agent <https://weaviate.io/developers/agents/transformation>`_: Enhances your data by manipulating it based on specific user instructions. This can involve tasks like summarizing, extracting information, or reformatting data stored in Weaviate.
+* `Search mode <https://docs.weaviate.io/query-agent/guides/search_mode>`_: Search Mode combines AI-powered semantic search with structured filtering and returns the matching Weaviate objects directly.
 
-* `Personalization Agent <https://weaviate.io/developers/agents/personalization>`_: Customizes outputs based on persona-specific information. This agent can learn user behavior and provide recommendations tailored to individual preferences.
+* `Suggest queries mode <https://docs.weaviate.io/query-agent/guides/suggest_queries>`_: The Query Agent can suggest queries based on the data in your collections.
 
 Installation
 ------------
@@ -52,7 +52,7 @@ Official documentation
 
 For the most comprehensive and up-to-date information, examples, and guides on Weaviate Agents, please refer to the main Weaviate documentation website:
 
-* `Weaviate Agents - Official documentation <https://weaviate.io/developers/agents>`_
+* `Weaviate Agents - Official documentation <https://docs.weaviate.io/query-agent>`_
 
 Client API reference
 ------------------------
@@ -68,6 +68,5 @@ Support
 -------
 
 - Use our `Forum <https://forum.weaviate.io>`_ for support or any other question.
-- Use our `Slack Channel <https://weaviate.io/slack>`_ for discussions or any other question.
 - Use the ``weaviate`` tag on `StackOverflow <https://stackoverflow.com/questions/tagged/weaviate>`_  for questions.
 - For bugs or problems, submit a GitHub `issue <https://github.com/weaviate/weaviate-python-client/issues>`_.
