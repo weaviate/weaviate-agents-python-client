@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     Any,
     Coroutine,
     Generic,
+    Iterator,
     Literal,
     Optional,
     Protocol,
@@ -21,6 +24,9 @@ from weaviate.outputs.query import QueryReturn
 
 from weaviate_agents.classes.core import Usage
 from weaviate_agents.utils import print_ask_mode_response, print_query_agent_response
+
+if TYPE_CHECKING:
+    from weaviate_agents.query.classes.request import ChatMessage
 
 
 class ComparisonOperator(str, Enum):
@@ -472,11 +478,51 @@ class AskModeResponse(BaseModel):
     missing_information: Union[list[str], None]
     final_answer: str
     sources: Union[list[Source], None]
+    _query: Union[str, list[ChatMessage], None] = None
 
     def display(self) -> None:
         """Display a pretty-printed summary of the AskModeResponse object."""
         print_ask_mode_response(self)
         return None
+
+    def to_conversation_history(self) -> list[ChatMessage]:
+        """Return the conversation so far with this answer appended, ready to extend and pass as the next query."""
+        if self._query is None:
+            raise ValueError(
+                "to_conversation_history() is only available on responses returned "
+                "directly by ask() or ask_stream()."
+            )
+
+        def find_images(value: Any) -> Iterator[str]:
+            if isinstance(value, list):
+                for item in value:
+                    yield from find_images(item)
+            elif isinstance(value, dict):
+                if isinstance(value.get("image_prompt"), str) and isinstance(
+                    value.get("base64"), str
+                ):
+                    yield value["base64"]
+                for item in value.values():
+                    yield from find_images(item)
+
+        try:
+            images = list(find_images(json.loads(self.final_answer)))
+        except ValueError:  # a plain text answer
+            images = []
+
+        # generated images move to media, labelled in answer order (which json.loads keeps)
+        content = self.final_answer
+        for i, image in enumerate(images, 1):
+            content = content.replace(
+                json.dumps(image), json.dumps(f"[generated image {i}]"), 1
+            )
+        message: ChatMessage = {"role": "assistant", "content": content}
+        if images:
+            message["media"] = [{"data": image} for image in images]
+
+        if isinstance(self._query, str):
+            return [{"role": "user", "content": self._query}, message]
+        return [*self._query, message]
 
 
 T = TypeVar("T", bound=Union[dict, BaseModel])

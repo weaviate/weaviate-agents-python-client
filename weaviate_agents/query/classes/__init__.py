@@ -1,6 +1,6 @@
 from ...classes.core import Usage
 from .collection import QueryAgentCollectionConfig
-from .request import ChatMessage
+from .request import ChatMessage, MediaContent
 from .response import (
     AggregationResult,
     AggregationResultWithCollection,
@@ -89,6 +89,7 @@ __all__ = [
     "IsNullPropertyFilter",
     "SearchModeResponseBase",
     "ChatMessage",
+    "MediaContent",
     "AskModeResponse",
     "ResearchModeResponse",
     "ModelUnitUsage",

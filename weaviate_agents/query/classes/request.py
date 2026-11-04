@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from weaviate_agents.query.classes import QueryAgentCollectionConfig
 from weaviate_agents.query.classes.response import QueryResultWithCollectionNormalized
@@ -31,9 +31,15 @@ class SearchModeGenerationRequest(SearchModeRequestBase):
     system_prompt: Optional[str] = None
 
 
+class MediaContent(TypedDict):
+    data: str
+    detail: NotRequired[Literal["low", "high", "auto"]]
+
+
 class ChatMessage(TypedDict):
     role: Literal["user", "assistant"]
     content: str
+    media: NotRequired[list[MediaContent]]
 
 
 class ConversationContext(BaseModel):

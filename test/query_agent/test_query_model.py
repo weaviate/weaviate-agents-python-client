@@ -1403,6 +1403,10 @@ def test_ask_success_with_string_query(monkeypatch):
     assert isinstance(result, AskModeResponse)
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
+    assert result.to_conversation_history() == [
+        {"role": "user", "content": "test query"},
+        {"role": "assistant", "content": "final answer"},
+    ]
 
 
 def test_ask_success_with_chat_messages(monkeypatch):
@@ -1421,7 +1425,11 @@ def test_ask_success_with_chat_messages(monkeypatch):
     agent._headers = dummy_client.additional_headers
 
     chat_messages: list[ChatMessage] = [
-        {"role": "user", "content": "hello"},
+        {
+            "role": "user",
+            "content": "hello",
+            "media": [{"data": "iVBORw0KGgo", "detail": "low"}],
+        },
         {"role": "assistant", "content": "hi there"},
     ]
 
@@ -1430,6 +1438,12 @@ def test_ask_success_with_chat_messages(monkeypatch):
 
     assert isinstance(result, AskModeResponse)
     assert captured["json"]["query"] == {"messages": chat_messages}
+    # appending to the caller's list afterwards doesn't change the history
+    chat_messages.append({"role": "user", "content": "a later turn"})
+    assert result.to_conversation_history() == [
+        *chat_messages[:2],
+        {"role": "assistant", "content": "final answer"},
+    ]
 
 
 def test_ask_with_annotated_image_output_format(monkeypatch):
@@ -1460,6 +1474,34 @@ def test_ask_with_annotated_image_output_format(monkeypatch):
     # the schema is sent with its shape, and the answer parses back into a GeneratedImage
     assert captured["json"]["output_format"]["X-image-shape"] == "square"
     assert result.final_answer_parsed == GeneratedImage(**image)
+
+
+def test_to_conversation_history_moves_generated_images_to_media(monkeypatch):
+    # images move in answer order ("b" before "1", like the TypeScript client), and
+    # all other text, such as 1.50 and the é escape, is kept byte for byte
+    final_answer = (
+        '{"b": {"image_prompt": "caf\\u00e9", "base64": "/9j/AAAA"}, "price": 1.50, '
+        '"1": [{"image_prompt": "b", "base64": "UklGRiQAAABXRUJQVlA4IA=="}]}'
+    )
+    response = {**FAKE_ASK_SUCCESS_JSON, "final_answer": final_answer}
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: FakeResponse(200, response))
+    dummy_client = DummyClient()
+    agent = QueryAgent(
+        dummy_client, ["test_collection"], agents_host="http://dummy-agent"
+    )
+    agent._connection = dummy_client
+    agent._headers = dummy_client.additional_headers
+
+    with pytest.warns(UserWarning):
+        result = agent.ask("two adverts")
+
+    assert result.to_conversation_history()[-1] == {
+        "role": "assistant",
+        "content": final_answer.replace("/9j/AAAA", "[generated image 1]").replace(
+            "UklGRiQAAABXRUJQVlA4IA==", "[generated image 2]"
+        ),
+        "media": [{"data": "/9j/AAAA"}, {"data": "UklGRiQAAABXRUJQVlA4IA=="}],
+    }
 
 
 def test_ask_rejects_unsupported_output_format():
@@ -1513,6 +1555,7 @@ def test_ask_stream_success_with_string_query(monkeypatch):
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
     assert isinstance(all_results[3], AskModeResponse)
+    assert all_results[3].to_conversation_history()[-1]["content"] == "final answer"
 
 
 def test_ask_stream_success_with_chat_messages(monkeypatch):
@@ -1620,6 +1663,7 @@ async def test_async_ask_success_with_string_query(monkeypatch):
     assert isinstance(result, AskModeResponse)
     assert result.total_time == 0.1
     assert result.final_answer == "final answer"
+    assert result.to_conversation_history()[-1]["content"] == "final answer"
 
 
 async def test_async_ask_success_with_chat_messages(monkeypatch):
@@ -1689,6 +1733,7 @@ async def test_async_ask_stream_success_with_string_query(monkeypatch):
     assert all_results[1] == StreamedTokens(delta="final")
     assert all_results[2] == StreamedTokens(delta=" answer")
     assert isinstance(all_results[3], AskModeResponse)
+    assert all_results[3].to_conversation_history()[-1]["content"] == "final answer"
 
 
 async def test_async_ask_stream_success_with_chat_messages(monkeypatch):

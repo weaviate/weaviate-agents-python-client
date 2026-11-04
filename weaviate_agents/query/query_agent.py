@@ -822,7 +822,8 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         Perform an agentic search on the collections and return a natural language answer to the query.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
                 Will override any collections if passed in the constructor.
             result_evaluation: One of ``"llm"`` or ``"none"``.
@@ -882,6 +883,10 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
             ... )
             >>> result = agent.ask("What is the best selling product?", output_format=AnswerWithImage)
             >>> image_bytes = b64decode(result.final_answer_parsed.image.base64) # base64 encoded image
+
+            >>> history = result.to_conversation_history() # generated images are moved into `media`
+            >>> history.append({"role": "user", "content": "Make the background of that image blue."})
+            >>> result = agent.ask(history, output_format=AnswerWithImage)
         """
         request_body = self._prepare_request_body(
             query=query,
@@ -900,7 +905,11 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         if response.is_error:
             raise Exception(response.text)
 
-        return _parse_ask_result(response=response.json(), output_format=output_format)
+        result = _parse_ask_result(
+            response=response.json(), output_format=output_format
+        )
+        result._query = query if isinstance(query, str) else list(query)
+        return result
 
     @overload
     def stream(
@@ -1145,7 +1154,8 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         """Run the Query Agent ask mode and stream the response.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
                 Will override any collections if passed in the constructor.
             include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
@@ -1263,6 +1273,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                         if include_progress:
                             yield output
                     elif isinstance(output, AskModeResponse):
+                        output._query = query if isinstance(query, str) else list(query)
                         if include_final_state:
                             yield output
                     else:
@@ -1379,6 +1390,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
 
         Args:
             query: The natural language query string or list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
             reasoning_prompt: Optional prompt to control the agent's behavior during the
@@ -1466,7 +1478,8 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
         underlying searches to ensure a consistent result set across pages.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             limit: The maximum number of results to return for the first page.
             collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
                 Overrides any collections provided in the constructor when set.
@@ -1547,6 +1560,7 @@ class QueryAgent(_BaseQueryAgent[WeaviateClient]):
                 Optional list of chat messages representing a prior conversation.
                 When provided, the suggested queries will be contextualised as
                 follow-up questions to the conversation.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
@@ -1717,7 +1731,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         Perform an agentic search on the collections and return a natural language answer to the query.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Will override any collections if passed in the constructor.
             result_evaluation: One of ``"llm"`` or ``"none"``.
                 If ``"llm"``, the final answer will be cross-compared to the sources, and those sources will be filtered to only those in the answer.
@@ -1776,6 +1791,10 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             ... )
             >>> result = await agent.ask("What is the best selling product?", output_format=AnswerWithImage)
             >>> image_bytes = b64decode(result.final_answer_parsed.image.base64) # base64 encoded image
+
+            >>> history = result.to_conversation_history() # generated images are moved into `media`
+            >>> history.append({"role": "user", "content": "Make the background of that image blue."})
+            >>> result = await agent.ask(history, output_format=AnswerWithImage)
         """
         request_body = self._prepare_request_body(
             query=query,
@@ -1795,9 +1814,11 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
             if response.is_error:
                 raise Exception(response.text)
 
-            return _parse_ask_result(
+            result = _parse_ask_result(
                 response=response.json(), output_format=output_format
             )
+            result._query = query if isinstance(query, str) else list(query)
+            return result
 
     @overload
     def stream(
@@ -2043,7 +2064,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         """Run the Query Agent ask mode and stream the response.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Either a list of strings, or a list of :class:`~weaviate_agents.query.classes.QueryAgentCollectionConfig` objects.
                 Will override any collections if passed in the constructor.
             include_progress: Whether to include progress messages in the stream. These are informational messages about the progress of the agent's search.
@@ -2161,6 +2183,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                         if include_progress:
                             yield output
                     elif isinstance(output, AskModeResponse):
+                        output._query = query if isinstance(query, str) else list(query)
                         if include_final_state:
                             yield output
                     else:
@@ -2276,6 +2299,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
 
         Args:
             query: The natural language query string or list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
             reasoning_prompt: Optional prompt to control the agent's behavior during the
@@ -2364,7 +2388,8 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
         pages.
 
         Args:
-            query: The natural language query string for the agent.
+            query: The natural language query string for the agent, or a list of chat messages.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
             limit: The maximum number of results to return for the first page.
             collections: The collections to query. Overrides any collections
                 provided in the constructor when set.
@@ -2445,6 +2470,7 @@ class AsyncQueryAgent(_BaseQueryAgent[WeaviateAsyncClient]):
                 Optional list of chat messages representing a prior conversation.
                 When provided, the suggested queries will be contextualised as
                 follow-up questions to the conversation.
+                Each chat message can also carry images as ``"media": [{"data": <base64>}]`` (PNG, JPEG, GIF or WEBP).
 
         Returns:
             An instance of :class:`~weaviate_agents.query.classes.response.SuggestQueryResponse` which
