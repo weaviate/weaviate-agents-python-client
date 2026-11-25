@@ -397,6 +397,7 @@ class QueryResultWithCollection(QueryResult):
 class Source(BaseModel):
     object_id: str
     collection: str
+    tenant: Union[str, None] = None
 
 
 class QueryAgentResponse(BaseModel):
@@ -441,6 +442,7 @@ class QueryResultWithCollectionNormalized(BaseModel):
     collection: str
     sort_property: Union[QuerySort, None] = None
     uuid_value: Union[UUID, None] = None
+    tenant: Union[str, None] = None
 
 
 class AggregationResultWithCollectionNormalized(BaseModel):
@@ -448,6 +450,7 @@ class AggregationResultWithCollectionNormalized(BaseModel):
     aggregation: PropertyAggregation
     filters: Union[PropertyFilter, FilterAndOr, None]
     collection: str
+    tenant: Union[str, None] = None
 
 
 class SuggestedQuery(BaseModel):
