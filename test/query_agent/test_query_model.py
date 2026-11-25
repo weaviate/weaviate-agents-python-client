@@ -582,6 +582,7 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
             "collection": "test_collection",
             "sort_property": None,
             "uuid_value": None,
+            "tenant": "tenant_a",
         },
         {
             "query": None,
@@ -593,6 +594,7 @@ FAKE_SEARCH_ONLY_SUCCESS_JSON = {
                 "tie_break": None,
             },
             "uuid_value": None,
+            "tenant": None,
         },
     ],
     "usage": {
